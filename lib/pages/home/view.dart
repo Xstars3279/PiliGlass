@@ -42,7 +42,10 @@ class _HomePageState extends CommonPageState<HomePage>
   Widget build(BuildContext context) {
     super.build(context);
     Widget tabBar;
-    if (_homeController.tabs.length > 1) {
+    final dockSearch = _mainController.dockSearch;
+    if (dockSearch && _homeController.tabs.length > 1) {
+      tabBar = _glassTabBar();
+    } else if (_homeController.tabs.length > 1) {
       tabBar = Padding(
         padding: const EdgeInsets.only(top: 4),
         child: SizedBox(
@@ -78,7 +81,8 @@ class _HomePageState extends CommonPageState<HomePage>
     return Column(
       children: [
         if (!_mainController.useSideBar &&
-            MediaQuery.sizeOf(context).isPortrait)
+            MediaQuery.sizeOf(context).isPortrait &&
+            !dockSearch)
           customAppBar(),
         tabBar,
         Expanded(
@@ -90,6 +94,69 @@ class _HomePageState extends CommonPageState<HomePage>
           ),
         ),
       ],
+    );
+  }
+
+  /// One row of text tabs; the selected one sits on a raised pill.
+  /// Used when search lives in the bottom dock, so the top bar is just this.
+  Widget _glassTabBar() {
+    final theme = Theme.of(context);
+    return Padding(
+      // the main page already pads the body below the status bar
+      padding: const EdgeInsets.only(top: 6),
+      child: SizedBox(
+        height: 44,
+        child: Row(
+          children: [
+            Expanded(
+              child: TabBar(
+                controller: _homeController.tabController,
+                tabs: _homeController.tabs
+                    .map((e) => Tab(text: e.label))
+                    .toList(),
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                labelPadding: const EdgeInsets.symmetric(horizontal: 14),
+                dividerColor: Colors.transparent,
+                dividerHeight: 0,
+                overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+                labelColor: _colorScheme.onSurface,
+                unselectedLabelColor: _colorScheme.onSurfaceVariant,
+                labelStyle: theme.textTheme.titleMedium!.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+                unselectedLabelStyle: theme.textTheme.titleMedium!.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                indicatorPadding: const EdgeInsets.symmetric(vertical: 4),
+                indicator: ShapeDecoration(
+                  shape: const StadiumBorder(
+                    side: BorderSide(color: Color(0x14FFFFFF)),
+                  ),
+                  color: _colorScheme.surfaceContainerHighest,
+                  shadows: [
+                    BoxShadow(
+                      color: _colorScheme.shadow.withValues(alpha: 0.08),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                onTap: (_) {
+                  feedBack();
+                  if (!_homeController.tabController.indexIsChanging) {
+                    _homeController.animateToTop();
+                  }
+                },
+              ),
+            ),
+            msgBadge(_mainController),
+            const SizedBox(width: 8),
+          ],
+        ),
+      ),
     );
   }
 

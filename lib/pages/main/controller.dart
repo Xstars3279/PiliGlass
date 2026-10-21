@@ -60,6 +60,9 @@ class MainController extends GetxController
   final enableMYBar = Pref.enableMYBar;
   final floatingNavBar = Pref.floatingNavBar;
   final liquidGlassNavBar = Pref.liquidGlassNavBar;
+
+  /// search lives in the liquid glass dock instead of the home top bar
+  late final dockSearch = floatingNavBar && liquidGlassNavBar;
   final useSideBar = Pref.useSideBar;
   final mainTabBarView = Pref.mainTabBarView;
   late final optTabletNav = Pref.optTabletNav;

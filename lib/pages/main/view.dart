@@ -10,6 +10,7 @@ import 'package:PiliPlus/common/widgets/main_layout.dart';
 import 'package:PiliPlus/common/widgets/navigation_bar_style.dart';
 import 'package:PiliPlus/common/widgets/route_aware_mixin.dart';
 import 'package:PiliPlus/models/common/nav_bar_config.dart';
+import 'package:PiliPlus/pages/home/controller.dart';
 import 'package:PiliPlus/pages/home/view.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
 import 'package:PiliPlus/utils/android/bindings.g.dart';
@@ -156,11 +157,32 @@ class _MainAppState extends PopScopeState<MainApp>
   Widget? get _bottomNav {
     Widget? bottomNav;
     if (_mainController.navigationBars.length > 1) {
-      if (_mainController.floatingNavBar && _mainController.liquidGlassNavBar) {
-        bottomNav = Obx(
-          () => LiquidGlassNavigationBar(
+      if (_mainController.dockSearch) {
+        // the dock never slides away: where the bar would hide, it shrinks
+        // to a circle next to the search button
+        final hide = _mainController.hideBottomBar;
+        final barOffset = _mainController.barOffset;
+        final showBottomBar = _mainController.showBottomBar;
+        return Obx(() {
+          final minimized =
+              hide &&
+              ((barOffset?.value ?? 0) > Style.topBarHeight / 2 ||
+                  showBottomBar?.value == false);
+          final home = Get.isRegistered<HomeController>()
+              ? Get.find<HomeController>()
+              : null;
+          final hint = home != null && home.enableSearchWord
+              ? home.defaultSearch.value
+              : null;
+          return LiquidGlassNavigationBar(
             onDestinationSelected: _mainController.setIndex,
             selectedIndex: _mainController.selectedIndex.value,
+            minimized: minimized,
+            searchHint: hint,
+            onSearch: () => Get.toNamed(
+              '/search',
+              parameters: hint?.isNotEmpty == true ? {'hintText': hint!} : null,
+            ),
             destinations: _mainController.navigationBars
                 .map(
                   (e) => LiquidGlassNavigationDestination(
@@ -170,8 +192,8 @@ class _MainAppState extends PopScopeState<MainApp>
                   ),
                 )
                 .toList(),
-          ),
-        );
+          );
+        });
       } else if (_mainController.floatingNavBar) {
         bottomNav = Obx(
           () => FloatingNavigationBar(

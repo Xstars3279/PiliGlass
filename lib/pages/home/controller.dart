@@ -38,7 +38,12 @@ class HomeController extends GetxController
   void onInit() {
     super.onInit();
 
-    hideTopBar = !Pref.useSideBar && Pref.hideTopBar;
+    // with search in the bottom dock, the top bar is a single row of tabs
+    // that stays put
+    hideTopBar =
+        !Pref.useSideBar &&
+        Pref.hideTopBar &&
+        !(Pref.floatingNavBar && Pref.liquidGlassNavBar);
     if (hideTopBar) {
       final mainCtr = Get.find<MainController>();
       switch (mainCtr.barHideType) {
