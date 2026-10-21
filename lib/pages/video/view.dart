@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'dart:math';
 
+import 'package:PiliPlus/common/motion/cover_hero.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
@@ -28,6 +29,7 @@ import 'package:PiliPlus/pages/danmaku/view.dart';
 import 'package:PiliPlus/pages/episode_panel/view.dart';
 import 'package:PiliPlus/pages/video/ai_conclusion/view.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
+import 'package:PiliPlus/pages/video/widgets/first_frame_cover.dart';
 import 'package:PiliPlus/pages/video/introduction/local/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/local/view.dart';
 import 'package:PiliPlus/pages/video/introduction/pgc/controller.dart';
@@ -1227,6 +1229,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           : PLVideoPlayer(
               maxWidth: width,
               maxHeight: height,
+              // transparent until the first frame, so FirstFrameCover shows
+              fill: Colors.transparent,
               plPlayerController: plPlayerController!,
               videoDetailController: videoDetailController,
               introController: introController,
@@ -1467,6 +1471,18 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           ),
         ),
 
+        // the card's cover lands here and stays until the first frame
+        if (videoDetailController.autoPlay)
+          Positioned.fill(
+            child: FirstFrameCover(
+              controller: videoDetailController.plPlayerController,
+              cover: videoDetailController.cover,
+              heroTag: videoDetailController.args['coverHero'],
+              width: width,
+              height: height,
+            ),
+          ),
+
         plPlayer(width: width, height: height),
 
         Obx(() {
@@ -1476,15 +1492,19 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                 onTap: handlePlay,
                 behavior: .opaque,
                 child: Obx(
-                  () => NetworkImgLayer(
-                    type: .emote,
-                    quality: 60,
-                    src: videoDetailController.cover.value,
-                    width: width,
-                    height: height,
-                    cacheWidth: true,
-                    getPlaceHolder: () => Center(
-                      child: Image.asset(Assets.loading),
+                  () => CoverHero(
+                    tag: videoDetailController.args['coverHero'],
+                    borderRadius: BorderRadius.zero,
+                    child: NetworkImgLayer(
+                      type: .emote,
+                      quality: 60,
+                      src: videoDetailController.cover.value,
+                      width: width,
+                      height: height,
+                      cacheWidth: true,
+                      getPlaceHolder: () => Center(
+                        child: Image.asset(Assets.loading),
+                      ),
                     ),
                   ),
                 ),

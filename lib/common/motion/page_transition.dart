@@ -15,8 +15,9 @@ abstract final class PiliPageTransition {
 
   /// Routes that fade in over the page below, which stays where it is.
   /// The search page continues the dock's morph in place, so it must not
-  /// slide in from the side.
-  static const fadeRoutes = {'/search'};
+  /// slide in from the side; the video page is entered by its cover flying
+  /// from the card into the player.
+  static const fadeRoutes = {'/search', '/videoV'};
 
   static bool _fades(PageRoute<dynamic> route) =>
       fadeRoutes.contains(route.settings.name);

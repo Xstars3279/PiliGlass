@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/motion/cover_hero.dart';
 import 'package:PiliPlus/common/motion/pressable_scale.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
@@ -62,6 +63,7 @@ class VideoCardV extends StatelessWidget {
             title: videoItem.title,
             isVertical: isVertical,
             dimension: dimension,
+            extraArguments: {'coverHero': coverHeroTag(videoItem)},
           );
         }
         break;
@@ -91,43 +93,24 @@ class VideoCardV extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Card(
+          // no card box: the cover and the text sit directly on the page
+          Material(
+            type: .transparency,
             child: InkWell(
               onTap: PressableScale.delayTap(onPushDetail),
               onLongPress: onLongPress,
               onSecondaryTap: PlatformUtils.isMobile ? null : onLongPress,
-              borderRadius: const .all(.circular(12)),
+              borderRadius: _coverRadius,
               child: Column(
                 crossAxisAlignment: .start,
                 children: [
                   AspectRatio(
                     aspectRatio: Style.aspectRatio,
                     child: LayoutBuilder(
-                      builder: (context, boxConstraints) {
-                        double maxWidth = boxConstraints.maxWidth;
-                        double maxHeight = boxConstraints.maxHeight;
-                        return Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            NetworkImgLayer(
-                              src: videoItem.cover,
-                              width: maxWidth,
-                              height: maxHeight,
-                              borderRadius: const .vertical(top: .circular(12)),
-                            ),
-                            if (videoItem.duration > 0)
-                              PBadge(
-                                bottom: 6,
-                                right: 7,
-                                size: .small,
-                                type: .gray,
-                                text: DurationUtils.formatDuration(
-                                  videoItem.duration,
-                                ),
-                              ),
-                          ],
-                        );
-                      },
+                      builder: (context, boxConstraints) => _cover(
+                        boxConstraints.maxWidth,
+                        boxConstraints.maxHeight,
+                      ),
                     ),
                   ),
                   content(context),
@@ -152,11 +135,84 @@ class VideoCardV extends StatelessWidget {
     );
   }
 
+  static const _coverRadius = BorderRadius.all(Radius.circular(16));
+
+  /// The cover, with play count, danmaku count and duration on a scrim.
+  /// Only the image flies to the player; the labels stay on the card.
+  Widget _cover(double width, double height) {
+    const white = Colors.white;
+    return ClipRRect(
+      borderRadius: _coverRadius,
+      child: Stack(
+        fit: .expand,
+        children: [
+          CoverHero(
+            tag: videoItem.goto == 'av' ? coverHeroTag(videoItem) : null,
+            borderRadius: _coverRadius,
+            child: NetworkImgLayer(
+              src: videoItem.cover,
+              width: width,
+              height: height,
+              borderRadius: BorderRadius.zero,
+            ),
+          ),
+          const Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 40,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: .topCenter,
+                  end: .bottomCenter,
+                  colors: [Color(0x00000000), Color(0x8C000000)],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 8,
+            right: 8,
+            bottom: 6,
+            child: Row(
+              spacing: 6,
+              children: [
+                StatWidget(
+                  type: .play,
+                  value: videoItem.stat.view,
+                  color: white,
+                ),
+                if (videoItem.goto != 'picture')
+                  StatWidget(
+                    type: .danmaku,
+                    value: videoItem.stat.danmu,
+                    color: white,
+                  ),
+                const Spacer(),
+                if (videoItem.duration > 0)
+                  Text(
+                    DurationUtils.formatDuration(videoItem.duration),
+                    style: const TextStyle(
+                      color: white,
+                      fontSize: 11,
+                      fontWeight: .w600,
+                      fontFeatures: [FontFeature.tabularFigures()],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget content(BuildContext context) {
     final theme = Theme.of(context);
     return Expanded(
       child: Padding(
-        padding: const .fromLTRB(6, 5, 6, 5),
+        padding: const .fromLTRB(2, 8, 2, 4),
         child: Column(
           crossAxisAlignment: .start,
           children: [
@@ -165,10 +221,9 @@ class VideoCardV extends StatelessWidget {
                 videoItem.title,
                 maxLines: 2,
                 overflow: .ellipsis,
-                style: const TextStyle(height: 1.38),
+                style: const TextStyle(height: 1.35, fontWeight: .w600),
               ),
             ),
-            videoStat(theme),
             Row(
               spacing: 2,
               children: [
@@ -205,7 +260,9 @@ class VideoCardV extends StatelessWidget {
                 Expanded(
                   flex: 1,
                   child: Text(
-                    videoItem.owner.name.toString(),
+                    videoItem is RcmdVideoItemModel
+                        ? '${videoItem.owner.name} · ${DateFormatUtils.dateFormat(videoItem.pubdate, short: shortFormat, long: longFormat)}'
+                        : videoItem.owner.name.toString(),
                     maxLines: 1,
                     overflow: .clip,
                     semanticsLabel: 'UP：${videoItem.owner.name}',
