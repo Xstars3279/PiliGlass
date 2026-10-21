@@ -1079,6 +1079,9 @@ abstract final class Pref {
   static bool get liquidGlassNavBar =>
       _setting.get(SettingBoxKey.liquidGlassNavBar, defaultValue: true);
 
+  static bool get modernPageTransition =>
+      _setting.get(SettingBoxKey.modernPageTransition, defaultValue: true);
+
   static bool get removeSafeArea =>
       _setting.get(SettingBoxKey.removeSafeArea, defaultValue: false);
 

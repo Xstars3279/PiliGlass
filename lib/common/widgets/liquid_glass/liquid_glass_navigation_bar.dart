@@ -313,17 +313,51 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
                       ),
                     ),
                   ),
-                  // The pill's glass, below the accent tabs: at rest it looks
-                  // like the bar it replaces, pressed it clears up completely.
+                  // What the pill shows, below the accent tabs: a glass slab
+                  // inset from the bar (56 instead of 64 high), seen only
+                  // through the pill. Pressed, the pill grows past the slab,
+                  // and the parts outside it are clear glass over the
+                  // content, while the slab keeps the tabs readable. This is
+                  // SukiSU's invisible `tabsBackdrop` row.
+                  // Its ends line up with the bar's ends (also while the bar
+                  // grows), so inside the pill there is no second rounded end
+                  // a few dp inside the bar's outline.
+                  Positioned.fill(
+                    child: ClipPath(
+                      clipper: _PillClipper(pillRRect),
+                      child: Stack(
+                        clipBehavior: .none,
+                        children: [
+                          Positioned.fromRect(
+                            rect: Rect.fromCenter(
+                              center: Offset(
+                                _width / 2 + panelOffset,
+                                _kBarHeight / 2,
+                              ),
+                              width: _width * barScale,
+                              height: _kPillHeight,
+                            ),
+                            child: LiquidGlass(
+                              blurSigma: _kBarBlur,
+                              saturation: _kBarSaturation,
+                              color: barTint,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // selected at rest, almost nothing when pressed
                   Positioned.fromRect(
                     rect: pillRect,
-                    child: LiquidGlass(
-                      blurSigma: _kBarBlur * (1 - press),
-                      saturation: lerpDouble(_kBarSaturation, 1.2, press)!,
-                      color: Color.lerp(
-                        Color.alphaBlend(selectedFill, barTint),
-                        Colors.black.withValues(alpha: 0.03),
-                        press,
+                    child: DecoratedBox(
+                      decoration: ShapeDecoration(
+                        shape: const StadiumBorder(),
+                        color: Color.lerp(
+                          selectedFill,
+                          Colors.black.withValues(alpha: 0.03),
+                          press,
+                        ),
                       ),
                     ),
                   ),

@@ -45,6 +45,24 @@ try {
             throw "$registrant was not generated"
         }
     }
+
+    # our own patches to dependencies: tool/patches/<package>_*.patch
+    $packages = (Get-Content ".dart_tool/package_config.json" -Raw | ConvertFrom-Json).packages
+    Get-ChildItem "tool/patches" -Filter *.patch | ForEach-Object {
+        $name = $_.BaseName.Split("_")[0]
+        if ($name -eq "getx") { $name = "get" }
+        $package = $packages | Where-Object { $_.name -eq $name }
+        if (-not $package) { throw "package $name not found for $($_.Name)" }
+        $dir = ([Uri]$package.rootUri).LocalPath
+        git -C $dir apply --check --reverse $_.FullName 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "$($_.Name) already applied"
+            return
+        }
+        git -C $dir apply $_.FullName
+        if ($LASTEXITCODE -ne 0) { throw "$($_.Name) failed in $dir" }
+        Write-Host "$($_.Name) applied"
+    }
 } finally {
     Pop-Location
 }

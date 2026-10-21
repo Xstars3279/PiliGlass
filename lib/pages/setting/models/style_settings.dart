@@ -103,6 +103,14 @@ List<SettingsModel> get styleSettings => [
     defaultVal: false,
     needReboot: true,
   ),
+  const SwitchModel(
+    title: '流畅页面转场',
+    subtitle: '视差推入，在页面任意位置右滑返回；开启时下方的过渡动画不生效',
+    leading: Icon(Icons.swipe_right_outlined),
+    setKey: SettingBoxKey.modernPageTransition,
+    defaultVal: true,
+    needReboot: true,
+  ),
   NormalModel(
     title: '页面过渡动画',
     leading: const Icon(Icons.animation),
