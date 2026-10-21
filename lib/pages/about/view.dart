@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:PiliPlus/build_config.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/dialog/export_import.dart';
@@ -88,215 +89,236 @@ class _AboutPageState extends State<AboutPage> {
     final subTitleStyle = TextStyle(fontSize: 13, color: outline);
     final showAppBar = widget.showAppBar;
     final padding = MediaQuery.viewPaddingOf(context);
-    return SimpleScaffold(
-      appBar: showAppBar ? AppBar(title: const Text('关于')) : null,
-      body: ListView(
-        padding: EdgeInsets.only(
-          left: showAppBar ? padding.left : 0,
-          right: showAppBar ? padding.right : 0,
-          bottom: padding.bottom + 100,
+    final children = <Widget>[
+      GestureDetector(
+        onTap: () {
+          if (++_pressCount == 5) {
+            _pressCount = 0;
+            _showDialog();
+          }
+        },
+        onSecondaryTap: PlatformUtils.isDesktop ? _showDialog : null,
+        child: Image.asset(
+          width: 150,
+          height: 150,
+          excludeFromSemantics: true,
+          cacheWidth: 150.cacheSize(context),
+          Assets.logo,
         ),
-        children: [
-          GestureDetector(
-            onTap: () {
-              if (++_pressCount == 5) {
-                _pressCount = 0;
-                _showDialog();
-              }
-            },
-            onSecondaryTap: PlatformUtils.isDesktop ? _showDialog : null,
-            child: Image.asset(
-              width: 150,
-              height: 150,
-              excludeFromSemantics: true,
-              cacheWidth: 150.cacheSize(context),
-              Assets.logo,
+      ),
+      ListTile(
+        title: Text(
+          Constants.appName,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.titleMedium!.copyWith(height: 2),
+        ),
+        subtitle: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '使用Flutter开发的B站第三方客户端',
+              style: TextStyle(color: outline),
+              semanticsLabel: '与你一起，发现不一样的世界',
             ),
+            const Icon(
+              Icons.accessibility_new,
+              semanticLabel: "无障碍适配",
+              size: 18,
+            ),
+          ],
+        ),
+      ),
+      ..._group([
+        ListTile(
+          onTap: () => Update.checkUpdate(false),
+          onLongPress: () => Utils.copyText(currentVersion),
+          onSecondaryTap: PlatformUtils.isMobile
+              ? null
+              : () => Utils.copyText(currentVersion),
+          title: const Text('当前版本'),
+          leading: revampLeading(const Icon(Icons.commit_outlined)),
+          trailing: Text(
+            currentVersion,
+            style: subTitleStyle,
           ),
-          ListTile(
-            title: Text(
-              Constants.appName,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleMedium!.copyWith(height: 2),
-            ),
-            subtitle: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '使用Flutter开发的B站第三方客户端',
-                  style: TextStyle(color: outline),
-                  semanticsLabel: '与你一起，发现不一样的世界',
-                ),
-                const Icon(
-                  Icons.accessibility_new,
-                  semanticLabel: "无障碍适配",
-                  size: 18,
-                ),
-              ],
-            ),
+        ),
+        ListTile(
+          title: Text(
+            '''
+Build Time: ${DateFormatUtils.format(BuildConfig.buildTime, format: DateFormatUtils.longFormatDs)}
+Commit Hash: ${BuildConfig.commitHash}''',
+            style: const TextStyle(fontSize: 14),
           ),
+          leading: revampLeading(const Icon(Icons.info_outline)),
+          onTap: () => PageUtils.launchURL(
+            '${Constants.sourceCodeUrl}/commit/${BuildConfig.commitHash}',
+          ),
+          onLongPress: () => Utils.copyText(BuildConfig.commitHash),
+          onSecondaryTap: PlatformUtils.isMobile
+              ? null
+              : () => Utils.copyText(BuildConfig.commitHash),
+        ),
+      ]),
+      if (!Revamp.enabled)
+        Divider(
+          thickness: 1,
+          height: 30,
+          color: theme.colorScheme.outlineVariant,
+        ),
+      ..._group([
+        ListTile(
+          onTap: () => PageUtils.launchURL(Constants.sourceCodeUrl),
+          leading: revampLeading(const Icon(Icons.code)),
+          title: const Text('Source Code'),
+          subtitle: Text(Constants.sourceCodeUrl, style: subTitleStyle),
+        ),
+        if (Platform.isAndroid)
           ListTile(
-            onTap: () => Update.checkUpdate(false),
-            onLongPress: () => Utils.copyText(currentVersion),
-            onSecondaryTap: PlatformUtils.isMobile
-                ? null
-                : () => Utils.copyText(currentVersion),
-            title: const Text('当前版本'),
-            leading: const Icon(Icons.commit_outlined),
-            trailing: Text(
-              currentVersion,
+            onTap: AndroidHelper.openLinkVerifySettings,
+            leading: revampLeading(const Icon(MdiIcons.linkBoxOutline)),
+            title: const Text('打开受支持的链接'),
+            trailing: Icon(Icons.arrow_forward, size: 16, color: outline),
+          ),
+        ListTile(
+          onTap: () => PageUtils.launchURL('${Constants.sourceCodeUrl}/issues'),
+          leading: revampLeading(const Icon(Icons.feedback_outlined)),
+          title: const Text('问题反馈'),
+          trailing: Icon(Icons.arrow_forward, size: 16, color: outline),
+        ),
+        ListTile(
+          onTap: () => Get.toNamed('/logs'),
+          onLongPress: LoggerUtils.clearLogs,
+          onSecondaryTap: PlatformUtils.isMobile ? null : LoggerUtils.clearLogs,
+          leading: revampLeading(const Icon(Icons.bug_report_outlined)),
+          title: const Text('错误日志'),
+          subtitle: Text('长按清除日志', style: subTitleStyle),
+          trailing: Icon(Icons.arrow_forward, size: 16, color: outline),
+        ),
+      ]),
+      ..._group([
+        ListTile(
+          onTap: () {
+            if (cacheSize.value.isNotEmpty) {
+              showConfirmDialog(
+                context: context,
+                title: const Text('提示'),
+                content: const Text('该操作将清除图片及网络请求缓存数据，确认清除？'),
+                onConfirm: () async {
+                  SmartDialog.showLoading(msg: '正在清除...');
+                  try {
+                    await CacheManager.clearLibraryCache();
+                    SmartDialog.showToast('清除成功');
+                  } catch (err) {
+                    SmartDialog.showToast(err.toString());
+                  } finally {
+                    SmartDialog.dismiss();
+                  }
+                  getCacheSize();
+                },
+              );
+            }
+          },
+          leading: revampLeading(const Icon(Icons.delete_outline)),
+          title: const Text('清除缓存'),
+          subtitle: Obx(
+            () => Text(
+              '图片及网络缓存 ${cacheSize.value}',
               style: subTitleStyle,
             ),
           ),
-          ListTile(
-            title: Text(
-              '''
-Build Time: ${DateFormatUtils.format(BuildConfig.buildTime, format: DateFormatUtils.longFormatDs)}
-Commit Hash: ${BuildConfig.commitHash}''',
-              style: const TextStyle(fontSize: 14),
-            ),
-            leading: const Icon(Icons.info_outline),
-            onTap: () => PageUtils.launchURL(
-              '${Constants.sourceCodeUrl}/commit/${BuildConfig.commitHash}',
-            ),
-            onLongPress: () => Utils.copyText(BuildConfig.commitHash),
-            onSecondaryTap: PlatformUtils.isMobile
-                ? null
-                : () => Utils.copyText(BuildConfig.commitHash),
+        ),
+        ListTile(
+          title: const Text('导入/导出登录信息'),
+          leading: revampLeading(const Icon(Icons.import_export_outlined)),
+          onTap: () => showImportExportDialog<Map<String, dynamic>>(
+            context,
+            title: '登录信息',
+            localFileName: () => 'account',
+            onExport: () => Utils.jsonEncoder.convert(Accounts.account.toMap()),
+            onImport: Accounts.importJsonAccount,
           ),
-          Divider(
-            thickness: 1,
-            height: 30,
-            color: theme.colorScheme.outlineVariant,
+        ),
+        ListTile(
+          title: const Text('导入/导出设置'),
+          dense: false,
+          leading: revampLeading(const Icon(Icons.import_export_outlined)),
+          onTap: () => showImportExportDialog<Map<String, dynamic>>(
+            context,
+            title: '设置',
+            localFileName: () => 'setting_${DeviceUtils.platformName}',
+            onExport: GStorage.exportAllSettings,
+            onImport: GStorage.importAllJsonSettings,
           ),
-          ListTile(
-            onTap: () => PageUtils.launchURL(Constants.sourceCodeUrl),
-            leading: const Icon(Icons.code),
-            title: const Text('Source Code'),
-            subtitle: Text(Constants.sourceCodeUrl, style: subTitleStyle),
+        ),
+        ListTile(
+          title: const Text('导入/导出所有数据'),
+          dense: false,
+          leading: revampLeading(const Icon(Icons.archive_outlined)),
+          onTap: () => showDataImportExportDialog(context),
+        ),
+        ListTile(
+          title: const Text('重置所有设置'),
+          leading: revampLeading(
+            const Icon(Icons.settings_backup_restore_outlined),
           ),
-          if (Platform.isAndroid)
-            ListTile(
-              onTap: AndroidHelper.openLinkVerifySettings,
-              leading: const Icon(MdiIcons.linkBoxOutline),
-              title: const Text('打开受支持的链接'),
-              trailing: Icon(Icons.arrow_forward, size: 16, color: outline),
-            ),
-          ListTile(
-            onTap: () =>
-                PageUtils.launchURL('${Constants.sourceCodeUrl}/issues'),
-            leading: const Icon(Icons.feedback_outlined),
-            title: const Text('问题反馈'),
-            trailing: Icon(Icons.arrow_forward, size: 16, color: outline),
-          ),
-          ListTile(
-            onTap: () => Get.toNamed('/logs'),
-            onLongPress: LoggerUtils.clearLogs,
-            onSecondaryTap: PlatformUtils.isMobile
-                ? null
-                : LoggerUtils.clearLogs,
-            leading: const Icon(Icons.bug_report_outlined),
-            title: const Text('错误日志'),
-            subtitle: Text('长按清除日志', style: subTitleStyle),
-            trailing: Icon(Icons.arrow_forward, size: 16, color: outline),
-          ),
-          ListTile(
-            onTap: () {
-              if (cacheSize.value.isNotEmpty) {
-                showConfirmDialog(
-                  context: context,
-                  title: const Text('提示'),
-                  content: const Text('该操作将清除图片及网络请求缓存数据，确认清除？'),
-                  onConfirm: () async {
-                    SmartDialog.showLoading(msg: '正在清除...');
-                    try {
-                      await CacheManager.clearLibraryCache();
-                      SmartDialog.showToast('清除成功');
-                    } catch (err) {
-                      SmartDialog.showToast(err.toString());
-                    } finally {
-                      SmartDialog.dismiss();
-                    }
-                    getCacheSize();
-                  },
-                );
-              }
+          onTap: () => showDialog(
+            context: context,
+            builder: (context) {
+              return SimpleDialog(
+                clipBehavior: Clip.hardEdge,
+                title: const Text('是否重置所有设置？'),
+                children: [
+                  DialogOption(
+                    onPressed: () async {
+                      Get.back();
+                      await Future.wait([
+                        GStorage.setting.clear(),
+                        GStorage.video.clear(),
+                      ]);
+                      SmartDialog.showToast('重置成功');
+                    },
+                    child: const Text('重置可导出的设置', style: style),
+                  ),
+                  DialogOption(
+                    onPressed: () async {
+                      Get.back();
+                      await GStorage.clear();
+                      SmartDialog.showToast('重置成功');
+                    },
+                    child: const Text('重置所有数据（含登录信息）', style: style),
+                  ),
+                ],
+              );
             },
-            leading: const Icon(Icons.delete_outline),
-            title: const Text('清除缓存'),
-            subtitle: Obx(
-              () => Text(
-                '图片及网络缓存 ${cacheSize.value}',
-                style: subTitleStyle,
-              ),
-            ),
           ),
-          ListTile(
-            title: const Text('导入/导出登录信息'),
-            leading: const Icon(Icons.import_export_outlined),
-            onTap: () => showImportExportDialog<Map<String, dynamic>>(
-              context,
-              title: '登录信息',
-              localFileName: () => 'account',
-              onExport: () =>
-                  Utils.jsonEncoder.convert(Accounts.account.toMap()),
-              onImport: Accounts.importJsonAccount,
-            ),
-          ),
-          ListTile(
-            title: const Text('导入/导出设置'),
-            dense: false,
-            leading: const Icon(Icons.import_export_outlined),
-            onTap: () => showImportExportDialog<Map<String, dynamic>>(
-              context,
-              title: '设置',
-              localFileName: () => 'setting_${DeviceUtils.platformName}',
-              onExport: GStorage.exportAllSettings,
-              onImport: GStorage.importAllJsonSettings,
-            ),
-          ),
-          ListTile(
-            title: const Text('导入/导出所有数据'),
-            dense: false,
-            leading: const Icon(Icons.archive_outlined),
-            onTap: () => showDataImportExportDialog(context),
-          ),
-          ListTile(
-            title: const Text('重置所有设置'),
-            leading: const Icon(Icons.settings_backup_restore_outlined),
-            onTap: () => showDialog(
-              context: context,
-              builder: (context) {
-                return SimpleDialog(
-                  clipBehavior: Clip.hardEdge,
-                  title: const Text('是否重置所有设置？'),
-                  children: [
-                    DialogOption(
-                      onPressed: () async {
-                        Get.back();
-                        await Future.wait([
-                          GStorage.setting.clear(),
-                          GStorage.video.clear(),
-                        ]);
-                        SmartDialog.showToast('重置成功');
-                      },
-                      child: const Text('重置可导出的设置', style: style),
-                    ),
-                    DialogOption(
-                      onPressed: () async {
-                        Get.back();
-                        await GStorage.clear();
-                        SmartDialog.showToast('重置成功');
-                      },
-                      child: const Text('重置所有数据（含登录信息）', style: style),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+        ),
+      ]),
+    ];
+    final listPadding = EdgeInsets.only(
+      left: showAppBar ? padding.left : 0,
+      right: showAppBar ? padding.right : 0,
+      bottom: padding.bottom + 100,
+    );
+    return SimpleScaffold(
+      appBar: showAppBar && !Revamp.enabled
+          ? AppBar(title: const Text('关于'))
+          : null,
+      body: Revamp.enabled
+          // large title that collapses as the page scrolls
+          ? CustomScrollView(
+              slivers: [
+                if (showAppBar) const RevampLargeAppBar(title: '关于'),
+                SliverPadding(
+                  padding: listPadding,
+                  sliver: SliverList.list(children: children),
+                ),
+              ],
+            )
+          : ListView(padding: listPadding, children: children),
     );
   }
+
+  /// With the redesign, related rows sit in one rounded group.
+  List<Widget> _group(List<Widget> rows) =>
+      Revamp.enabled ? [RevampGroup(child: Column(children: rows))] : rows;
 }
