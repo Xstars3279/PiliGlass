@@ -131,6 +131,14 @@ List<SettingsModel> get styleSettings => [
     defaultVal: false,
     needReboot: true,
   ),
+  const SwitchModel(
+    title: '液态玻璃悬浮底栏',
+    subtitle: '开启悬浮底栏后生效，折射效果需要 Impeller',
+    leading: Icon(Icons.water_drop_outlined),
+    setKey: SettingBoxKey.liquidGlassNavBar,
+    defaultVal: true,
+    needReboot: true,
+  ),
   SwitchModel(
     title: '显示粉丝勋章',
     leading: const Icon(MdiIcons.medalOutline),

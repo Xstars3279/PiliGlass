@@ -1,4 +1,5 @@
 import 'package:flutter/physics.dart';
+import 'package:flutter/scheduler.dart' show Ticker;
 import 'package:flutter/widgets.dart';
 
 /// Shared spring tokens.
@@ -36,6 +37,79 @@ abstract final class Springs {
     duration: const Duration(milliseconds: 320),
     bounce: 0.6,
   );
+}
+
+/// A value that follows a target with a spring, stepping the spring once per
+/// frame from the current position and velocity.
+///
+/// Unlike [SpringAnimationController.springTo], changing the target does not
+/// restart a simulation at t = 0. Pointer events arrive faster than frames,
+/// so restarting on every drag event would keep the simulation at its start
+/// and the value would barely move until the finger lifts.
+class SpringFollower extends ChangeNotifier {
+  SpringFollower({
+    required TickerProvider vsync,
+    required double value,
+    required this.spring,
+  }) : _value = value,
+       _target = value {
+    _ticker = vsync.createTicker(_tick);
+  }
+
+  late final Ticker _ticker;
+  SpringDescription spring;
+
+  double _value;
+  double _target;
+  double _velocity = 0;
+  Duration _lastElapsed = Duration.zero;
+
+  double get value => _value;
+  double get target => _target;
+
+  /// units per second
+  double get velocity => _velocity;
+
+  void animateTo(double target, {SpringDescription? spring}) {
+    _target = target;
+    if (spring != null) this.spring = spring;
+    if (!_ticker.isActive && _value != target) {
+      _lastElapsed = Duration.zero;
+      _ticker.start();
+    }
+  }
+
+  /// Sets the value directly, e.g. while it follows a finger.
+  void jumpTo(double value) {
+    _ticker.stop();
+    _value = _target = value;
+    _velocity = 0;
+    notifyListeners();
+  }
+
+  void _tick(Duration elapsed) {
+    final dt =
+        (elapsed - _lastElapsed).inMicroseconds /
+        Duration.microsecondsPerSecond;
+    _lastElapsed = elapsed;
+    if (dt <= 0) return;
+    final simulation = SpringSimulation(spring, _value, _target, _velocity);
+    if (simulation.isDone(dt)) {
+      _value = _target;
+      _velocity = 0;
+      _ticker.stop();
+    } else {
+      _value = simulation.x(dt);
+      _velocity = simulation.dx(dt);
+    }
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    super.dispose();
+  }
 }
 
 extension SpringAnimationController on AnimationController {
