@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/motion/appear_in.dart';
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/skeleton/video_card_v.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -60,10 +62,23 @@ class _RcmdPageState extends State<RcmdPage>
     mainAxisExtent: MediaQuery.textScalerOf(context).scale(76),
   );
 
+  /// when the current list arrived, so its cards can animate in
+  Object? _shownList;
+  DateTime? _shownAt;
+
+  Widget _appear(int index, Widget card) => Revamp.enabled
+      ? AppearIn(index: index, since: _shownAt, child: card)
+      : card;
+
   Widget _buildBody(
     ColorScheme colorScheme,
     LoadingState<List<dynamic>?> loadingState,
   ) {
+    if (loadingState case Success(:final response)
+        when !identical(response, _shownList)) {
+      _shownList = response;
+      _shownAt = DateTime.now();
+    }
     return switch (loadingState) {
       Loading() => _buildSkeleton,
       Success(:final response) =>
@@ -98,25 +113,31 @@ class _RcmdPageState extends State<RcmdPage>
                     final actualIndex = index > controller.lastRefreshAt!
                         ? index - 1
                         : index;
-                    return VideoCardV(
-                      videoItem: response[actualIndex],
-                      onRemove: () {
-                        if (controller.lastRefreshAt != null &&
-                            actualIndex < controller.lastRefreshAt!) {
-                          controller.lastRefreshAt =
-                              controller.lastRefreshAt! - 1;
-                        }
-                        controller.loadingState
-                          ..value.data!.removeAt(actualIndex)
-                          ..refresh();
-                      },
+                    return _appear(
+                      index,
+                      VideoCardV(
+                        videoItem: response[actualIndex],
+                        onRemove: () {
+                          if (controller.lastRefreshAt != null &&
+                              actualIndex < controller.lastRefreshAt!) {
+                            controller.lastRefreshAt =
+                                controller.lastRefreshAt! - 1;
+                          }
+                          controller.loadingState
+                            ..value.data!.removeAt(actualIndex)
+                            ..refresh();
+                        },
+                      ),
                     );
                   } else {
-                    return VideoCardV(
-                      videoItem: response[index],
-                      onRemove: () => controller.loadingState
-                        ..value.data!.removeAt(index)
-                        ..refresh(),
+                    return _appear(
+                      index,
+                      VideoCardV(
+                        videoItem: response[index],
+                        onRemove: () => controller.loadingState
+                          ..value.data!.removeAt(index)
+                          ..refresh(),
+                      ),
                     );
                   }
                 },
