@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/models/common/setting_type.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
@@ -48,6 +49,42 @@ class _CommonSettingState extends State<CommonSetting> {
   @override
   Widget build(BuildContext context) {
     final showAppBar = widget.showAppBar;
+    if (Revamp.enabled && showAppBar) {
+      // large title, and all the options in one rounded group
+      return Scaffold(
+        body: CustomScrollView(
+          key: ValueKey(widget.settingType),
+          slivers: [
+            RevampLargeAppBar(title: widget.settingType.title),
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(
+                padding.left + 12,
+                4,
+                padding.right + 12,
+                padding.bottom + 60,
+              ),
+              sliver: DecoratedSliver(
+                decoration: BoxDecoration(
+                  color: ColorScheme.of(context).surfaceContainerLow,
+                  borderRadius: const BorderRadius.all(Radius.circular(24)),
+                ),
+                sliver: SliverPadding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  sliver: SliverList.builder(
+                    itemCount: settings.length,
+                    // ink ripples need a Material above the group's color
+                    itemBuilder: (context, index) => Material(
+                      type: MaterialType.transparency,
+                      child: settings[index].widget,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return SimpleScaffold(
       appBar: showAppBar ? AppBar(title: Text(widget.settingType.title)) : null,
       body: ListView.builder(

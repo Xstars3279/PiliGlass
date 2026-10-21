@@ -604,12 +604,12 @@ class _MediaPageState extends CommonPageState<MinePage>
   /// A rounded group on the page, the way the redesign sets off sections.
   Widget _group({required Widget child}) => Padding(
     padding: const .fromLTRB(12, 0, 12, 12),
-    child: ClipRRect(
+    // a Material, so the ink ripples inside are drawn on top of the color
+    child: Material(
+      color: theme.colorScheme.surfaceContainerLow,
       borderRadius: const .all(.circular(24)),
-      child: ColoredBox(
-        color: theme.colorScheme.surfaceContainerLow,
-        child: child,
-      ),
+      clipBehavior: .antiAlias,
+      child: child,
     ),
   );
 

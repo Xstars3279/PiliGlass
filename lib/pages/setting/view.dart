@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -107,8 +108,85 @@ class _SettingPageState extends State<SettingPage> {
     _isPortrait = MediaQuery.sizeOf(context).isPortrait;
   }
 
+  /// Large title that collapses as the list scrolls, and the entries in
+  /// rounded groups: the settings, the account, about.
+  Widget _buildRevamp() {
+    final titleStyle = theme.textTheme.titleMedium!;
+    final subTitleStyle = theme.textTheme.labelMedium!.copyWith(
+      color: theme.colorScheme.outline,
+    );
+    final chevron = Icon(
+      Icons.chevron_right_rounded,
+      color: theme.colorScheme.outline,
+    );
+    Widget tile(_SettingsModel item, {bool showSubtitle = true}) => ListTile(
+      onTap: () => _toPage(item.type),
+      leading: RevampIconTile(icon: item.icon),
+      title: Text(item.type.title, style: titleStyle),
+      subtitle: !showSubtitle || item.subtitle == null
+          ? null
+          : Text(item.subtitle!, style: subTitleStyle),
+      trailing: chevron,
+    );
+    final padding = MediaQuery.viewPaddingOf(context);
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          const RevampLargeAppBar(title: '设置'),
+          SliverToBoxAdapter(child: _buildSearchItem(theme)),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+          SliverToBoxAdapter(
+            child: RevampGroup(
+              child: Column(
+                children: _items.take(_items.length - 1).map(tile).toList(),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: RevampGroup(
+              child: Column(
+                children: [
+                  ListTile(
+                    onTap: () =>
+                        LoginPageController.switchAccountDialog(context),
+                    leading: const RevampIconTile(
+                      icon: Icon(Icons.switch_account_outlined),
+                    ),
+                    title: Text('切换账号', style: titleStyle),
+                    trailing: chevron,
+                  ),
+                  Obx(
+                    () => _noAccount.value
+                        ? const SizedBox.shrink()
+                        : ListTile(
+                            onTap: () => _logoutDialog(context),
+                            leading: const RevampIconTile(
+                              icon: Icon(Icons.logout_outlined),
+                            ),
+                            title: Text(
+                              '退出登录',
+                              style: titleStyle.copyWith(
+                                color: theme.colorScheme.error,
+                              ),
+                            ),
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: RevampGroup(child: tile(_items.last, showSubtitle: false)),
+          ),
+          SliverPadding(padding: EdgeInsets.only(bottom: padding.bottom + 60)),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (Revamp.enabled && _isPortrait) return _buildRevamp();
     return SimpleScaffold(
       appBar: AppBar(
         title: _isPortrait ? const Text('设置') : Text(_type.title),
