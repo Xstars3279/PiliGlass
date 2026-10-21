@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/motion/cover_hero.dart';
 import 'package:PiliPlus/common/motion/pressable_scale.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
@@ -35,6 +36,8 @@ class VideoCardH extends StatelessWidget {
     cover: videoItem.cover,
   );
 
+  static const _coverRadius = BorderRadius.all(Radius.circular(14));
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -67,56 +70,64 @@ class VideoCardH extends StatelessWidget {
 
                           final progress = videoItem.progress;
 
-                          return Stack(
-                            clipBehavior: .none,
-                            children: [
-                              NetworkImgLayer(
-                                src: videoItem.cover,
-                                width: maxWidth,
-                                height: maxHeight,
-                              ),
-                              if (videoItem.badge case final badge?)
-                                PBadge(
-                                  text: badge,
-                                  top: 6.0,
-                                  right: 6.0,
-                                  type: switch (badge) {
-                                    '充电专属' => .error,
-                                    _ => .primary,
-                                  },
-                                ),
-                              if (progress != null && progress != 0) ...[
-                                PBadge(
-                                  text: progress == -1
-                                      ? '已看完'
-                                      : '${DurationUtils.formatDuration(progress)}/${DurationUtils.formatDuration(videoItem.duration)}',
-                                  right: 6,
-                                  bottom: 8,
-                                  type: .gray,
-                                ),
-                                Positioned(
-                                  left: 0,
-                                  bottom: 0,
-                                  right: 0,
-                                  child: VideoProgressIndicator(
-                                    color: theme.colorScheme.primary,
-                                    backgroundColor:
-                                        theme.colorScheme.secondaryContainer,
-                                    progress: progress == -1
-                                        ? 1
-                                        : progress / videoItem.duration,
+                          return ClipRRect(
+                            borderRadius: _coverRadius,
+                            child: Stack(
+                              clipBehavior: .none,
+                              children: [
+                                CoverHero(
+                                  tag: coverHeroTag(videoItem),
+                                  borderRadius: _coverRadius,
+                                  child: NetworkImgLayer(
+                                    src: videoItem.cover,
+                                    width: maxWidth,
+                                    height: maxHeight,
+                                    borderRadius: BorderRadius.zero,
                                   ),
                                 ),
-                              ] else if (videoItem.duration > 0)
-                                PBadge(
-                                  text: DurationUtils.formatDuration(
-                                    videoItem.duration,
+                                if (videoItem.badge case final badge?)
+                                  PBadge(
+                                    text: badge,
+                                    top: 6.0,
+                                    right: 6.0,
+                                    type: switch (badge) {
+                                      '充电专属' => .error,
+                                      _ => .primary,
+                                    },
                                   ),
-                                  right: 6.0,
-                                  bottom: 6.0,
-                                  type: .gray,
-                                ),
-                            ],
+                                if (progress != null && progress != 0) ...[
+                                  PBadge(
+                                    text: progress == -1
+                                        ? '已看完'
+                                        : '${DurationUtils.formatDuration(progress)}/${DurationUtils.formatDuration(videoItem.duration)}',
+                                    right: 6,
+                                    bottom: 8,
+                                    type: .gray,
+                                  ),
+                                  Positioned(
+                                    left: 0,
+                                    bottom: 0,
+                                    right: 0,
+                                    child: VideoProgressIndicator(
+                                      color: theme.colorScheme.primary,
+                                      backgroundColor:
+                                          theme.colorScheme.secondaryContainer,
+                                      progress: progress == -1
+                                          ? 1
+                                          : progress / videoItem.duration,
+                                    ),
+                                  ),
+                                ] else if (videoItem.duration > 0)
+                                  PBadge(
+                                    text: DurationUtils.formatDuration(
+                                      videoItem.duration,
+                                    ),
+                                    right: 6.0,
+                                    bottom: 6.0,
+                                    type: .gray,
+                                  ),
+                              ],
+                            ),
                           );
                         },
                       ),
@@ -258,6 +269,7 @@ Future<void> pushVideoH(HorizontalVideoModel videoItem) async {
       cover: videoItem.cover,
       title: videoItem.title,
       dimension: dimension,
+      extraArguments: {'coverHero': coverHeroTag(videoItem)},
     );
   }
 }
