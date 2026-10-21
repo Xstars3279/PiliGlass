@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -119,10 +120,12 @@ class ReplyItemGrpc extends StatelessWidget {
     );
 
     Widget child = Padding(
-      padding: const .fromLTRB(12, 14, 8, 5),
+      padding: Revamp.enabled
+          ? const .fromLTRB(14, 16, 10, 10)
+          : const .fromLTRB(12, 14, 8, 5),
       child: _buildContent(context, colorScheme),
     );
-    if (needDivider) {
+    if (needDivider && !Revamp.enabled) {
       child = Column(
         mainAxisSize: .min,
         children: [
@@ -160,7 +163,7 @@ class ReplyItemGrpc extends StatelessWidget {
         children: [
           PendantAvatar(
             member.face,
-            size: 34,
+            size: Revamp.enabled ? 38 : 34,
             badgeSize: 14,
             vipStatus: member.vipStatus.toInt(),
             officialType: member.officialVerifyType.toInt(),
@@ -185,8 +188,11 @@ class ReplyItemGrpc extends StatelessWidget {
                         style: TextStyle(
                           color: (member.vipStatus > 0 && member.vipType == 2)
                               ? colorScheme.vipColor
+                              : Revamp.enabled
+                              ? colorScheme.onSurface
                               : colorScheme.outline,
-                          fontSize: 13,
+                          fontSize: Revamp.enabled ? 13.5 : 13,
+                          fontWeight: Revamp.enabled ? FontWeight.w600 : null,
                         ),
                       ),
                     ),
@@ -343,7 +349,9 @@ class ReplyItemGrpc extends StatelessWidget {
           padding: padding,
           child: TextMore.rich(
             primary: colorScheme.primary,
-            style: const TextStyle(height: 1.75, fontSize: 14),
+            style: Revamp.enabled
+                ? const TextStyle(height: 1.6, fontSize: 15)
+                : const TextStyle(height: 1.75, fontSize: 14),
             maxLines: replyLevel == 1 ? replyLengthLimit : null,
             TextSpan(
               children: [
@@ -561,6 +569,9 @@ class ReplyItemGrpc extends StatelessWidget {
     );
   }
 
+  /// corner radius of the box with the first sub-replies
+  static double get _nestRadius => Revamp.enabled ? 14 : 6;
+
   Widget replyItemRow(
     BuildContext context,
     ColorScheme colorScheme,
@@ -572,8 +583,10 @@ class ReplyItemGrpc extends StatelessWidget {
       padding: const .only(left: 42, right: 4),
       child: Material(
         animationDuration: .zero,
-        color: colorScheme.onInverseSurface,
-        borderRadius: const .all(.circular(6)),
+        color: Revamp.enabled
+            ? colorScheme.surfaceContainer
+            : colorScheme.onInverseSurface,
+        borderRadius: .all(.circular(_nestRadius)),
         child: Column(
           crossAxisAlignment: .stretch,
           children: [
@@ -583,14 +596,14 @@ class ReplyItemGrpc extends StatelessWidget {
                 BorderRadius? borderRadius;
                 if (length == 1) {
                   padding = const .fromLTRB(8, 5, 8, 5);
-                  borderRadius = const .all(.circular(6));
+                  borderRadius = .all(.circular(_nestRadius));
                 } else {
                   if (index == 0) {
                     padding = const .fromLTRB(8, 8, 8, 4);
-                    borderRadius = const .vertical(top: .circular(6));
+                    borderRadius = .vertical(top: .circular(_nestRadius));
                   } else if (index == length - 1) {
                     padding = const .fromLTRB(8, 4, 8, 8);
-                    borderRadius = const .vertical(bottom: .circular(6));
+                    borderRadius = .vertical(bottom: .circular(_nestRadius));
                   } else {
                     padding = const .fromLTRB(8, 4, 8, 4);
                   }
@@ -674,8 +687,8 @@ class ReplyItemGrpc extends StatelessWidget {
               InkWell(
                 onTap: () => replyReply?.call(replyItem, null),
                 borderRadius: length == 1
-                    ? const .all(.circular(6))
-                    : const .vertical(bottom: .circular(6)),
+                    ? .all(.circular(_nestRadius))
+                    : .vertical(bottom: .circular(_nestRadius)),
                 child: Padding(
                   padding: length == 1
                       ? const .fromLTRB(8, 6, 8, 6)
