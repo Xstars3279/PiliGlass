@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:material_ui/material_ui.dart' hide ListTile;
 
@@ -52,7 +53,7 @@ class _NormalItemState extends State<NormalItem> {
         style: widget.titleStyle ?? theme.textTheme.titleMedium!,
       ),
       subtitle: subtitle,
-      leading: widget.leading,
+      leading: revampLeading(widget.leading),
       trailing: widget.getTrailing?.call(theme),
     );
   }

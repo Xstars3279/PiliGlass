@@ -2,26 +2,26 @@ import 'package:PiliPlus/common/widgets/cover_palette.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// Tints the top of the video page with the cover's color, fading into the
-/// normal background, like YouTube's ambient mode.
-class AmbientBackground extends StatefulWidget {
-  const AmbientBackground({
+/// Builds with the cover's ambient tint, cross-fading when the cover
+/// changes; null until the color is known.
+class AmbientTintBuilder extends StatefulWidget {
+  const AmbientTintBuilder({
     super.key,
     required this.cover,
-    required this.child,
+    required this.builder,
+    this.child,
   });
 
   final RxString cover;
-  final Widget child;
-
-  /// how far down the tint reaches
-  static const _height = 320.0;
+  final Widget Function(BuildContext context, Color? tint, Widget? child)
+  builder;
+  final Widget? child;
 
   @override
-  State<AmbientBackground> createState() => _AmbientBackgroundState();
+  State<AmbientTintBuilder> createState() => _AmbientTintBuilderState();
 }
 
-class _AmbientBackgroundState extends State<AmbientBackground> {
+class _AmbientTintBuilderState extends State<AmbientTintBuilder> {
   int? _seed;
   late final Worker _worker;
 
@@ -47,24 +47,50 @@ class _AmbientBackgroundState extends State<AmbientBackground> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = ColorScheme.of(context);
-    final surface = colorScheme.surface;
-    final target = _seed == null
-        ? surface
-        : CoverPalette.ambient(_seed!, colorScheme.brightness);
+    final seed = _seed;
+    if (seed == null) return widget.builder(context, null, widget.child);
+    final target = CoverPalette.ambient(
+      seed,
+      ColorScheme.of(context).brightness,
+    );
+    return TweenAnimationBuilder<Color?>(
+      tween: ColorTween(end: target),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOut,
+      builder: widget.builder,
+      child: widget.child,
+    );
+  }
+}
+
+/// Tints the top of the video page with the cover's color, fading into the
+/// normal background, like YouTube's ambient mode.
+class AmbientBackground extends StatelessWidget {
+  const AmbientBackground({
+    super.key,
+    required this.cover,
+    required this.child,
+  });
+
+  final RxString cover;
+  final Widget child;
+
+  /// how far down the tint reaches
+  static const _height = 320.0;
+
+  @override
+  Widget build(BuildContext context) {
     return Stack(
       children: [
         Positioned(
           top: 0,
           left: 0,
           right: 0,
-          height: AmbientBackground._height,
-          child: TweenAnimationBuilder<Color?>(
-            tween: ColorTween(end: target),
-            duration: const Duration(milliseconds: 600),
-            curve: Curves.easeOut,
-            builder: (context, color, _) {
-              final tint = color ?? surface;
+          height: _height,
+          child: AmbientTintBuilder(
+            cover: cover,
+            builder: (context, tint, _) {
+              if (tint == null) return const SizedBox.shrink();
               // fade to the same hue, not to grey
               return DecoratedBox(
                 decoration: BoxDecoration(
@@ -78,7 +104,7 @@ class _AmbientBackgroundState extends State<AmbientBackground> {
             },
           ),
         ),
-        widget.child,
+        child,
       ],
     );
   }

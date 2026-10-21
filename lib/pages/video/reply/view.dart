@@ -1,3 +1,6 @@
+import 'dart:ui' show ImageFilter;
+
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/skeleton/video_reply.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -9,9 +12,11 @@ import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show ReplyInfo;
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/pages/common/fab_mixin.dart';
+import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/pages/video/reply/controller.dart';
 import 'package:PiliPlus/pages/video/reply/vote/reply_vote_item.dart';
 import 'package:PiliPlus/pages/video/reply/widgets/reply_item_grpc.dart';
+import 'package:PiliPlus/pages/video/widgets/ambient_background.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
@@ -81,37 +86,41 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
             key: const PageStorageKey(_VideoReplyPanelState),
             slivers: [
               SliverFloatingHeaderWidget(
-                backgroundColor: colorScheme.surface,
-                child: Padding(
-                  padding: const .fromLTRB(12, 2.5, 6, 2.5),
-                  child: Obx(() {
-                    final sortType = _videoReplyController.sortType.value;
-                    return Row(
-                      mainAxisAlignment: .spaceBetween,
-                      children: [
-                        Text(
-                          sortType.desc,
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                        TextButton.icon(
-                          style: Style.buttonStyle,
-                          onPressed: _videoReplyController.queryBySort,
-                          icon: Icon(
-                            Icons.sort,
-                            size: 16,
-                            color: colorScheme.secondary,
+                backgroundColor: Revamp.enabled
+                    ? Colors.transparent
+                    : colorScheme.surface,
+                child: _revampHeader(
+                  Padding(
+                    padding: const .fromLTRB(12, 2.5, 6, 2.5),
+                    child: Obx(() {
+                      final sortType = _videoReplyController.sortType.value;
+                      return Row(
+                        mainAxisAlignment: .spaceBetween,
+                        children: [
+                          Text(
+                            sortType.desc,
+                            style: const TextStyle(fontSize: 13),
                           ),
-                          label: Text(
-                            sortType.descShort,
-                            style: TextStyle(
-                              fontSize: 13,
+                          TextButton.icon(
+                            style: Style.buttonStyle,
+                            onPressed: _videoReplyController.queryBySort,
+                            icon: Icon(
+                              Icons.sort,
+                              size: 16,
                               color: colorScheme.secondary,
                             ),
+                            label: Text(
+                              sortType.descShort,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: colorScheme.secondary,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
-                    );
-                  }),
+                        ],
+                      );
+                    }),
+                  ),
                 ),
               ),
               Obx(() => _buildBody(_videoReplyController.loadingState.value)),
@@ -141,6 +150,33 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// With the redesign, frosted glass in the ambient tint instead of a
+  /// white strip: it blends into the tinted top, and replies scrolling under
+  /// it show through softly.
+  Widget _revampHeader(Widget child) {
+    if (!Revamp.enabled) return child;
+    final surface = ColorScheme.of(context).surface;
+    final detail = Get.isRegistered<VideoDetailController>(tag: heroTag)
+        ? Get.find<VideoDetailController>(tag: heroTag)
+        : null;
+    Widget glass(Color? tint, Widget child) => ColoredBox(
+      color: (tint ?? surface).withValues(alpha: 0.82),
+      child: child,
+    );
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: detail == null
+            ? glass(null, child)
+            : AmbientTintBuilder(
+                cover: detail.cover,
+                builder: (context, tint, child) => glass(tint, child!),
+                child: child,
+              ),
       ),
     );
   }

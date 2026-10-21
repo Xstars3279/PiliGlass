@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/revamp_theme.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/font_utils.dart';
@@ -165,10 +167,11 @@ abstract final class ThemeUtils {
         },
       ),
     );
+    final revamped = Revamp.enabled ? RevampTheme.apply(theme) : theme;
     if (isDark && Pref.isPureBlackTheme) {
-      return darkenTheme(theme);
+      return darkenTheme(revamped);
     }
-    return theme;
+    return revamped;
   }
 
   static ThemeData darkenTheme(ThemeData theme) {

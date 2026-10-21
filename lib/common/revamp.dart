@@ -93,3 +93,7 @@ class RevampIconTile extends StatelessWidget {
     );
   }
 }
+
+/// A settings row's leading icon, on a tile when the redesign is on.
+Widget? revampLeading(Widget? leading) =>
+    Revamp.enabled && leading != null ? RevampIconTile(icon: leading) : leading;

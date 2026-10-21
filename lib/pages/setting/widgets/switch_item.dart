@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -108,7 +109,7 @@ class _SetSwitchItemState extends State<SetSwitchItem> {
       subtitle: widget.subtitle != null
           ? Text(widget.subtitle!, style: subTitleStyle)
           : null,
-      leading: widget.leading,
+      leading: revampLeading(widget.leading),
       trailing: trailing,
     );
 

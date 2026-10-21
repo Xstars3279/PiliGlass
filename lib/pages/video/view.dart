@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 import 'dart:math';
 
 import 'package:PiliPlus/common/motion/cover_hero.dart';
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
@@ -507,34 +508,40 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         return SimpleScaffold(
           appBar: removeAppBar(isFullScreen)
               ? null
-              : Obx(
-                  () {
-                    final scrollRatio = videoDetailController.scrollRatio.value;
-                    final brightness = colorScheme.brightness;
-                    final Brightness statusBarBrightness;
-                    final Brightness statusBarIconBrightness;
-                    final backgroundColor = isPortrait && scrollRatio > 0
-                        ? Color.lerp(
-                            Colors.black,
-                            colorScheme.surface,
-                            scrollRatio,
-                          )!
-                        : Colors.black;
-                    if (isPortrait && scrollRatio >= 0.5) {
-                      statusBarBrightness = brightness;
-                      statusBarIconBrightness = brightness.reverse;
-                    } else {
-                      statusBarBrightness = .dark;
-                      statusBarIconBrightness = .light;
-                    }
-                    return SimpleAppBar(
-                      height: padding.top,
-                      backgroundColor: backgroundColor,
-                      brightness: brightness,
-                      statusBarBrightness: statusBarBrightness,
-                      statusBarIconBrightness: statusBarIconBrightness,
-                    );
-                  },
+              : AmbientTintBuilder(
+                  cover: videoDetailController.cover,
+                  builder: (context, tint, _) => Obx(
+                    () {
+                      final scrollRatio =
+                          videoDetailController.scrollRatio.value;
+                      final brightness = colorScheme.brightness;
+                      final Brightness statusBarBrightness;
+                      final Brightness statusBarIconBrightness;
+                      final backgroundColor = isPortrait && scrollRatio > 0
+                          ? Color.lerp(
+                              Colors.black,
+                              Revamp.enabled
+                                  ? tint ?? colorScheme.surface
+                                  : colorScheme.surface,
+                              scrollRatio,
+                            )!
+                          : Colors.black;
+                      if (isPortrait && scrollRatio >= 0.5) {
+                        statusBarBrightness = brightness;
+                        statusBarIconBrightness = brightness.reverse;
+                      } else {
+                        statusBarBrightness = .dark;
+                        statusBarIconBrightness = .light;
+                      }
+                      return SimpleAppBar(
+                        height: padding.top,
+                        backgroundColor: backgroundColor,
+                        brightness: brightness,
+                        statusBarBrightness: statusBarBrightness,
+                        statusBarIconBrightness: statusBarIconBrightness,
+                      );
+                    },
+                  ),
                 ),
           body: ExtendedNestedScrollView(
             onlyOneScrollInBody: true,
@@ -650,9 +657,17 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     );
     return Opacity(
       opacity: videoDetailController.scrollRatio.value,
-      child: Container(
-        color: colorScheme.surface,
-        alignment: .topCenter,
+      // with the redesign, the bar takes the ambient tint, so it continues
+      // into the tinted tab bar below instead of a white strip
+      child: AmbientTintBuilder(
+        cover: videoDetailController.cover,
+        builder: (context, tint, child) => Container(
+          color: Revamp.enabled
+              ? tint ?? colorScheme.surface
+              : colorScheme.surface,
+          alignment: .topCenter,
+          child: child,
+        ),
         child: SizedBox(
           height: kToolbarHeight,
           child: Stack(

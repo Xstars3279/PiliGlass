@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/models/common/enum_with_label.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
@@ -112,7 +113,7 @@ class _PopupListTileState<T> extends State<PopupListTile<T>> {
       safeArea: widget.safeArea,
       enabled: widget.enabled,
       onTapUp: (details) => _showButtonMenu(details, value),
-      leading: widget.leading,
+      leading: revampLeading(widget.leading),
       title: title,
       titleTextStyle: widget.titleStyle ?? theme.textTheme.titleMedium,
       subtitle: subtitle,
