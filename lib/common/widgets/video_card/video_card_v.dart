@@ -216,14 +216,15 @@ class VideoCardV extends StatelessWidget {
         child: Column(
           crossAxisAlignment: .start,
           children: [
-            Expanded(
-              child: Text(
-                videoItem.title,
-                maxLines: 2,
-                overflow: .ellipsis,
-                style: const TextStyle(height: 1.35, fontWeight: .w600),
-              ),
+            // the UP row follows the title directly, also when the title
+            // takes one line; any leftover height stays below
+            Text(
+              videoItem.title,
+              maxLines: 2,
+              overflow: .ellipsis,
+              style: const TextStyle(height: 1.35, fontWeight: .w600),
             ),
+            const SizedBox(height: 4),
             Row(
               spacing: 2,
               children: [
