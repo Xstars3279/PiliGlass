@@ -33,6 +33,8 @@ const _kDockGap = 10.0;
 const _kDockEdge = 16.0;
 // shape changes of the dock overshoot a little
 final _dockSpring = _spring(0.75, 320);
+// growing back from a circle overshoots more, so the bar pops out
+final _expandSpring = _spring(0.55, 260);
 
 class LiquidGlassNavigationDestination {
   const LiquidGlassNavigationDestination({
@@ -135,11 +137,17 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
       _moveTo(_currentIndex.toDouble());
     }
     if (widget.minimized != oldWidget.minimized) {
-      _mini.animateTo(widget.minimized ? 1 : 0);
+      _mini.animateTo(
+        widget.minimized ? 1 : 0,
+        spring: widget.minimized ? _dockSpring : _expandSpring,
+      );
     }
   }
 
   bool _searching = false;
+
+  /// the bar reached full width since it last started shrinking
+  bool _expanded = true;
 
   void _openSearch() {
     if (_searching) return;
@@ -188,7 +196,7 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     if (_pointer != null) return;
     // shrunk to a circle: a tap brings the bar back
     if (_mini.target > 0.5 || _search.target > 0.5) {
-      if (!_searching) _mini.animateTo(0);
+      if (!_searching) _mini.animateTo(0, spring: _expandSpring);
       return;
     }
     _pointer = event.pointer;
@@ -491,7 +499,15 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
             left: _kBarPadding,
             top: _kBarPadding,
             bottom: _kBarPadding,
-            child: Opacity(opacity: tabsOpacity, child: baseTabs),
+            child: Opacity(
+              opacity: tabsOpacity,
+              // the tabs grow with the bar, so they pop out with it
+              child: Transform.scale(
+                scale: 1 - 0.15 * collapse,
+                alignment: .centerLeft,
+                child: baseTabs,
+              ),
+            ),
           ),
         if (iconOpacity > 0)
           Positioned.fill(
@@ -637,7 +653,17 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
                   search,
                 )!.clamp(circle * 0.8, double.infinity);
 
-                final bar = collapse > 0.001
+                // Once the bar is back to full width, keep drawing the full
+                // bar until it shrinks again: the expand spring swings a
+                // little past full width and back, and switching on every
+                // swing would make the pill flicker.
+                final shrinking = _mini.target > 0.5 || _search.target > 0.5;
+                if (shrinking) {
+                  _expanded = false;
+                } else if (collapse <= 0.001) {
+                  _expanded = true;
+                }
+                final bar = collapse > 0.001 && !_expanded
                     ? _collapsedBar(
                         colorScheme: colorScheme,
                         isDark: isDark,
