@@ -1,8 +1,8 @@
 diff --git a/lib/get_navigation/src/routes/get_transition_mixin.dart b/lib/get_navigation/src/routes/get_transition_mixin.dart
-index b916bb47..7bb38c00 100644
+index b916bb47..418b5674 100644
 --- a/lib/get_navigation/src/routes/get_transition_mixin.dart
 +++ b/lib/get_navigation/src/routes/get_transition_mixin.dart
-@@ -13,8 +13,22 @@ mixin GetPageRouteTransitionMixin<T> on PageRoute<T> {
+@@ -13,8 +13,28 @@ mixin GetPageRouteTransitionMixin<T> on PageRoute<T> {
    @protected
    Widget buildContent(BuildContext context);
  
@@ -18,6 +18,12 @@ index b916bb47..7bb38c00 100644
 +
 +  static Duration customTransitionDuration = const Duration(milliseconds: 300);
 +
++  /// PiliPlus: with [customTransitionBuilder], lets a route decide how the
++  /// route below it moves (see [ModalRoute.delegatedTransition]); null keeps
++  /// the default, where the route below runs its own secondary transition.
++  static DelegatedTransitionBuilder? Function(PageRoute<dynamic> route)?
++      customDelegatedTransition;
++
    @override
 -  Duration get transitionDuration => const Duration(milliseconds: 300);
 +  Duration get transitionDuration => customTransitionBuilder != null
@@ -26,18 +32,18 @@ index b916bb47..7bb38c00 100644
  
    // The transitionDuration is used to create the AnimationController which is only
    // built once, so when page transition builder is updated and transitionDuration
-@@ -44,7 +58,9 @@ mixin GetPageRouteTransitionMixin<T> on PageRoute<T> {
+@@ -44,7 +64,9 @@ mixin GetPageRouteTransitionMixin<T> on PageRoute<T> {
  
    @override
    DelegatedTransitionBuilder? get delegatedTransition =>
 -      switch (Get.defaultTransition) {
 +      customTransitionBuilder != null
-+          ? _delegatedTransition
++          ? customDelegatedTransition?.call(this) ?? _delegatedTransition
 +          : switch (Get.defaultTransition) {
          Transition.native || Transition.zoom => null,
          Transition.cupertino ||
          Transition.cupertinoDialog =>
-@@ -128,6 +144,9 @@ mixin GetPageRouteTransitionMixin<T> on PageRoute<T> {
+@@ -128,6 +150,9 @@ mixin GetPageRouteTransitionMixin<T> on PageRoute<T> {
      Animation<double> secondaryAnimation,
      Widget child,
    ) {

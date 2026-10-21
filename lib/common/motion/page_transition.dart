@@ -13,10 +13,30 @@ import 'package:material_ui/material_ui.dart';
 abstract final class PiliPageTransition {
   static const duration = Duration(milliseconds: 450);
 
+  /// Routes that fade in over the page below, which stays where it is.
+  /// The search page continues the dock's morph in place, so it must not
+  /// slide in from the side.
+  static const fadeRoutes = {'/search'};
+
+  static bool _fades(PageRoute<dynamic> route) =>
+      fadeRoutes.contains(route.settings.name);
+
   static void install() {
     GetPageRouteTransitionMixin.customTransitionBuilder = build;
     GetPageRouteTransitionMixin.customTransitionDuration = duration;
+    // a different delegated transition makes the route below drop its own
+    // secondary (parallax) transition and use this one, which does nothing
+    GetPageRouteTransitionMixin.customDelegatedTransition = (route) =>
+        _fades(route) ? _stayInPlace : null;
   }
+
+  static Widget? _stayInPlace(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    bool allowSnapshotting,
+    Widget? child,
+  ) => child;
 
   static Widget build(
     PageRoute<dynamic> route,
@@ -25,6 +45,9 @@ abstract final class PiliPageTransition {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
+    if (_fades(route)) {
+      return _FadeIn(animation: animation, child: child);
+    }
     return _PageTransition(
       route: route,
       animation: animation,
@@ -57,6 +80,37 @@ double _curved(Animation<double> animation, bool linear) {
   return animation.status == AnimationStatus.reverse
       ? _curve.flipped.transform(animation.value)
       : _curve.transform(animation.value);
+}
+
+/// Fades in during the first half of the transition, so it reads as quick
+/// while the route keeps the shared duration.
+class _FadeIn extends StatefulWidget {
+  const _FadeIn({required this.animation, required this.child});
+
+  final Animation<double> animation;
+  final Widget child;
+
+  @override
+  State<_FadeIn> createState() => _FadeInState();
+}
+
+class _FadeInState extends State<_FadeIn> {
+  late final _opacity = CurvedAnimation(
+    parent: widget.animation,
+    curve: const Interval(0, 0.5, curve: Curves.easeOut),
+    reverseCurve: const Interval(0.5, 1, curve: Curves.easeIn),
+  );
+
+  @override
+  void dispose() {
+    _opacity.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(opacity: _opacity, child: widget.child);
+  }
 }
 
 class _PageTransition extends StatelessWidget {
