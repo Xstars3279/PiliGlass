@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show ImageFilter;
 
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -73,9 +74,13 @@ class _MediaPageState extends CommonPageState<MinePage>
     theme = Theme.of(context);
   }
 
+  /// the redesigned page, together with the liquid glass dock
+  bool get _modern => _mainController.dockSearch;
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    if (_modern) return _buildModern();
     final secondary = theme.colorScheme.secondary;
     return Column(
       children: [
@@ -546,12 +551,13 @@ class _MediaPageState extends CommonPageState<MinePage>
         );
     }
     final secondary = theme.colorScheme.secondary;
-    return Column(
+    final section = Column(
       children: [
-        Divider(
-          height: 20,
-          color: theme.colorScheme.outline.withValues(alpha: 0.1),
-        ),
+        if (!_modern)
+          Divider(
+            height: 20,
+            color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          ),
         ListTile(
           dense: true,
           onTap: onPushDetail,
@@ -588,6 +594,310 @@ class _MediaPageState extends CommonPageState<MinePage>
         ),
         child,
       ],
+    );
+    if (!_modern) return section;
+    return _group(
+      child: Padding(padding: const .only(bottom: 14), child: section),
+    );
+  }
+
+  /// A rounded group on the page, the way the redesign sets off sections.
+  Widget _group({required Widget child}) => Padding(
+    padding: const .fromLTRB(12, 0, 12, 12),
+    child: ClipRRect(
+      borderRadius: const .all(.circular(24)),
+      child: ColoredBox(
+        color: theme.colorScheme.surfaceContainerLow,
+        child: child,
+      ),
+    ),
+  );
+
+  Widget _buildModern() {
+    final colorScheme = theme.colorScheme;
+    return Stack(
+      children: [
+        // a banner made from the avatar, blurred, fading into the page
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 280,
+          child: Obx(
+            () => _ProfileBanner(face: controller.userInfo.value.face),
+          ),
+        ),
+        Column(
+          children: [
+            Padding(
+              padding: const .symmetric(vertical: 10),
+              child: _buildHeaderActions,
+            ),
+            Expanded(
+              child: Material(
+                type: .transparency,
+                child: refreshIndicator(
+                  onRefresh: controller.onRefresh,
+                  child: onBuild(
+                    ListView(
+                      padding: const .only(bottom: 150),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        _buildProfile(),
+                        const SizedBox(height: 18),
+                        _buildStatChips(),
+                        const SizedBox(height: 12),
+                        _group(child: _buildActions(colorScheme.primary)),
+                        for (final tab in controller.mineTabs)
+                          switch (tab) {
+                            .favorite => Obx(_buildFav),
+                            .history => Obx(_buildHistory),
+                            .later => Obx(_buildLater),
+                            .sub => Obx(_buildSub),
+                          },
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfile() {
+    final colorScheme = theme.colorScheme;
+    return Obx(() {
+      final userInfo = controller.userInfo.value;
+      final levelInfo = userInfo.levelInfo;
+      final isVip = userInfo.vipStatus != null && userInfo.vipStatus! > 0;
+      const size = 76.0;
+      return GestureDetector(
+        behavior: .opaque,
+        onTap: controller.onLogin,
+        onLongPress: () {
+          Feedback.forLongPress(context);
+          controller.onLogin(true);
+        },
+        onSecondaryTap: PlatformUtils.isMobile
+            ? null
+            : () => controller.onLogin(true),
+        child: Padding(
+          padding: const .symmetric(horizontal: 20),
+          child: Row(
+            spacing: 16,
+            children: [
+              Stack(
+                clipBehavior: .none,
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: .circle,
+                      border: Border.all(color: colorScheme.surface, width: 3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.shadow.withValues(alpha: 0.12),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: userInfo.face != null
+                        ? NetworkImgLayer(
+                            src: userInfo.face,
+                            type: .avatar,
+                            width: size,
+                            height: size,
+                          )
+                        : ClipOval(
+                            child: Image.asset(
+                              Assets.avatarPlaceHolder,
+                              width: size,
+                              height: size,
+                              cacheHeight: size.cacheSize(context),
+                              semanticLabel: '默认头像',
+                            ),
+                          ),
+                  ),
+                  if (isVip)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: SvgPicture.asset(
+                        Assets.vipIcon,
+                        height: 22,
+                        semanticsLabel: '大会员',
+                      ),
+                    ),
+                ],
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: .start,
+                  spacing: 6,
+                  children: [
+                    Row(
+                      spacing: 8,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            userInfo.uname ?? '点击登录',
+                            maxLines: 1,
+                            overflow: .ellipsis,
+                            style: theme.textTheme.titleLarge!.copyWith(
+                              fontWeight: .w900,
+                              color: isVip && userInfo.vipType == 2
+                                  ? colorScheme.vipColor
+                                  : null,
+                            ),
+                          ),
+                        ),
+                        BiliUtils.levelPicture(
+                          levelInfo?.currentLevel ?? 0,
+                          isSeniorMember: userInfo.isSeniorMember == 1,
+                          height: 11,
+                        ),
+                      ],
+                    ),
+                    Text(
+                      '硬币 ${userInfo.money?.toString() ?? '-'}   ·   '
+                      '经验 ${levelInfo?.currentExp ?? '-'}/${levelInfo?.nextExp ?? '-'}',
+                      style: theme.textTheme.labelMedium!.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    ClipRRect(
+                      borderRadius: const .all(.circular(3)),
+                      child: LinearProgressIndicator(
+                        minHeight: 5,
+                        value: levelInfo != null
+                            ? levelInfo.currentExp! / levelInfo.nextExp!
+                            : 0,
+                        backgroundColor: colorScheme.surfaceContainerHighest,
+                        color: colorScheme.primary,
+                        stopIndicatorColor: Colors.transparent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildStatChips() {
+    final colorScheme = theme.colorScheme;
+    Widget chip(int? count, String label, VoidCallback onTap) => Expanded(
+      child: Material(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: const .all(.circular(20)),
+        clipBehavior: .antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const .symmetric(horizontal: 14, vertical: 12),
+            child: Column(
+              crossAxisAlignment: .start,
+              spacing: 2,
+              children: [
+                Text(
+                  count?.toString() ?? '-',
+                  style: theme.textTheme.titleLarge!.copyWith(
+                    fontWeight: .w800,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                Text(
+                  label,
+                  style: theme.textTheme.labelMedium!.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    return Obx(() {
+      final stat = controller.userStat.value;
+      return Padding(
+        padding: const .symmetric(horizontal: 12),
+        child: Row(
+          spacing: 10,
+          children: [
+            chip(
+              stat.dynamicCount,
+              '动态',
+              () => controller.push('memberDynamics'),
+            ),
+            chip(stat.following, '关注', () => controller.push('follow')),
+            chip(stat.follower, '粉丝', () => controller.push('fan')),
+          ],
+        ),
+      );
+    });
+  }
+}
+
+/// The page's top, tinted by the user's avatar: blurred far past
+/// recognition, then fading into the page.
+class _ProfileBanner extends StatelessWidget {
+  const _ProfileBanner({required this.face});
+
+  final String? face;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = ColorScheme.of(context);
+    final Widget base = face == null
+        ? DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: .topLeft,
+                end: .bottomRight,
+                colors: [
+                  colorScheme.primaryContainer,
+                  colorScheme.tertiaryContainer,
+                ],
+              ),
+            ),
+          )
+        // a strong blur spreads well past its box; clip it, or the spread
+        // shows as a band below the banner that the fade does not cover
+        : LayoutBuilder(
+            builder: (context, constraints) => ClipRect(
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(
+                  sigmaX: 36,
+                  sigmaY: 36,
+                  tileMode: .clamp,
+                ),
+                child: NetworkImgLayer(
+                  src: face,
+                  width: constraints.maxWidth,
+                  height: constraints.maxHeight,
+                  borderRadius: BorderRadius.zero,
+                ),
+              ),
+            ),
+          );
+    // fade the banner itself out instead of painting the page color over
+    // it, so it meets whatever the page's background is without a seam
+    return ShaderMask(
+      blendMode: .dstIn,
+      shaderCallback: (rect) => const LinearGradient(
+        begin: .topCenter,
+        end: .bottomCenter,
+        colors: [Color(0xFFFFFFFF), Color(0x00FFFFFF)],
+        stops: [0.3, 1],
+      ).createShader(rect),
+      child: Opacity(opacity: 0.55, child: base),
     );
   }
 }
