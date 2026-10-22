@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:ui' show ImageFilter;
 
+import 'package:PiliPlus/build_config.dart';
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/pages/about/view.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
@@ -456,8 +459,9 @@ class _MediaPageState extends CommonPageState<MinePage>
     () => tabCtr.onRefresh(isManual: false),
   );
 
-  Widget _buildFav() {
+  Widget _buildFav({bool previewOnly = false}) {
     return _buildTab(
+      previewOnly: previewOnly,
       .favorite,
       controller.favCtr!,
       itemBuilder: (element) => FavFolderItem(
@@ -470,8 +474,9 @@ class _MediaPageState extends CommonPageState<MinePage>
     );
   }
 
-  Widget _buildHistory() {
+  Widget _buildHistory({bool previewOnly = false}) {
     return _buildTab(
+      previewOnly: previewOnly,
       .history,
       controller.historyCtr!,
       itemBuilder: (element) => MineHistoryItem(
@@ -484,8 +489,9 @@ class _MediaPageState extends CommonPageState<MinePage>
     );
   }
 
-  Widget _buildLater() {
+  Widget _buildLater({bool previewOnly = false}) {
     return _buildTab(
+      previewOnly: previewOnly,
       .later,
       controller.laterCtr!,
       itemBuilder: (element) => MineLaterItem(
@@ -498,8 +504,9 @@ class _MediaPageState extends CommonPageState<MinePage>
     );
   }
 
-  Widget _buildSub() {
+  Widget _buildSub({bool previewOnly = false}) {
     return _buildTab(
+      previewOnly: previewOnly,
       .sub,
       controller.subCtr!,
       itemBuilder: (element) => MineSubItem(
@@ -517,6 +524,7 @@ class _MediaPageState extends CommonPageState<MinePage>
     MineRefreshMixin<R, T> tabCtr, {
     required Widget Function(T element) itemBuilder,
     required VoidCallback onPushDetail,
+    bool previewOnly = false,
   }) {
     final Widget child;
     switch (tabCtr.loadingState.value) {
@@ -550,6 +558,8 @@ class _MediaPageState extends CommonPageState<MinePage>
           child: Center(child: Text(errMsg, textAlign: .center)),
         );
     }
+    // the redesigned page shows this list inside an expandable row
+    if (previewOnly) return child;
     final secondary = theme.colorScheme.secondary;
     final section = Column(
       children: [
@@ -614,7 +624,6 @@ class _MediaPageState extends CommonPageState<MinePage>
   );
 
   Widget _buildModern() {
-    final colorScheme = theme.colorScheme;
     return Stack(
       children: [
         // a banner made from the avatar, blurred, fading into the page
@@ -647,14 +656,7 @@ class _MediaPageState extends CommonPageState<MinePage>
                         const SizedBox(height: 18),
                         _buildStatChips(),
                         const SizedBox(height: 12),
-                        _group(child: _buildActions(colorScheme.primary)),
-                        for (final tab in controller.mineTabs)
-                          switch (tab) {
-                            .favorite => Obx(_buildFav),
-                            .history => Obx(_buildHistory),
-                            .later => Obx(_buildLater),
-                            .sub => Obx(_buildSub),
-                          },
+                        _buildMenu(),
                       ],
                     ),
                   ),
@@ -662,6 +664,184 @@ class _MediaPageState extends CommonPageState<MinePage>
               ),
             ),
           ],
+        ),
+      ],
+    );
+  }
+
+  /// the rows whose list preview is unfolded
+  final Set<MineTabType> _expanded = {};
+
+  /// The shortcuts and the sections as one list of rows, each with its own
+  /// colored icon. Rows that had a preview section (favorites, history...)
+  /// unfold it in place; the others open their page.
+  Widget _buildMenu() {
+    final outline = theme.colorScheme.outline;
+    VoidCallback? shortcut(String title) {
+      for (final e in controller.list) {
+        if (e.title == title) return e.onTap;
+      }
+      return null;
+    }
+
+    Widget? preview(MineTabType tab) => switch (tab) {
+      .favorite => _buildFav(previewOnly: true),
+      .history => _buildHistory(previewOnly: true),
+      .later => _buildLater(previewOnly: true),
+      .sub => _buildSub(previewOnly: true),
+    };
+
+    Widget row({
+      required IconData icon,
+      required Color color,
+      required String title,
+      required VoidCallback? onOpen,
+      MineTabType? tab,
+      int? count,
+    }) {
+      final expandable = tab != null && controller.mineTabs.contains(tab);
+      final expanded = expandable && _expanded.contains(tab);
+      final tile = ListTile(
+        leading: RevampIconTile(icon: Icon(icon), color: color),
+        title: Text(title),
+        trailing: Row(
+          mainAxisSize: .min,
+          spacing: 6,
+          children: [
+            if (count != null)
+              Text(
+                '$count',
+                style: TextStyle(
+                  color: outline,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            if (expandable)
+              AnimatedRotation(
+                turns: expanded ? 0.5 : 0,
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutBack,
+                child: Icon(Icons.expand_more_rounded, color: outline),
+              )
+            else
+              Icon(Icons.chevron_right_rounded, color: outline),
+          ],
+        ),
+        onTap: expandable
+            ? () => setState(
+                () => expanded ? _expanded.remove(tab) : _expanded.add(tab),
+              )
+            : onOpen,
+      );
+      if (!expandable) return tile;
+      return Column(
+        children: [
+          tile,
+          AnimatedSize(
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeOutCubic,
+            alignment: .topCenter,
+            child: expanded
+                ? Column(
+                    children: [
+                      ?preview(tab),
+                      Align(
+                        alignment: .centerRight,
+                        child: TextButton(
+                          onPressed: onOpen,
+                          child: const Text('查看全部'),
+                        ),
+                      ),
+                    ],
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        // counts arrive with the sections' data
+        Obx(() {
+          controller.favCtr?.loadingState.value;
+          controller.historyCtr?.loadingState.value;
+          controller.laterCtr?.loadingState.value;
+          controller.subCtr?.loadingState.value;
+          return _group(
+            child: Column(
+              children: [
+                row(
+                  icon: Icons.download_rounded,
+                  color: const Color(0xFFFF6F91),
+                  title: '离线缓存',
+                  onOpen: shortcut('离线缓存'),
+                ),
+                row(
+                  icon: Icons.history_rounded,
+                  color: const Color(0xFF7B8CFF),
+                  title: '观看记录',
+                  tab: .history,
+                  onOpen: shortcut('观看记录'),
+                ),
+                row(
+                  icon: Icons.star_rounded,
+                  color: const Color(0xFF3FB6E8),
+                  title: '我的收藏',
+                  tab: .favorite,
+                  count: controller.favCtr?.count,
+                  onOpen: () => Get.toNamed('/fav'),
+                ),
+                row(
+                  icon: Icons.watch_later_rounded,
+                  color: const Color(0xFFF2A73B),
+                  title: '稍后再看',
+                  tab: .later,
+                  count: controller.laterCtr?.count,
+                  onOpen: shortcut('稍后再看'),
+                ),
+                row(
+                  icon: Icons.subscriptions_rounded,
+                  color: const Color(0xFF55B97A),
+                  title: '我的订阅',
+                  tab: .sub,
+                  count: controller.subCtr?.count,
+                  onOpen: shortcut('我的订阅'),
+                ),
+              ],
+            ),
+          );
+        }),
+        _group(
+          child: Column(
+            children: [
+              row(
+                icon: Icons.settings_rounded,
+                color: const Color(0xFF8A8296),
+                title: '设置',
+                onOpen: () => Get.toNamed('/setting', preventDuplicates: false),
+              ),
+              ListTile(
+                leading: const RevampIconTile(
+                  icon: Icon(Icons.info_rounded),
+                  color: Color(0xFFE0457B),
+                ),
+                title: const Text('关于 PiliPlus'),
+                trailing: Row(
+                  mainAxisSize: .min,
+                  spacing: 6,
+                  children: [
+                    Text(
+                      BuildConfig.versionName,
+                      style: TextStyle(color: outline),
+                    ),
+                    Icon(Icons.chevron_right_rounded, color: outline),
+                  ],
+                ),
+                onTap: () => Get.to(() => const AboutPage()),
+              ),
+            ],
+          ),
         ),
       ],
     );

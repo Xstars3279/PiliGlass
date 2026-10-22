@@ -71,22 +71,30 @@ class RevampLargeAppBar extends StatelessWidget {
 
 /// An icon on a tinted rounded square, as in a settings list.
 class RevampIconTile extends StatelessWidget {
-  const RevampIconTile({super.key, required this.icon});
+  const RevampIconTile({super.key, required this.icon, this.color});
 
   final Widget icon;
+
+  /// a solid color with a white icon; the theme's tonal container if null
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer,
+        color: color ?? colorScheme.primaryContainer,
         borderRadius: const BorderRadius.all(Radius.circular(10)),
       ),
       child: SizedBox.square(
         dimension: 34,
         child: IconTheme.merge(
-          data: IconThemeData(size: 20, color: colorScheme.onPrimaryContainer),
+          data: IconThemeData(
+            size: 20,
+            color: color != null
+                ? Colors.white
+                : colorScheme.onPrimaryContainer,
+          ),
           child: Center(child: icon),
         ),
       ),
