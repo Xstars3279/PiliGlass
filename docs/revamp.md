@@ -45,4 +45,5 @@
 - [x] 弹出菜单（全 App 42 处）变成玻璃：半透明 + 背景模糊 + 细高光边（tool/patches/material-ui_glass_menu.patch）
 - [x] 底部弹窗、对话框也变成玻璃（tool/patches/material-ui_glass_sheet.patch），和菜单同一套：半透明 + 模糊 + 细高光边
 - [x] 所有底部弹窗用评论面板的同一个弹簧弹起（Springs.sheet + PiliSheetMotion），玻璃延伸到下沿以下，回弹时不露缝
+- [x] 播放器上的按钮（播放前和播放中）统一为烟灰玻璃圆钮，带细高光边（Revamp.overlayButtonStyle）
 - [x] 楼中楼、图片占位改用统一的淡色叠加 Revamp.wash，不再是突兀的灰白块

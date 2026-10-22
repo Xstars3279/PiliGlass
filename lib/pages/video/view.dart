@@ -1138,6 +1138,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                   height: 34,
                   child: IconButton(
                     tooltip: '返回',
+                    style: _overlayBtnStyle,
                     icon: const Icon(
                       FontAwesomeIcons.arrowLeft,
                       size: 15,
@@ -1157,6 +1158,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                   height: 34,
                   child: IconButton(
                     tooltip: '返回主页',
+                    style: _overlayBtnStyle,
                     icon: const Icon(
                       FontAwesomeIcons.house,
                       size: 15,
@@ -1197,6 +1199,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   });
 
   Widget _moreBtn(Color color, {List<Shadow>? shadows}) => PopupMenuButton(
+    // a round of glass on the video, plain on the collapsed bar
+    style: shadows != null ? _overlayBtnStyle : null,
     icon: Icon(
       size: 22,
       Icons.more_vert,

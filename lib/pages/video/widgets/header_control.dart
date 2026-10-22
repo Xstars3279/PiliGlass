@@ -3,6 +3,7 @@ import 'dart:convert' show jsonDecode, utf8;
 import 'dart:io' show Platform, File;
 import 'dart:typed_data' show Uint8List;
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
@@ -1660,7 +1661,9 @@ class HeaderControlState extends State<HeaderControl>
 
   static const btnWidth = 42.0;
   static const btnHeight = 34.0;
-  static const btnStyle = ButtonStyle(padding: WidgetStatePropertyAll(.zero));
+  static final btnStyle = Revamp.enabled
+      ? Revamp.overlayButtonStyle
+      : const ButtonStyle(padding: WidgetStatePropertyAll(.zero));
 
   @override
   Widget build(BuildContext context) {

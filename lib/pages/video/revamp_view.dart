@@ -5,6 +5,10 @@ part of 'view.dart';
 extension _VideoRevamp on _VideoDetailPageVState {
   /// In portrait the comments are a sheet over the intro instead of a tab,
   /// raised from a preview card below the actions.
+  /// the buttons on the video before it plays, like those while it plays
+  ButtonStyle? get _overlayBtnStyle =>
+      Revamp.enabled ? Revamp.overlayButtonStyle : null;
+
   bool get _replyInSheet => Revamp.enabled && videoDetailController.showReply;
 
   /// Shows [panel] in the comment sheet, e.g. 合集; false if there is no

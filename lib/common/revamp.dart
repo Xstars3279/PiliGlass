@@ -12,6 +12,20 @@ abstract final class Revamp {
   /// tints whatever is behind instead of covering it.
   static Color wash(ColorScheme colorScheme) =>
       colorScheme.onSurface.withValues(alpha: 0.06);
+
+  /// Buttons over the video: a dark round of smoked glass behind each, so
+  /// they read on a bright frame as well as a dark one.
+  /// The light rim shows the round on the black bars beside a video too.
+  static const overlayButtonStyle = ButtonStyle(
+    padding: WidgetStatePropertyAll(EdgeInsets.zero),
+    backgroundColor: WidgetStatePropertyAll(Color(0x47000000)),
+    shape: WidgetStatePropertyAll(
+      CircleBorder(side: BorderSide(color: Color(0x33FFFFFF), width: 0.8)),
+    ),
+    fixedSize: WidgetStatePropertyAll(Size.square(34)),
+    minimumSize: WidgetStatePropertyAll(Size.zero),
+    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+  );
 }
 
 /// A rounded group of rows, the way the redesign sets off a section.
