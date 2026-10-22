@@ -31,6 +31,7 @@ import 'package:PiliPlus/pages/episode_panel/view.dart';
 import 'package:PiliPlus/pages/video/ai_conclusion/view.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/pages/video/widgets/ambient_background.dart';
+import 'package:PiliPlus/pages/video/widgets/comment_sheet.dart';
 import 'package:PiliPlus/pages/video/widgets/first_frame_cover.dart';
 import 'package:PiliPlus/pages/video/introduction/local/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/local/view.dart';
@@ -72,8 +73,10 @@ import 'package:PiliPlus/utils/mobile_observer.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/reply_scheme_helper.dart' show rootRpIdKey;
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/theme_utils.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, clampDouble;
@@ -82,6 +85,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:screen_brightness_platform_interface/screen_brightness_platform_interface.dart';
+
+part 'revamp_view.dart';
 
 class VideoDetailPageV extends StatefulWidget {
   const VideoDetailPageV({super.key});
@@ -606,22 +611,32 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
               key: videoDetailController.childKey,
               body: AmbientBackground(
                 cover: videoDetailController.cover,
-                child: Column(
-                  children: [
-                    buildTabBar(onTap: videoDetailController.animToTop),
-                    Expanded(
-                      child: tabBarView(
-                        hitTestBehavior: .translucent,
-                        controller: videoDetailController.tabCtr,
-                        children: [
-                          videoIntro(isHorizontal: false, needCtr: false),
-                          if (videoDetailController.showReply)
-                            videoReplyPanel(isNested: true),
-                          if (_shouldShowSeasonPanel) seasonPanel,
-                        ],
+                child: _withCommentSheet(
+                  Column(
+                    children: [
+                      buildTabBar(
+                        onTap: videoDetailController.animToTop,
+                        replyTab: !_replyInSheet,
                       ),
-                    ),
-                  ],
+                      Expanded(
+                        child: tabBarView(
+                          hitTestBehavior: .translucent,
+                          controller: videoDetailController.tabCtr,
+                          children: [
+                            videoIntro(
+                              isHorizontal: false,
+                              needCtr: false,
+                              commentCard: _replyInSheet,
+                            ),
+                            if (videoDetailController.showReply &&
+                                !_replyInSheet)
+                              videoReplyPanel(isNested: true),
+                            if (_shouldShowSeasonPanel) seasonPanel,
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1327,11 +1342,12 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     String? introText,
     bool showIntro = true,
     VoidCallback? onTap,
+    bool replyTab = true,
   }) {
     final tabs = [
       if (showIntro)
         videoDetailController.isFileSource ? '离线视频' : introText ?? '简介',
-      if (videoDetailController.showReply) '评论',
+      if (videoDetailController.showReply && replyTab) '评论',
       if (_shouldShowSeasonPanel) '播放列表',
     ];
     if (videoDetailController.tabCtr.length != tabs.length) {
@@ -1679,6 +1695,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     bool? isHorizontal,
     bool needRelated = true,
     bool needCtr = true,
+    bool commentCard = false,
   }) {
     if (videoDetailController.isFileSource) {
       return localIntroPanel(needCtr: needCtr);
@@ -1701,6 +1718,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             isPortrait: isPortrait,
             isHorizontal: isHorizontal ?? width! / height! >= kScreenRatio,
           ),
+          if (commentCard)
+            SliverToBoxAdapter(child: CommentPreviewCard(heroTag: heroTag)),
           if (needRelated && videoDetailController.showRelatedVideo) ...[
             SliverToBoxAdapter(
               child: Padding(
@@ -1726,6 +1745,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             maxWidth: width ?? maxWidth,
             isPortrait: isPortrait,
           ),
+        if (commentCard && !videoDetailController.isUgc)
+          SliverToBoxAdapter(child: CommentPreviewCard(heroTag: heroTag)),
         SliverToBoxAdapter(
           child: SizedBox(
             height:

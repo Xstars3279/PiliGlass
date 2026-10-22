@@ -27,11 +27,16 @@ class VideoReplyPanel extends StatefulWidget {
     this.replyLevel = 1,
     required this.heroTag,
     required this.isNested,
+    this.inSheet = false,
   });
 
   final int replyLevel;
   final String heroTag;
   final bool isNested;
+
+  /// inside the redesign's comment sheet, which has its own header with the
+  /// sort button and its own input bar instead of the reply button
+  final bool inSheet;
 
   @override
   State<VideoReplyPanel> createState() => _VideoReplyPanelState();
@@ -85,70 +90,73 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
             physics: const AlwaysScrollableScrollPhysics(),
             key: const PageStorageKey(_VideoReplyPanelState),
             slivers: [
-              SliverFloatingHeaderWidget(
-                backgroundColor: Revamp.enabled
-                    ? Colors.transparent
-                    : colorScheme.surface,
-                child: _revampHeader(
-                  Padding(
-                    padding: const .fromLTRB(12, 2.5, 6, 2.5),
-                    child: Obx(() {
-                      final sortType = _videoReplyController.sortType.value;
-                      return Row(
-                        mainAxisAlignment: .spaceBetween,
-                        children: [
-                          Text(
-                            sortType.desc,
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                          TextButton.icon(
-                            style: Style.buttonStyle,
-                            onPressed: _videoReplyController.queryBySort,
-                            icon: Icon(
-                              Icons.sort,
-                              size: 16,
-                              color: colorScheme.secondary,
+              if (!widget.inSheet)
+                SliverFloatingHeaderWidget(
+                  backgroundColor: Revamp.enabled
+                      ? Colors.transparent
+                      : colorScheme.surface,
+                  child: _revampHeader(
+                    Padding(
+                      padding: const .fromLTRB(12, 2.5, 6, 2.5),
+                      child: Obx(() {
+                        final sortType = _videoReplyController.sortType.value;
+                        return Row(
+                          mainAxisAlignment: .spaceBetween,
+                          children: [
+                            Text(
+                              sortType.desc,
+                              style: const TextStyle(fontSize: 13),
                             ),
-                            label: Text(
-                              sortType.descShort,
-                              style: TextStyle(
-                                fontSize: 13,
+                            TextButton.icon(
+                              style: Style.buttonStyle,
+                              onPressed: _videoReplyController.queryBySort,
+                              icon: Icon(
+                                Icons.sort,
+                                size: 16,
                                 color: colorScheme.secondary,
                               ),
+                              label: Text(
+                                sortType.descShort,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: colorScheme.secondary,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
-                      );
-                    }),
+                          ],
+                        );
+                      }),
+                    ),
                   ),
                 ),
-              ),
               Obx(() => _buildBody(_videoReplyController.loadingState.value)),
             ],
           ),
-          fab: SlideTransition(
-            position: fabAnimation,
-            child: Padding(
-              padding: .only(
-                right: kFloatingActionButtonMargin,
-                bottom: kFloatingActionButtonMargin + bottom,
-              ),
-              child: FloatingActionButton(
-                heroTag: null,
-                onPressed: () {
-                  feedBack();
-                  _videoReplyController.onReply(
-                    null,
-                    oid: _videoReplyController.aid,
-                    replyType: _videoReplyController.videoType.replyType,
-                    mentionItem: _videoReplyController.mentionItem,
-                  );
-                },
-                tooltip: '发表评论',
-                child: const Icon(Icons.reply),
-              ),
-            ),
-          ),
+          fab: widget.inSheet
+              ? null
+              : SlideTransition(
+                  position: fabAnimation,
+                  child: Padding(
+                    padding: .only(
+                      right: kFloatingActionButtonMargin,
+                      bottom: kFloatingActionButtonMargin + bottom,
+                    ),
+                    child: FloatingActionButton(
+                      heroTag: null,
+                      onPressed: () {
+                        feedBack();
+                        _videoReplyController.onReply(
+                          null,
+                          oid: _videoReplyController.aid,
+                          replyType: _videoReplyController.videoType.replyType,
+                          mentionItem: _videoReplyController.mentionItem,
+                        );
+                      },
+                      tooltip: '发表评论',
+                      child: const Icon(Icons.reply),
+                    ),
+                  ),
+                ),
         ),
       ),
     );

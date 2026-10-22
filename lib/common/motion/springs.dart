@@ -79,11 +79,12 @@ class SpringFollower extends ChangeNotifier {
     }
   }
 
-  /// Sets the value directly, e.g. while it follows a finger.
-  void jumpTo(double value) {
+  /// Sets the value directly, e.g. while it follows a finger. [velocity] is
+  /// kept for the next [animateTo], so a release carries the finger's speed.
+  void jumpTo(double value, {double velocity = 0}) {
     _ticker.stop();
     _value = _target = value;
-    _velocity = 0;
+    _velocity = velocity;
     notifyListeners();
   }
 
