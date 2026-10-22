@@ -19,6 +19,20 @@ class PublishRoute<T> extends PopupRoute<T> {
 
   final RoutePageBuilder pageBuilder;
 
+  /// Set right before pushing a page that grows out of a rect on the screen
+  /// by itself, e.g. the reply panel out of the glass input bar; the route
+  /// takes it and leaves the transition to the page.
+  static Rect? pendingMorph;
+
+  /// see [pendingMorph]
+  final Rect? morphFrom = _takePendingMorph();
+
+  static Rect? _takePendingMorph() {
+    final rect = pendingMorph;
+    pendingMorph = null;
+    return rect;
+  }
+
   @override
   final bool barrierDismissible;
 
@@ -56,6 +70,7 @@ class PublishRoute<T> extends PopupRoute<T> {
     if (_transitionBuilder != null) {
       return _transitionBuilder(context, animation, secondaryAnimation, child);
     }
+    if (morphFrom != null) return child;
     return SlideTransition(
       // the redesign eases the panel in and out instead of a constant speed
       position: (Revamp.enabled ? _eased : animation).drive(

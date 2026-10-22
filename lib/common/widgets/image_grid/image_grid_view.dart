@@ -17,6 +17,7 @@
 
 import 'dart:io' show Platform;
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
@@ -212,9 +213,11 @@ class ImageGridView extends StatelessWidget {
             width: width,
             height: height,
             decoration: BoxDecoration(
-              color: ColorScheme.of(
-                context,
-              ).onInverseSurface.withValues(alpha: 0.4),
+              color: Revamp.enabled
+                  ? Revamp.wash(ColorScheme.of(context))
+                  : ColorScheme.of(context).onInverseSurface.withValues(
+                      alpha: 0.4,
+                    ),
             ),
             child: Image.asset(
               Assets.loading,

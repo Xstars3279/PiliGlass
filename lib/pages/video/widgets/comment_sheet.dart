@@ -1,3 +1,4 @@
+import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
@@ -656,7 +657,17 @@ class _InputBar extends StatelessWidget {
       label: '发表评论',
       excludeSemantics: true,
       child: GestureDetector(
-        onTap: onTap,
+        onTap: () {
+          // the reply panel grows out of the bar
+          final box = context.findRenderObject() as RenderBox?;
+          if (box != null && box.hasSize) {
+            PublishRoute.pendingMorph =
+                box.localToGlobal(Offset.zero) & box.size;
+          }
+          onTap();
+          // nothing was opened, e.g. replies are closed: forget the bar
+          Future.microtask(() => PublishRoute.pendingMorph = null);
+        },
         child: CustomPaint(
           painter: GlassShadowPainter(
             radius: radius,

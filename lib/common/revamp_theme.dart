@@ -33,12 +33,17 @@ abstract final class RevampTheme {
         overlayColor: const WidgetStatePropertyAll(Colors.transparent),
         splashFactory: NoSplash.splashFactory,
       ),
+      // translucent, so the patched menu blurs what is behind it like the
+      // dock's glass (tool/patches/material-ui_glass_menu.patch)
       popupMenuTheme: theme.popupMenuTheme.copyWith(
-        color: colorScheme.surfaceContainer,
-        elevation: 8,
-        shadowColor: shadow,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(20)),
+        color: colorScheme.surfaceContainer.withValues(alpha: 0.72),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(20)),
+          side: BorderSide(
+            color: Colors.white.withValues(alpha: isDark ? 0.12 : 0.6),
+            width: 0.8,
+          ),
         ),
         menuPadding: const EdgeInsets.symmetric(vertical: 8),
       ),

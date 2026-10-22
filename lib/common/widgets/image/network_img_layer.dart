@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
@@ -103,7 +104,9 @@ class NetworkImgLayer extends StatelessWidget {
       clipBehavior: isEmote ? Clip.none : Clip.antiAlias,
       decoration: BoxDecoration(
         shape: isAvatar ? BoxShape.circle : BoxShape.rectangle,
-        color: ColorScheme.of(context).onInverseSurface.withValues(alpha: 0.4),
+        color: Revamp.enabled
+            ? Revamp.wash(ColorScheme.of(context))
+            : ColorScheme.of(context).onInverseSurface.withValues(alpha: 0.4),
         borderRadius: isEmote || isAvatar ? null : borderRadius,
       ),
       child: Center(

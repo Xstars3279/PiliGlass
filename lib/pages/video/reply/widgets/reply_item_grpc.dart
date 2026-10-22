@@ -584,7 +584,7 @@ class ReplyItemGrpc extends StatelessWidget {
       child: Material(
         animationDuration: .zero,
         color: Revamp.enabled
-            ? colorScheme.surfaceContainer
+            ? Revamp.wash(colorScheme)
             : colorScheme.onInverseSurface,
         borderRadius: .all(.circular(_nestRadius)),
         child: Column(

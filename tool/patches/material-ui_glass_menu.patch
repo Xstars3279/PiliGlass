@@ -1,0 +1,44 @@
+diff --git a/lib/src/popup_menu.dart b/lib/src/popup_menu.dart
+index 0022a99..5be373f 100644
+--- a/lib/src/popup_menu.dart
++++ b/lib/src/popup_menu.dart
+@@ -792,14 +792,16 @@ class _PopupMenuState<T> extends State<_PopupMenu<T>> {
+       ),
+     );
+ 
++    final ShapeBorder? shape = widget.route.shape ?? popupMenuTheme.shape ?? defaults.shape;
++    final Color? color = widget.route.color ?? popupMenuTheme.color ?? defaults.color;
+     return AnimatedBuilder(
+       animation: widget.route.animation!,
+       builder: (BuildContext context, Widget? child) {
+-        return FadeTransition(
++        final Widget menu = FadeTransition(
+           opacity: opacity.animate(widget.route.animation!),
+           child: Material(
+-            shape: widget.route.shape ?? popupMenuTheme.shape ?? defaults.shape,
+-            color: widget.route.color ?? popupMenuTheme.color ?? defaults.color,
++            shape: shape,
++            color: color,
+             clipBehavior: widget.clipBehavior,
+             type: MaterialType.card,
+             elevation: widget.route.elevation ?? popupMenuTheme.elevation ?? defaults.elevation!,
+@@ -817,6 +819,19 @@ class _PopupMenuState<T> extends State<_PopupMenu<T>> {
+             ),
+           ),
+         );
++        // PiliPlus: a translucent menu blurs what is behind it, like glass;
++        // the blur grows with the fade, so no blurred patch shows up first
++        if (shape == null || color == null || color.a >= 1) {
++          return menu;
++        }
++        final double sigma = 24 * opacity.evaluate(widget.route.animation!);
++        return ClipPath(
++          clipper: ShapeBorderClipper(shape: shape),
++          child: BackdropFilter(
++            filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
++            child: menu,
++          ),
++        );
+       },
+       child: child,
+     );

@@ -6,6 +6,12 @@ import 'package:material_ui/material_ui.dart';
 /// Both settings need a restart, so reading them once is enough.
 abstract final class Revamp {
   static final bool enabled = Pref.floatingNavBar && Pref.liquidGlassNavBar;
+
+  /// A light wash for a block inside a surface, glass or not, e.g. the
+  /// sub-replies under a comment or an image that is still loading: it
+  /// tints whatever is behind instead of covering it.
+  static Color wash(ColorScheme colorScheme) =>
+      colorScheme.onSurface.withValues(alpha: 0.06);
 }
 
 /// A rounded group of rows, the way the redesign sets off a section.

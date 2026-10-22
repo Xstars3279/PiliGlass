@@ -19,8 +19,8 @@ class DockScrollWatcher extends StatefulWidget {
 }
 
 class _DockScrollWatcherState extends State<DockScrollWatcher> {
-  static const _toMinimize = 120.0;
-  static const _toRestore = 100.0;
+  static const _toMinimize = 60.0;
+  static const _toRestore = 50.0;
 
   /// the distance scrolled in one direction: + towards the end, - back
   double _run = 0;

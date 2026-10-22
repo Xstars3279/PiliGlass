@@ -51,17 +51,24 @@ try {
     # our own patches to dependencies: tool/patches/<package>_*.patch
     $packages = (Get-Content ".dart_tool/package_config.json" -Raw | ConvertFrom-Json).packages
     Get-ChildItem "tool/patches" -Filter *.patch | ForEach-Object {
-        $name = $_.BaseName.Split("_")[0]
+        # the name before the first "_"; a "-" in it stands for "_"
+        $name = $_.BaseName.Split("_")[0].Replace("-", "_")
         if ($name -eq "getx") { $name = "get" }
         $package = $packages | Where-Object { $_.name -eq $name }
         if (-not $package) { throw "package $name not found for $($_.Name)" }
         $dir = ([Uri]$package.rootUri).LocalPath
-        git -C $dir apply --check --reverse $_.FullName 2>$null
-        if ($LASTEXITCODE -eq 0) {
+        # pub may unpack a package with CRLF line ends; the patches are LF.
+        # The check fails when the patch is not applied yet, which "Stop"
+        # would turn into an error that ends the script.
+        $ErrorActionPreference = "Continue"
+        git -C $dir apply --ignore-whitespace --check --reverse $_.FullName 2>$null
+        $applied = $LASTEXITCODE -eq 0
+        $ErrorActionPreference = "Stop"
+        if ($applied) {
             Write-Host "$($_.Name) already applied"
             return
         }
-        git -C $dir apply $_.FullName
+        git -C $dir apply --ignore-whitespace $_.FullName
         if ($LASTEXITCODE -ne 0) { throw "$($_.Name) failed in $dir" }
         Write-Host "$($_.Name) applied"
     }

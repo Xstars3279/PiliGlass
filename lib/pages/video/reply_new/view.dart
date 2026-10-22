@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' show max;
 
+import 'package:PiliPlus/pages/common/publish/publish_route.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
 import 'package:PiliPlus/common/motion/pressable_scale.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/button/toolbar_icon_button.dart';
@@ -32,6 +35,13 @@ import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/theme_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
+import 'package:flutter/rendering.dart'
+    show
+        BoxHitTestResult,
+        ClipRRectLayer,
+        LayerHandle,
+        PipelineOwner,
+        RenderProxyBox;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart' hide TextField;
@@ -92,19 +102,19 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (Revamp.enabled) {
+      final child = _revampBody();
+      return darkVideoPage ? Theme(data: theme, child: child) : child;
+    }
     Widget child = ViewSafeArea(
       child: Align(
         alignment: Alignment.bottomCenter,
         child: Container(
           constraints: const BoxConstraints(maxWidth: 640),
-          decoration: Revamp.enabled
-              ? _revampSheet
-              : BoxDecoration(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
-                  ),
-                  color: theme.colorScheme.surface,
-                ),
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            color: theme.colorScheme.surface,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,7 +159,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
       () => RichTextField(
         key: key,
         controller: editController,
-        minLines: 4,
+        minLines: Revamp.enabled ? 2 : 4,
         maxLines: 8,
         autofocus: false,
         readOnly: readOnly.value,
@@ -157,7 +167,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
         onSubmitted: onSubmitted,
         focusNode: focusNode,
         decoration: InputDecoration(
-          hintText: widget.hint ?? "输入回复内容",
+          hintText: widget.hint ?? (Revamp.enabled ? '发条友善的评论' : "输入回复内容"),
           border: InputBorder.none,
           hintStyle: const TextStyle(fontSize: 14),
         ),
