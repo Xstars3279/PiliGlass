@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/models_new/video/video_detail/data.dart';
 import 'package:PiliPlus/models_new/video/video_detail/episode.dart';
@@ -102,10 +103,10 @@ class _SeasonPanelState extends State<SeasonPanel> {
         right: 2,
       ),
       child: Material(
-        color: theme.colorScheme.onInverseSurface,
-        borderRadius: const BorderRadius.all(Radius.circular(6)),
+        color: Revamp.tile(theme.colorScheme),
+        borderRadius: Revamp.tileRadius,
         child: InkWell(
-          borderRadius: const BorderRadius.all(Radius.circular(6)),
+          borderRadius: Revamp.tileRadius,
           onTap: widget.canTap
               ? () => widget.showEpisodes(
                   _videoDetailController.seasonIndex.value,

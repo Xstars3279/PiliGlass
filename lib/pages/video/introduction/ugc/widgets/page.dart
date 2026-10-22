@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/models_new/video/video_detail/page.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
@@ -161,10 +162,10 @@ class _PagesPanelState extends State<PagesPanel> {
                     ? const .only(right: 10)
                     : null,
                 child: Material(
-                  color: colorScheme.onInverseSurface,
-                  borderRadius: const .all(.circular(6)),
+                  color: Revamp.tile(colorScheme),
+                  borderRadius: Revamp.tileRadius,
                   child: InkWell(
-                    borderRadius: const .all(.circular(6)),
+                    borderRadius: Revamp.tileRadius,
                     onTap: () {
                       if (widget.onDownload case final onDownload?) {
                         if (onDownload(item) && mounted) {
@@ -203,9 +204,9 @@ class _PagesPanelState extends State<PagesPanel> {
                               color: colorScheme.secondaryContainer.withValues(
                                 alpha: .7,
                               ),
-                              borderRadius: const .only(
-                                topLeft: .circular(2),
-                                bottomRight: .circular(6),
+                              borderRadius: .only(
+                                topLeft: const .circular(2),
+                                bottomRight: .circular(Revamp.tileCorner),
                               ),
                             ),
                             child: Text(

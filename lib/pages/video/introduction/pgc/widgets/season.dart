@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/models_new/pgc/pgc_info_model/season.dart';
 import 'package:PiliPlus/pages/video/introduction/pgc/controller.dart';
 import 'package:material_ui/material_ui.dart';
@@ -41,10 +42,10 @@ class SeasonPanel extends StatelessWidget {
             width: 150,
             margin: index != seasons.length - 1 ? const .only(right: 10) : null,
             child: Material(
-              color: colorScheme.onInverseSurface,
-              borderRadius: const .all(.circular(6)),
+              color: Revamp.tile(colorScheme),
+              borderRadius: Revamp.tileRadius,
               child: InkWell(
-                borderRadius: const .all(.circular(6)),
+                borderRadius: Revamp.tileRadius,
                 onTap: () {
                   if (isCurr || pgcController.changingSeason) return;
                   pgcController.changeSeason(item.seasonId!).then((res) {

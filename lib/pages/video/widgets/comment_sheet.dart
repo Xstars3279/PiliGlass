@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -748,8 +749,8 @@ class _CommentPreviewCardState extends State<CommentPreviewCard> {
     return Padding(
       padding: const .fromLTRB(12, 12, 12, 0),
       child: Material(
-        color: colorScheme.surfaceContainerLow.withValues(alpha: 0.75),
-        borderRadius: const .all(.circular(20)),
+        color: Revamp.tile(colorScheme),
+        borderRadius: Revamp.tileRadius,
         clipBehavior: .antiAlias,
         child: InkWell(
           onTap: () => CommentSheet.open(_replyCtr),

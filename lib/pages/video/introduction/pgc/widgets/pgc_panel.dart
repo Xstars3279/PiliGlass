@@ -1,6 +1,7 @@
 import 'dart:async' show StreamSubscription;
 import 'dart:math';
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/models_new/pgc/pgc_info_model/episode.dart';
 import 'package:PiliPlus/models_new/pgc/pgc_info_model/new_ep.dart';
@@ -166,10 +167,10 @@ class _PgcPanelState extends State<PgcPanel> {
           ? const EdgeInsets.only(right: 10)
           : null,
       child: Material(
-        color: theme.onInverseSurface,
-        borderRadius: const BorderRadius.all(Radius.circular(6)),
+        color: Revamp.tile(theme),
+        borderRadius: Revamp.tileRadius,
         child: InkWell(
-          borderRadius: const BorderRadius.all(Radius.circular(6)),
+          borderRadius: Revamp.tileRadius,
           onTap: () {
             if (item.badge == '会员' && Accounts.mainEqVideo && vipStatus) {
               SmartDialog.showToast('需要大会员');

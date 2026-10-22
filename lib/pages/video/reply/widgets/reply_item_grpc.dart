@@ -570,7 +570,7 @@ class ReplyItemGrpc extends StatelessWidget {
   }
 
   /// corner radius of the box with the first sub-replies
-  static double get _nestRadius => Revamp.enabled ? 14 : 6;
+  static double get _nestRadius => Revamp.tileCorner;
 
   Widget replyItemRow(
     BuildContext context,
@@ -583,9 +583,7 @@ class ReplyItemGrpc extends StatelessWidget {
       padding: const .only(left: 42, right: 4),
       child: Material(
         animationDuration: .zero,
-        color: Revamp.enabled
-            ? Revamp.wash(colorScheme)
-            : colorScheme.onInverseSurface,
+        color: Revamp.tile(colorScheme),
         borderRadius: .all(.circular(_nestRadius)),
         child: Column(
           crossAxisAlignment: .stretch,

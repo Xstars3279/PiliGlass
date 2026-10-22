@@ -13,6 +13,23 @@ abstract final class Revamp {
   static Color wash(ColorScheme colorScheme) =>
       colorScheme.onSurface.withValues(alpha: 0.06);
 
+  // The redesign has two kinds of blocks. A group sets off a section on a
+  // plain page: solid, see [RevampGroup]. A tile sits on something tinted
+  // or on glass, e.g. in the video intro: the wash, smaller corners.
+
+  /// corner radius of a group
+  static const double groupRadius = 24;
+
+  /// corner radius of a tile; upstream's small blocks where it is off
+  static final double tileCorner = enabled ? 14 : 6;
+  static final BorderRadius tileRadius = BorderRadius.all(
+    Radius.circular(tileCorner),
+  );
+
+  /// a tile's color; upstream's where the redesign is off
+  static Color tile(ColorScheme colorScheme) =>
+      enabled ? wash(colorScheme) : colorScheme.onInverseSurface;
+
   /// Buttons over the video: a dark round of smoked glass behind each, so
   /// they read on a bright frame as well as a dark one.
   /// The light rim shows the round on the black bars beside a video too.
@@ -43,7 +60,9 @@ class RevampGroup extends StatelessWidget {
       // Material, and one below the group would be hidden by its color
       child: Material(
         color: ColorScheme.of(context).surfaceContainerLow,
-        borderRadius: const BorderRadius.all(Radius.circular(24)),
+        borderRadius: const BorderRadius.all(
+          Radius.circular(Revamp.groupRadius),
+        ),
         clipBehavior: Clip.antiAlias,
         child: child,
       ),
