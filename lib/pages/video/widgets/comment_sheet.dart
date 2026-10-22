@@ -21,6 +21,12 @@ final _sheetOpen = Expando<ValueNotifier<bool>>();
 ValueNotifier<bool> _openOf(VideoReplyController controller) =>
     _sheetOpen[controller] ??= ValueNotifier(false);
 
+/// Opens another panel in a video's sheet, see [CommentSheet.showPanel].
+final _panelOpeners = Expando<void Function(SheetPanelBuilder)>();
+
+/// builds a panel for the sheet, given the way to close the sheet
+typedef SheetPanelBuilder = Widget Function(VoidCallback close);
+
 /// The comments of the redesigned video page: a sheet of liquid glass that
 /// rises over the intro, below the player.
 ///
@@ -51,6 +57,18 @@ class CommentSheet extends StatefulWidget {
   static void open(VideoReplyController controller) =>
       _openOf(controller).value = true;
 
+  /// Brings up the sheet with [panel] in place of the comments, e.g. 合集,
+  /// so it slides and bounces like them. False if the page has no sheet.
+  static bool showPanel(
+    VideoReplyController controller,
+    SheetPanelBuilder panel,
+  ) {
+    final open = _panelOpeners[controller];
+    if (open == null) return false;
+    open(panel);
+    return true;
+  }
+
   @override
   State<CommentSheet> createState() => _CommentSheetState();
 }
@@ -77,6 +95,9 @@ class _CommentSheetState extends State<CommentSheet>
 
   LocalHistoryEntry? _history;
 
+  /// a panel shown in place of the comments, see [CommentSheet.showPanel]
+  Widget? _panel;
+
   /// The thread (评论详情) shown in the sheet in place of the list. It slides
   /// in over the same glass, so the page below is blurred only once.
   ({ReplyInfo item, int? id})? _thread;
@@ -102,6 +123,7 @@ class _CommentSheetState extends State<CommentSheet>
     _sheetCtr.addListener(_onSize);
     _shown.addListener(_onShown);
     _replyCtr.onShowReplies = _openThread;
+    _panelOpeners[_replyCtr] = _openPanel;
     if (widget.openAtStart) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _isOpen.value = true;
@@ -119,6 +141,7 @@ class _CommentSheetState extends State<CommentSheet>
       ..dispose();
     _shown.dispose();
     if (_replyCtr.onShowReplies == _openThread) _replyCtr.onShowReplies = null;
+    if (_panelOpeners[_replyCtr] == _openPanel) _panelOpeners[_replyCtr] = null;
     _threadIn.dispose();
     _history?.remove();
     _threadHistory?.remove();
@@ -187,6 +210,7 @@ class _CommentSheetState extends State<CommentSheet>
 
   void _finishClose() {
     if (!_isOpen.value) return;
+    _panel = null;
     _thread = null;
     _threadIn.value = 0;
     final threadHistory = _threadHistory;
@@ -197,6 +221,11 @@ class _CommentSheetState extends State<CommentSheet>
     history?.remove();
     _isOpen.value = false;
     _shown.jumpTo(0);
+  }
+
+  void _openPanel(SheetPanelBuilder panel) {
+    setState(() => _panel = panel(_close));
+    if (!_isOpen.value) _isOpen.value = true;
   }
 
   void _openThread(ReplyInfo item, int? id) {
@@ -366,24 +395,26 @@ class _CommentSheetState extends State<CommentSheet>
           ),
         ),
         // the input bar floats over the bottom of the open sheet
-        ListenableBuilder(
-          listenable: _shown,
-          builder: (context, child) => Positioned(
-            left: 12,
-            right: 12,
-            // moved by layout, not a transform, so the lens follows it
-            bottom: bottom + 10 - (1 - _progress) * (_barHeight + 30 + bottom),
-            height: _barHeight,
-            child: child!,
+        if (_panel == null)
+          ListenableBuilder(
+            listenable: _shown,
+            builder: (context, child) => Positioned(
+              left: 12,
+              right: 12,
+              // moved by layout, not a transform, so the lens follows it
+              bottom:
+                  bottom + 10 - (1 - _progress) * (_barHeight + 30 + bottom),
+              height: _barHeight,
+              child: child!,
+            ),
+            child: _InputBar(
+              label: switch (_thread) {
+                final thread? => '回复 @${thread.item.member.name}',
+                null => '发条友善的评论',
+              },
+              onTap: () => _thread != null ? _replyInThread?.call() : _reply(),
+            ),
           ),
-          child: _InputBar(
-            label: switch (_thread) {
-              final thread? => '回复 @${thread.item.member.name}',
-              null => '发条友善的评论',
-            },
-            onTap: () => _thread != null ? _replyInThread?.call() : _reply(),
-          ),
-        ),
       ],
     );
   }
@@ -450,6 +481,7 @@ class _CommentSheetState extends State<CommentSheet>
   /// The list, and the thread sliding in over it from the right: the list
   /// drifts left and fades, like a page pushed in a navigation stack.
   Widget _buildContent(ScrollController scrollController) {
+    if (_panel case final panel?) return panel;
     // made once per build, so the animation below does not rebuild them
     final list = PrimaryScrollController(
       controller: scrollController,
@@ -525,7 +557,8 @@ class _CommentSheetState extends State<CommentSheet>
         curve: Curves.easeOutCubic,
       ),
       child: SizedBox(
-        height: _headerHeight,
+        // a panel brings its own title bar: only the handle to drag by
+        height: _panel != null ? 20 : _headerHeight,
         child: Column(
           children: [
             Container(
@@ -537,67 +570,68 @@ class _CommentSheetState extends State<CommentSheet>
                 borderRadius: const .all(.circular(2)),
               ),
             ),
-            Expanded(
-              child: Padding(
-                padding: .only(left: _thread != null ? 6 : 20, right: 6),
-                child: _thread != null
-                    ? Row(
-                        children: [
-                          IconButton(
-                            tooltip: '返回',
-                            onPressed: _closeThread,
-                            icon: const Icon(Icons.arrow_back_rounded),
-                          ),
-                          const Text(
-                            '评论详情',
-                            style: TextStyle(fontSize: 17, fontWeight: .w800),
-                          ),
-                          const Spacer(),
-                          IconButton(
-                            tooltip: '关闭',
-                            onPressed: _close,
-                            icon: const Icon(Icons.close_rounded),
-                          ),
-                        ],
-                      )
-                    : Row(
-                        crossAxisAlignment: .center,
-                        children: [
-                          const Text(
-                            '评论',
-                            style: TextStyle(fontSize: 17, fontWeight: .w800),
-                          ),
-                          const SizedBox(width: 8),
-                          Obx(() {
-                            final count = _replyCtr.count.value;
-                            return Text(
-                              count == -1 ? '' : NumUtils.numFormat(count),
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: colorScheme.onSurfaceVariant,
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
-                              ),
-                            );
-                          }),
-                          const Spacer(),
-                          Obx(
-                            () => TextButton.icon(
-                              onPressed: _replyCtr.queryBySort,
-                              icon: const Icon(Icons.sort_rounded, size: 18),
-                              label: Text(_replyCtr.sortType.value.descShort),
+            if (_panel == null)
+              Expanded(
+                child: Padding(
+                  padding: .only(left: _thread != null ? 6 : 20, right: 6),
+                  child: _thread != null
+                      ? Row(
+                          children: [
+                            IconButton(
+                              tooltip: '返回',
+                              onPressed: _closeThread,
+                              icon: const Icon(Icons.arrow_back_rounded),
                             ),
-                          ),
-                          IconButton(
-                            tooltip: '关闭',
-                            onPressed: _close,
-                            icon: const Icon(Icons.close_rounded),
-                          ),
-                        ],
-                      ),
+                            const Text(
+                              '评论详情',
+                              style: TextStyle(fontSize: 17, fontWeight: .w800),
+                            ),
+                            const Spacer(),
+                            IconButton(
+                              tooltip: '关闭',
+                              onPressed: _close,
+                              icon: const Icon(Icons.close_rounded),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          crossAxisAlignment: .center,
+                          children: [
+                            const Text(
+                              '评论',
+                              style: TextStyle(fontSize: 17, fontWeight: .w800),
+                            ),
+                            const SizedBox(width: 8),
+                            Obx(() {
+                              final count = _replyCtr.count.value;
+                              return Text(
+                                count == -1 ? '' : NumUtils.numFormat(count),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: colorScheme.onSurfaceVariant,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                              );
+                            }),
+                            const Spacer(),
+                            Obx(
+                              () => TextButton.icon(
+                                onPressed: _replyCtr.queryBySort,
+                                icon: const Icon(Icons.sort_rounded, size: 18),
+                                label: Text(_replyCtr.sortType.value.descShort),
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: '关闭',
+                              onPressed: _close,
+                              icon: const Icon(Icons.close_rounded),
+                            ),
+                          ],
+                        ),
+                ),
               ),
-            ),
           ],
         ),
       ),

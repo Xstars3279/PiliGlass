@@ -60,6 +60,7 @@ class EpisodePanel extends CommonSlidePage {
     this.onReverse,
     required this.onChangeEpisode,
     this.onClose,
+    this.inSheet = false,
   }) : assert(type == EpisodeType.pgc || ugcIntroController != null);
 
   final UgcIntroController? ugcIntroController;
@@ -80,6 +81,9 @@ class EpisodePanel extends CommonSlidePage {
   final Future<bool> Function(ugc.BaseEpisodeItem) onChangeEpisode;
   final VoidCallback? onReverse;
   final VoidCallback? onClose;
+
+  /// inside the redesign's glass sheet: no background of its own
+  final bool inSheet;
 
   @override
   State<EpisodePanel> createState() => _EpisodePanelState();
@@ -211,9 +215,10 @@ class _EpisodePanelState extends State<EpisodePanel>
 
   @override
   Widget buildPage(ThemeData theme) {
+    final opaque = showTitle && !widget.inSheet;
     return Material(
-      color: showTitle ? theme.colorScheme.surface : null,
-      type: showTitle ? MaterialType.canvas : MaterialType.transparency,
+      color: opaque ? theme.colorScheme.surface : null,
+      type: opaque ? MaterialType.canvas : MaterialType.transparency,
       child: Column(
         children: [
           _buildToolbar(theme),
@@ -648,11 +653,13 @@ class _EpisodePanelState extends State<EpisodePanel>
     height: 45,
     padding: EdgeInsets.symmetric(horizontal: showTitle ? 14 : 6),
     decoration: BoxDecoration(
-      border: Border(
-        bottom: BorderSide(
-          color: theme.dividerColor.withValues(alpha: 0.1),
-        ),
-      ),
+      border: widget.inSheet
+          ? null
+          : Border(
+              bottom: BorderSide(
+                color: theme.dividerColor.withValues(alpha: 0.1),
+              ),
+            ),
     ),
     child: Row(
       children: [

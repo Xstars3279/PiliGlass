@@ -1980,7 +1980,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       videoDetailController.showMediaListPanel(context);
       return;
     }
-    Widget listSheetContent({bool enableSlide = true}) => EpisodePanel(
+    Widget listSheetContent({
+      bool enableSlide = true,
+      VoidCallback? onClose,
+      bool inSheet = false,
+    }) => EpisodePanel(
       heroTag: heroTag,
       ugcIntroController: videoDetailController.isUgc
           ? ugcIntroController
@@ -2012,11 +2016,12 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       onChangeEpisode: videoDetailController.isUgc
           ? ugcIntroController.onChangeEpisode
           : pgcIntroController.onChangeEpisode,
-      onClose: Get.back,
+      onClose: onClose ?? Get.back,
       onReverse: () {
-        Get.back();
+        (onClose ?? Get.back)();
         onReversePlay(isSeason: season != null);
       },
+      inSheet: inSheet,
     );
     if (isFullScreen || videoDetailController.showVideoSheet) {
       final child = listSheetContent(enableSlide: false);
@@ -2026,7 +2031,13 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             ? Theme(data: theme, child: child)
             : child,
       );
-    } else {
+    } else if (!_showInSheet(
+      (close) => listSheetContent(
+        enableSlide: false,
+        onClose: close,
+        inSheet: true,
+      ),
+    )) {
       videoDetailController.childKey.currentState?.showBottomSheet(
         constraints: const BoxConstraints(),
         (context) => listSheetContent(),

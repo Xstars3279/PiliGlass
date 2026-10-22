@@ -7,6 +7,11 @@ extension _VideoRevamp on _VideoDetailPageVState {
   /// raised from a preview card below the actions.
   bool get _replyInSheet => Revamp.enabled && videoDetailController.showReply;
 
+  /// Shows [panel] in the comment sheet, e.g. 合集; false if there is no
+  /// sheet to show it in.
+  bool _showInSheet(Widget Function(VoidCallback close) panel) =>
+      _replyInSheet && CommentSheet.showPanel(_videoReplyController, panel);
+
   Widget _withCommentSheet(Widget page) {
     if (!_replyInSheet) return page;
     return CommentSheet(
