@@ -36,6 +36,8 @@ $script = $script -replace '\$PubCacheDir = "~/.pub-cache"', '$PubCacheDir = $en
 Push-Location $ProjectRoot
 try {
     & ([scriptblock]::Create($script)) -platform $platform
+    # it ends in another directory
+    Set-Location $ProjectRoot
 
     # a missing registrant builds fine but hangs the app on the splash screen
     $registrant = "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java"

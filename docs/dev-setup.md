@@ -51,7 +51,8 @@
 | 液态玻璃底栏、搜索按钮 | `lib/common/widgets/liquid_glass/liquid_glass_navigation_bar.dart` |
 | 液态玻璃折射着色器 | `shaders/liquid_glass_lens.frag` |
 | 视频卡片 | `lib/common/widgets/video_card/video_card_v.dart`（竖版）、`video_card_h.dart`（横版） |
-| 首页、搜索、我的、设置、播放页 | `lib/pages/<页面>/view.dart` |
+| 「我的」页、搜索页的新布局 | `lib/pages/mine/revamp_view.dart`、`lib/pages/search/revamp_view.dart`（原来的 `view.dart` 只留几行接口，方便合并上游） |
+| 首页、设置、播放页 | `lib/pages/<页面>/view.dart` |
 | 改版进度和待办 | `docs/revamp.md` |
 
 所有改版代码都包在 `if (Revamp.enabled)` 或 `Revamp.enabled ? 新 : 旧` 里，旧代码原样保留，对照着读能看出改了什么。
