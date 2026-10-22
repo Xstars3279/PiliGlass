@@ -37,6 +37,27 @@ abstract final class Springs {
     duration: const Duration(milliseconds: 320),
     bounce: 0.6,
   );
+
+  /// sheets coming up from the bottom: the comment sheet, modal sheets
+  static final sheet = SpringDescription.withDurationAndBounce(
+    duration: const Duration(milliseconds: 420),
+    bounce: 0.28,
+  );
+}
+
+/// A spring as a [Curve], for animations that only take a curve, such as
+/// the route of a modal sheet. [duration] is how long the animation runs,
+/// long enough for [spring] to settle.
+class SpringCurve extends Curve {
+  const SpringCurve(this.spring, this.duration);
+
+  final SpringDescription spring;
+  final Duration duration;
+
+  @override
+  double transformInternal(double t) => SpringSimulation(spring, 0, 1, 0).x(
+    t * duration.inMicroseconds / Duration.microsecondsPerSecond,
+  );
 }
 
 /// A value that follows a target with a spring, stepping the spring once per

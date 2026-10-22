@@ -1,5 +1,5 @@
 diff --git a/lib/src/bottom_sheet.dart b/lib/src/bottom_sheet.dart
-index 0d5c5c9..61b2ce5 100644
+index 0d5c5c9..676a1bf 100644
 --- a/lib/src/bottom_sheet.dart
 +++ b/lib/src/bottom_sheet.dart
 @@ -6,7 +6,7 @@
@@ -11,40 +11,127 @@ index 0d5c5c9..61b2ce5 100644
  
  import 'package:flutter/foundation.dart';
  import 'package:flutter/gestures.dart';
+@@ -250,7 +250,7 @@ class BottomSheet extends StatefulWidget {
+     AnimationStyle? sheetAnimationStyle,
+   }) {
+     return AnimationController(
+-      duration: sheetAnimationStyle?.duration ?? _kBottomSheetEnterDuration,
++      duration: sheetAnimationStyle?.duration ?? PiliSheetMotion.enterDuration ?? _kBottomSheetEnterDuration,
+       reverseDuration: sheetAnimationStyle?.reverseDuration ?? _kBottomSheetExitDuration,
+       debugLabel: 'BottomSheet',
+       vsync: vsync,
 @@ -416,6 +416,8 @@ class _BottomSheetState<T extends BottomSheet> extends State<T> {
        ),
      );
  
-+    bottomSheet = _piliGlass(bottomSheet, shape, color);
++    bottomSheet = _piliGlass(bottomSheet, shape, color, extendDown: true);
 +
      if (constraints != null) {
        bottomSheet = Align(
          alignment: Alignment.bottomCenter,
-@@ -435,6 +437,22 @@ class _BottomSheetState<T extends BottomSheet> extends State<T> {
+@@ -435,6 +437,53 @@ class _BottomSheetState<T extends BottomSheet> extends State<T> {
    }
  }
  
 +
 +// PiliPlus: a translucent sheet or dialog blurs what is behind it, like
 +// glass; an opaque one is drawn as before
-+Widget _piliGlass(Widget child, ShapeBorder? shape, Color? color) {
++Widget _piliGlass(Widget child, ShapeBorder? shape, Color? color, {bool extendDown = false}) {
 +  if (color == null || color.a >= 1) {
 +    return child;
 +  }
-+  return ClipPath(
++  final Widget glass = ClipPath(
 +    clipper: ShapeBorderClipper(shape: shape ?? const RoundedRectangleBorder()),
 +    child: BackdropFilter(
 +      filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
 +      child: child,
 +    ),
 +  );
++  if (!extendDown) {
++    return glass;
++  }
++  // a springy sheet rises a little past its place; the glass goes on below
++  // its bottom edge so no gap opens under it
++  return Stack(
++    clipBehavior: Clip.none,
++    children: <Widget>[
++      glass,
++      Positioned(
++        left: 0,
++        right: 0,
++        bottom: -80,
++        height: 80,
++        child: ClipRect(
++          child: BackdropFilter(
++            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
++            child: ColoredBox(color: color),
++          ),
++        ),
++      ),
++    ],
++  );
++}
++
++/// PiliPlus: the app's motion for modal bottom sheets, e.g. a spring, used
++/// where a sheet does not bring an [AnimationStyle] of its own.
++abstract final class PiliSheetMotion {
++  static Curve? curve;
++  static Curve? reverseCurve;
++  static Duration? enterDuration;
 +}
 +
  // PERSISTENT BOTTOM SHEETS
  
  // See scaffold.dart
+@@ -693,8 +742,8 @@ class _ModalBottomSheetState<T> extends State<_ModalBottomSheet<T>> {
+     super.initState();
+     _curvedSheetAnimation = CurvedAnimation(
+       parent: widget.route.animation!,
+-      curve: widget.animationStyle?.curve ?? _kModalBottomSheetCurve,
+-      reverseCurve: widget.animationStyle?.reverseCurve ?? _kModalBottomSheetCurve,
++      curve: widget.animationStyle?.curve ?? PiliSheetMotion.curve ?? _kModalBottomSheetCurve,
++      reverseCurve: widget.animationStyle?.reverseCurve ?? PiliSheetMotion.reverseCurve ?? _kModalBottomSheetCurve,
+     );
+     _sheetAnimation = ProxyAnimation(_curvedSheetAnimation);
+   }
+@@ -705,11 +754,11 @@ class _ModalBottomSheetState<T> extends State<_ModalBottomSheet<T>> {
+     assert(oldWidget.route == widget.route);
+ 
+     assert(
+-      _curvedSheetAnimation.curve == (widget.animationStyle?.curve ?? _kModalBottomSheetCurve),
++      _curvedSheetAnimation.curve == (widget.animationStyle?.curve ?? PiliSheetMotion.curve ?? _kModalBottomSheetCurve),
+     );
+     assert(
+       _curvedSheetAnimation.reverseCurve ==
+-          (widget.animationStyle?.reverseCurve ?? _kModalBottomSheetCurve),
++          (widget.animationStyle?.reverseCurve ?? PiliSheetMotion.reverseCurve ?? _kModalBottomSheetCurve),
+     );
+   }
+ 
+@@ -748,11 +797,11 @@ class _ModalBottomSheetState<T> extends State<_ModalBottomSheet<T>> {
+       parent: widget.route.animation!,
+       curve: Split(
+         currentProgress,
+-        endCurve: widget.animationStyle?.curve ?? _kModalBottomSheetCurve,
++        endCurve: widget.animationStyle?.curve ?? PiliSheetMotion.curve ?? _kModalBottomSheetCurve,
+       ),
+       reverseCurve: Split(
+         currentProgress,
+-        endCurve: widget.animationStyle?.reverseCurve ?? _kModalBottomSheetCurve,
++        endCurve: widget.animationStyle?.reverseCurve ?? PiliSheetMotion.reverseCurve ?? _kModalBottomSheetCurve,
+       ),
+     );
+   }
+@@ -1092,6 +1141,7 @@ class ModalBottomSheetRoute<T> extends PopupRoute<T> {
+   Duration get transitionDuration =>
+       transitionAnimationController?.duration ??
+       sheetAnimationStyle?.duration ??
++      PiliSheetMotion.enterDuration ??
+       _kBottomSheetEnterDuration;
+ 
+   @override
 diff --git a/lib/src/dialog.dart b/lib/src/dialog.dart
-index eb3580d..7634084 100644
+index eb3580d..8b33f86 100644
 --- a/lib/src/dialog.dart
 +++ b/lib/src/dialog.dart
 @@ -10,7 +10,8 @@
@@ -88,25 +175,49 @@ index eb3580d..7634084 100644
            ),
          ),
        );
-@@ -323,6 +328,22 @@ class Dialog extends StatelessWidget {
+@@ -323,6 +328,46 @@ class Dialog extends StatelessWidget {
    }
  }
  
 +
 +// PiliPlus: a translucent sheet or dialog blurs what is behind it, like
 +// glass; an opaque one is drawn as before
-+Widget _piliGlass(Widget child, ShapeBorder? shape, Color? color) {
++Widget _piliGlass(Widget child, ShapeBorder? shape, Color? color, {bool extendDown = false}) {
 +  if (color == null || color.a >= 1) {
 +    return child;
 +  }
-+  return ClipPath(
++  final Widget glass = ClipPath(
 +    clipper: ShapeBorderClipper(shape: shape ?? const RoundedRectangleBorder()),
 +    child: BackdropFilter(
 +      filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
 +      child: child,
 +    ),
 +  );
++  if (!extendDown) {
++    return glass;
++  }
++  // a springy sheet rises a little past its place; the glass goes on below
++  // its bottom edge so no gap opens under it
++  return Stack(
++    clipBehavior: Clip.none,
++    children: <Widget>[
++      glass,
++      Positioned(
++        left: 0,
++        right: 0,
++        bottom: -80,
++        height: 80,
++        child: ClipRect(
++          child: BackdropFilter(
++            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
++            child: ColoredBox(color: color),
++          ),
++        ),
++      ),
++    ],
++  );
 +}
++
 +
  /// A Material Design alert dialog.
  ///

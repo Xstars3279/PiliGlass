@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The redesign's look for the standard components, so the pages that are
@@ -9,6 +10,14 @@ abstract final class RevampTheme {
     final textTheme = theme.textTheme;
     final isDark = colorScheme.brightness == Brightness.dark;
     final shadow = Colors.black.withValues(alpha: isDark ? 0.4 : 0.12);
+    // modal sheets come up on the comment sheet's spring
+    // (tool/patches/material-ui_glass_sheet.patch)
+    PiliSheetMotion.enterDuration = const Duration(milliseconds: 520);
+    PiliSheetMotion.curve = SpringCurve(
+      Springs.sheet,
+      PiliSheetMotion.enterDuration!,
+    );
+    PiliSheetMotion.reverseCurve = Curves.easeInCubic;
     // the light catching the edge of the glass surfaces
     final rim = BorderSide(
       color: Colors.white.withValues(alpha: isDark ? 0.12 : 0.6),

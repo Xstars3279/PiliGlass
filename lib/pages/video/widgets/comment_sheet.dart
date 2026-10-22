@@ -82,10 +82,10 @@ class _CommentSheetState extends State<CommentSheet>
 
   /// The sheet as drawn. It follows the sheet's own position with a spring,
   /// so the snaps of [DraggableScrollableSheet] land with a little bounce.
-  late final _shown = SpringFollower(vsync: this, value: 0, spring: _spring);
-  static final _spring = SpringDescription.withDurationAndBounce(
-    duration: const Duration(milliseconds: 420),
-    bounce: 0.28,
+  late final _shown = SpringFollower(
+    vsync: this,
+    value: 0,
+    spring: Springs.sheet,
   );
 
   /// a finger is on the sheet: draw it exactly where it is
