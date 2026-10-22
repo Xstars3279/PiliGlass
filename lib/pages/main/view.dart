@@ -12,6 +12,8 @@ import 'package:PiliPlus/common/widgets/route_aware_mixin.dart';
 import 'package:PiliPlus/models/common/nav_bar_config.dart';
 import 'package:PiliPlus/pages/home/controller.dart';
 import 'package:PiliPlus/pages/home/view.dart';
+import 'package:PiliPlus/pages/main/dock_scroll.dart';
+import 'package:PiliPlus/pages/dynamics_create/view.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
 import 'package:PiliPlus/utils/android/bindings.g.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
@@ -154,6 +156,9 @@ class _MainAppState extends PopScopeState<MainApp>
     }
   }
 
+  /// the dock shrunk to a circle, see [DockScrollWatcher]
+  final _dockMinimized = false.obs;
+
   Widget? get _bottomNav {
     Widget? bottomNav;
     if (_mainController.navigationBars.length > 1) {
@@ -161,13 +166,8 @@ class _MainAppState extends PopScopeState<MainApp>
         // the dock never slides away: where the bar would hide, it shrinks
         // to a circle next to the search button
         final hide = _mainController.hideBottomBar;
-        final barOffset = _mainController.barOffset;
-        final showBottomBar = _mainController.showBottomBar;
         return Obx(() {
-          final minimized =
-              hide &&
-              ((barOffset?.value ?? 0) > Style.topBarHeight / 2 ||
-                  showBottomBar?.value == false);
+          final minimized = hide && _dockMinimized.value;
           final home = Get.isRegistered<HomeController>()
               ? Get.find<HomeController>()
               : null;
@@ -175,8 +175,23 @@ class _MainAppState extends PopScopeState<MainApp>
               ? home.defaultSearch.value
               : null;
           return LiquidGlassNavigationBar(
-            onDestinationSelected: _mainController.setIndex,
+            onDestinationSelected: (index) {
+              _dockMinimized.value = false;
+              _mainController.setIndex(index);
+            },
             selectedIndex: _mainController.selectedIndex.value,
+            // on 动态 the round button posts, where the page had its +
+            action:
+                _mainController.navigationBars[_mainController
+                        .selectedIndex
+                        .value] ==
+                    NavigationBarType.dynamics
+                ? LiquidGlassDockAction(
+                    icon: Icons.add_rounded,
+                    label: '发布动态',
+                    onTap: () => CreateDynPanel.onCreateDyn(context),
+                  )
+                : null,
             minimized: minimized,
             searchHint: hint,
             onSearch: () => Get.toNamed(
@@ -366,6 +381,10 @@ class _MainAppState extends PopScopeState<MainApp>
         physics: const NeverScrollableScrollPhysics(),
         children: _mainController.navigationBars.map((i) => i.page).toList(),
       );
+    }
+
+    if (_mainController.dockSearch && _mainController.hideBottomBar) {
+      child = DockScrollWatcher(minimized: _dockMinimized, child: child);
     }
 
     Widget? sideBar;

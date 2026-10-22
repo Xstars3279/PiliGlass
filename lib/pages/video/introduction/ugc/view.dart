@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -521,23 +522,26 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
               text: !isLoading ? NumUtils.numFormat(stat!.favorite) : null,
             ),
           ),
-          ActionItem(
-            icon: const Icon(CustomIcons.download),
-            onTap: () => videoDetailCtr.onDownload(context),
-            text: '缓存',
-            semanticsLabel: '缓存',
-          ),
-          Obx(
-            () => ActionItem(
-              icon: const Icon(FontAwesomeIcons.clock),
-              selectIcon: const Icon(FontAwesomeIcons.solidClock),
-              onTap: () =>
-                  introController.handleAction(introController.viewLater),
-              selectStatus: introController.hasLater.value,
-              semanticsLabel: '再看',
-              text: '再看',
+          // the redesign keeps them in the ⋯ menu only
+          if (!Revamp.enabled) ...[
+            ActionItem(
+              icon: const Icon(CustomIcons.download),
+              onTap: () => videoDetailCtr.onDownload(context),
+              text: '缓存',
+              semanticsLabel: '缓存',
             ),
-          ),
+            Obx(
+              () => ActionItem(
+                icon: const Icon(FontAwesomeIcons.clock),
+                selectIcon: const Icon(FontAwesomeIcons.solidClock),
+                onTap: () =>
+                    introController.handleAction(introController.viewLater),
+                selectStatus: introController.hasLater.value,
+                semanticsLabel: '再看',
+                text: '再看',
+              ),
+            ),
+          ],
           ActionItem(
             icon: const Icon(FontAwesomeIcons.shareFromSquare),
             onTap: () => introController.actionShareVideo(context),

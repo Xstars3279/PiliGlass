@@ -7,54 +7,40 @@ extension _MineRevamp on _MediaPageState {
   bool get _modern => _mainController.dockSearch;
 
   Widget _buildModern() {
-    return Stack(
+    return Column(
       children: [
-        // a banner made from the avatar, blurred, fading into the page
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 280,
-          child: Obx(
-            () => _ProfileBanner(face: controller.userInfo.value.face),
-          ),
+        Padding(
+          padding: const .symmetric(vertical: 10),
+          child: _buildHeaderActions,
         ),
-        Column(
-          children: [
-            Padding(
-              padding: const .symmetric(vertical: 10),
-              child: _buildHeaderActions,
-            ),
-            Expanded(
-              child: Material(
-                type: .transparency,
-                child: refreshIndicator(
-                  onRefresh: controller.onRefresh,
-                  child: onBuild(
-                    ListView(
-                      padding: const .only(bottom: 150),
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      children: [
-                        _buildProfile(),
-                        const SizedBox(height: 18),
-                        _buildStatChips(),
-                        const SizedBox(height: 12),
-                        _MineMenu(
-                          controller: controller,
-                          preview: (tab) => switch (tab) {
-                            .favorite => _buildFav(previewOnly: true),
-                            .history => _buildHistory(previewOnly: true),
-                            .later => _buildLater(previewOnly: true),
-                            .sub => _buildSub(previewOnly: true),
-                          },
-                        ),
-                      ],
+        Expanded(
+          child: Material(
+            type: .transparency,
+            child: refreshIndicator(
+              onRefresh: controller.onRefresh,
+              child: onBuild(
+                ListView(
+                  padding: const .only(bottom: 150),
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    _buildProfile(),
+                    const SizedBox(height: 18),
+                    _buildStatChips(),
+                    const SizedBox(height: 12),
+                    _MineMenu(
+                      controller: controller,
+                      preview: (tab) => switch (tab) {
+                        .favorite => _buildFav(previewOnly: true),
+                        .history => _buildHistory(previewOnly: true),
+                        .later => _buildLater(previewOnly: true),
+                        .sub => _buildSub(previewOnly: true),
+                      },
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),
-          ],
+          ),
         ),
       ],
     );
@@ -270,7 +256,6 @@ class _MineMenuState extends State<_MineMenu> {
 
     Widget row({
       required IconData icon,
-      required Color color,
       required String title,
       required VoidCallback? onOpen,
       MineTabType? tab,
@@ -279,7 +264,7 @@ class _MineMenuState extends State<_MineMenu> {
       final expandable = tab != null && controller.mineTabs.contains(tab);
       final expanded = expandable && _expanded.contains(tab);
       final tile = ListTile(
-        leading: RevampIconTile(icon: Icon(icon), color: color),
+        leading: RevampIconTile(icon: Icon(icon)),
         title: Text(title),
         trailing: Row(
           mainAxisSize: .min,
@@ -350,20 +335,17 @@ class _MineMenuState extends State<_MineMenu> {
               children: [
                 row(
                   icon: Icons.download_rounded,
-                  color: const Color(0xFFFF6F91),
                   title: '离线缓存',
                   onOpen: shortcut('离线缓存'),
                 ),
                 row(
                   icon: Icons.history_rounded,
-                  color: const Color(0xFF7B8CFF),
                   title: '观看记录',
                   tab: .history,
                   onOpen: shortcut('观看记录'),
                 ),
                 row(
                   icon: Icons.star_rounded,
-                  color: const Color(0xFF3FB6E8),
                   title: '我的收藏',
                   tab: .favorite,
                   count: controller.favCtr?.count,
@@ -371,7 +353,6 @@ class _MineMenuState extends State<_MineMenu> {
                 ),
                 row(
                   icon: Icons.watch_later_rounded,
-                  color: const Color(0xFFF2A73B),
                   title: '稍后再看',
                   tab: .later,
                   count: controller.laterCtr?.count,
@@ -379,7 +360,6 @@ class _MineMenuState extends State<_MineMenu> {
                 ),
                 row(
                   icon: Icons.subscriptions_rounded,
-                  color: const Color(0xFF55B97A),
                   title: '我的订阅',
                   tab: .sub,
                   count: controller.subCtr?.count,
@@ -394,15 +374,11 @@ class _MineMenuState extends State<_MineMenu> {
             children: [
               row(
                 icon: Icons.settings_rounded,
-                color: const Color(0xFF8A8296),
                 title: '设置',
                 onOpen: () => Get.toNamed('/setting', preventDuplicates: false),
               ),
               ListTile(
-                leading: const RevampIconTile(
-                  icon: Icon(Icons.info_rounded),
-                  color: Color(0xFFE0457B),
-                ),
+                leading: const RevampIconTile(icon: Icon(Icons.info_rounded)),
                 title: const Text('关于 PiliPlus'),
                 trailing: Row(
                   mainAxisSize: .min,
@@ -421,63 +397,6 @@ class _MineMenuState extends State<_MineMenu> {
           ),
         ),
       ],
-    );
-  }
-}
-
-/// The page's top, tinted by the user's avatar: blurred far past
-/// recognition, then fading into the page.
-class _ProfileBanner extends StatelessWidget {
-  const _ProfileBanner({required this.face});
-
-  final String? face;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = ColorScheme.of(context);
-    final Widget base = face == null
-        ? DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: .topLeft,
-                end: .bottomRight,
-                colors: [
-                  colorScheme.primaryContainer,
-                  colorScheme.tertiaryContainer,
-                ],
-              ),
-            ),
-          )
-        // a strong blur spreads well past its box; clip it, or the spread
-        // shows as a band below the banner that the fade does not cover
-        : LayoutBuilder(
-            builder: (context, constraints) => ClipRect(
-              child: ImageFiltered(
-                imageFilter: ImageFilter.blur(
-                  sigmaX: 36,
-                  sigmaY: 36,
-                  tileMode: .clamp,
-                ),
-                child: NetworkImgLayer(
-                  src: face,
-                  width: constraints.maxWidth,
-                  height: constraints.maxHeight,
-                  borderRadius: BorderRadius.zero,
-                ),
-              ),
-            ),
-          );
-    // fade the banner itself out instead of painting the page color over
-    // it, so it meets whatever the page's background is without a seam
-    return ShaderMask(
-      blendMode: .dstIn,
-      shaderCallback: (rect) => const LinearGradient(
-        begin: .topCenter,
-        end: .bottomCenter,
-        colors: [Color(0xFFFFFFFF), Color(0x00FFFFFF)],
-        stops: [0.3, 1],
-      ).createShader(rect),
-      child: Opacity(opacity: 0.55, child: base),
     );
   }
 }

@@ -55,6 +55,20 @@ class LiquidGlassNavigationDestination {
 ///
 /// Press anywhere to lift the indicator into a glass lens, drag to slide it
 /// across the tabs, release to select the tab under it.
+/// A button for the round slot next to the bar, see
+/// [LiquidGlassNavigationBar.action].
+class LiquidGlassDockAction {
+  const LiquidGlassDockAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+}
+
 class LiquidGlassNavigationBar extends StatefulWidget {
   const LiquidGlassNavigationBar({
     super.key,
@@ -64,6 +78,7 @@ class LiquidGlassNavigationBar extends StatefulWidget {
     this.bottomPadding = 8.0,
     this.onSearch,
     this.searchHint,
+    this.action,
     this.minimized = false,
   }) : assert(destinations.length >= 2);
 
@@ -78,6 +93,10 @@ class LiquidGlassNavigationBar extends StatefulWidget {
 
   /// shown in the search field while it opens, e.g. today's suggested word
   final String? searchHint;
+
+  /// Takes the search button's place on a tab with a main action of its own,
+  /// e.g. posting on 动态. Tapping it calls the action instead of searching.
+  final LiquidGlassDockAction? action;
 
   /// While scrolling, the bar shrinks to a circle with the current tab's
   /// icon instead of hiding; a tap brings it back. Needs [onSearch].
@@ -533,13 +552,17 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     required Color barTint,
   }) {
     const radius = Radius.circular(_kBarHeight / 2);
-    final hintOpacity = (_search.value * 2 - 0.6).clamp(0.0, 1.0);
+    final action = widget.action;
+    final hintOpacity = action != null
+        ? 0.0
+        : (_search.value * 2 - 0.6).clamp(0.0, 1.0);
+    final icon = action?.icon ?? Icons.search;
     return Semantics(
       button: true,
-      label: '搜索',
+      label: action?.label ?? '搜索',
       excludeSemantics: true,
       child: GestureDetector(
-        onTap: _openSearch,
+        onTap: action?.onTap ?? _openSearch,
         child: CustomPaint(
           painter: GlassShadowPainter(
             radius: radius,
@@ -561,7 +584,21 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
               child: Row(
                 spacing: 10,
                 children: [
-                  Icon(Icons.search, size: 24, color: colorScheme.onSurface),
+                  // the icon pops when the tab swaps the button's action
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 260),
+                    switchInCurve: Curves.easeOutBack,
+                    transitionBuilder: (child, animation) => ScaleTransition(
+                      scale: animation,
+                      child: FadeTransition(opacity: animation, child: child),
+                    ),
+                    child: Icon(
+                      icon,
+                      key: ValueKey(icon),
+                      size: 24,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
                   if (hintOpacity > 0)
                     Expanded(
                       child: Opacity(
@@ -594,7 +631,7 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = colorScheme.brightness == .dark;
     final viewPadding = MediaQuery.viewPaddingOf(context);
-    final barTint = colorScheme.surfaceContainer.withValues(alpha: 0.4);
+    final barTint = colorScheme.surfaceContainer.withValues(alpha: 0.28);
     final selectedFill = (isDark ? Colors.white : Colors.black).withValues(
       alpha: 0.1,
     );

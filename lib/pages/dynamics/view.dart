@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/dynamic/dynamics_type.dart';
@@ -163,6 +164,14 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
         endDrawer = upPanelPart(colorScheme);
         leading = _createDynamicBtn(colorScheme, isRight: false);
         actions = const EndDrawerButton();
+    }
+    // the redesign posts from the round button of the dock
+    if (Revamp.enabled) {
+      if (upPanelPosition == .rightDrawer) {
+        leading = null;
+      } else {
+        actions = const SizedBox.shrink();
+      }
     }
 
     return Scaffold(

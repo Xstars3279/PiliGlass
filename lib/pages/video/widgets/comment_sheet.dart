@@ -500,7 +500,7 @@ class _InputBar extends StatelessWidget {
             refractionHeight: 16,
             refractionAmount: 18,
             saturation: 1.5,
-            color: colorScheme.surfaceContainer.withValues(alpha: 0.6),
+            color: colorScheme.surfaceContainer.withValues(alpha: 0.4),
             child: Padding(
               padding: const .symmetric(horizontal: 18),
               child: Row(

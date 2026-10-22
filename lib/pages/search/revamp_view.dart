@@ -125,7 +125,7 @@ extension _SearchRevamp on _SearchPageState {
         refractionHeight: 20,
         refractionAmount: 20,
         saturation: 1.5,
-        color: colorScheme.surfaceContainer.withValues(alpha: 0.6),
+        color: colorScheme.surfaceContainer.withValues(alpha: 0.4),
         child: Center(child: child),
       ),
     );

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui' show ImageFilter;
 
 import 'package:PiliPlus/build_config.dart';
 import 'package:PiliPlus/common/assets.dart';

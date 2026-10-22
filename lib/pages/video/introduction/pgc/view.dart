@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
@@ -440,17 +441,19 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
               text: NumUtils.numFormat(stat.favorite),
             ),
           ),
-          Obx(
-            () => ActionItem(
-              icon: const Icon(FontAwesomeIcons.clock),
-              selectIcon: const Icon(FontAwesomeIcons.solidClock),
-              onTap: () =>
-                  introController.handleAction(introController.viewLater),
-              selectStatus: introController.hasLater.value,
-              semanticsLabel: '再看',
-              text: '再看',
+          // the redesign keeps it in the ⋯ menu only
+          if (!Revamp.enabled)
+            Obx(
+              () => ActionItem(
+                icon: const Icon(FontAwesomeIcons.clock),
+                selectIcon: const Icon(FontAwesomeIcons.solidClock),
+                onTap: () =>
+                    introController.handleAction(introController.viewLater),
+                selectStatus: introController.hasLater.value,
+                semanticsLabel: '再看',
+                text: '再看',
+              ),
             ),
-          ),
           ActionItem(
             icon: const Icon(FontAwesomeIcons.shareFromSquare),
             onTap: () => introController.actionShareVideo(context),
