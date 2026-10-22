@@ -64,10 +64,9 @@ float circleMap(float x) {
 }
 
 vec4 sampleBackdrop(vec2 coord) {
+  // The backdrop of a backdrop filter is upright on OpenGLES too: flipping
+  // it, as for image samplers, mirrors the top of the screen into the glass.
   vec2 uv = coord / uSize;
-#ifdef IMPELLER_TARGET_OPENGLES
-  uv.y = 1.0 - uv.y;
-#endif
   return texture(uTexture, uv);
 }
 
