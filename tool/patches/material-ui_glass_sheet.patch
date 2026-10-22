@@ -1,0 +1,113 @@
+diff --git a/lib/src/bottom_sheet.dart b/lib/src/bottom_sheet.dart
+index 0d5c5c9..61b2ce5 100644
+--- a/lib/src/bottom_sheet.dart
++++ b/lib/src/bottom_sheet.dart
+@@ -6,7 +6,7 @@
+ library;
+ 
+ import 'dart:math' as math;
+-import 'dart:ui' show SemanticsHitTestBehavior;
++import 'dart:ui' show ImageFilter, SemanticsHitTestBehavior;
+ 
+ import 'package:flutter/foundation.dart';
+ import 'package:flutter/gestures.dart';
+@@ -416,6 +416,8 @@ class _BottomSheetState<T extends BottomSheet> extends State<T> {
+       ),
+     );
+ 
++    bottomSheet = _piliGlass(bottomSheet, shape, color);
++
+     if (constraints != null) {
+       bottomSheet = Align(
+         alignment: Alignment.bottomCenter,
+@@ -435,6 +437,22 @@ class _BottomSheetState<T extends BottomSheet> extends State<T> {
+   }
+ }
+ 
++
++// PiliPlus: a translucent sheet or dialog blurs what is behind it, like
++// glass; an opaque one is drawn as before
++Widget _piliGlass(Widget child, ShapeBorder? shape, Color? color) {
++  if (color == null || color.a >= 1) {
++    return child;
++  }
++  return ClipPath(
++    clipper: ShapeBorderClipper(shape: shape ?? const RoundedRectangleBorder()),
++    child: BackdropFilter(
++      filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
++      child: child,
++    ),
++  );
++}
++
+ // PERSISTENT BOTTOM SHEETS
+ 
+ // See scaffold.dart
+diff --git a/lib/src/dialog.dart b/lib/src/dialog.dart
+index eb3580d..7634084 100644
+--- a/lib/src/dialog.dart
++++ b/lib/src/dialog.dart
+@@ -10,7 +10,8 @@
+ /// @docImport 'text_button.dart';
+ library;
+ 
+-import 'dart:ui' show SemanticsHitTestBehavior, SemanticsRole, clampDouble, lerpDouble;
++import 'dart:ui'
++    show ImageFilter, SemanticsHitTestBehavior, SemanticsRole, clampDouble, lerpDouble;
+ 
+ import 'package:cupertino_ui/cupertino_ui.dart';
+ import 'package:flutter/foundation.dart';
+@@ -289,16 +290,20 @@ class Dialog extends StatelessWidget {
+         alignment: alignment ?? dialogTheme.alignment ?? defaults.alignment!,
+         child: ConstrainedBox(
+           constraints: boxConstraints,
+-          child: Material(
+-            color: backgroundColor ?? dialogTheme.backgroundColor ?? defaults.backgroundColor,
+-            elevation: elevation ?? dialogTheme.elevation ?? defaults.elevation!,
+-            shadowColor: shadowColor ?? dialogTheme.shadowColor ?? defaults.shadowColor,
+-            surfaceTintColor:
+-                surfaceTintColor ?? dialogTheme.surfaceTintColor ?? defaults.surfaceTintColor,
+-            shape: shape ?? dialogTheme.shape ?? defaults.shape!,
+-            type: MaterialType.card,
+-            clipBehavior: clipBehavior ?? dialogTheme.clipBehavior ?? defaults.clipBehavior!,
+-            child: child,
++          child: _piliGlass(
++            Material(
++              color: backgroundColor ?? dialogTheme.backgroundColor ?? defaults.backgroundColor,
++              elevation: elevation ?? dialogTheme.elevation ?? defaults.elevation!,
++              shadowColor: shadowColor ?? dialogTheme.shadowColor ?? defaults.shadowColor,
++              surfaceTintColor:
++                  surfaceTintColor ?? dialogTheme.surfaceTintColor ?? defaults.surfaceTintColor,
++              shape: shape ?? dialogTheme.shape ?? defaults.shape!,
++              type: MaterialType.card,
++              clipBehavior: clipBehavior ?? dialogTheme.clipBehavior ?? defaults.clipBehavior!,
++              child: child,
++            ),
++            shape ?? dialogTheme.shape ?? defaults.shape,
++            backgroundColor ?? dialogTheme.backgroundColor ?? defaults.backgroundColor,
+           ),
+         ),
+       );
+@@ -323,6 +328,22 @@ class Dialog extends StatelessWidget {
+   }
+ }
+ 
++
++// PiliPlus: a translucent sheet or dialog blurs what is behind it, like
++// glass; an opaque one is drawn as before
++Widget _piliGlass(Widget child, ShapeBorder? shape, Color? color) {
++  if (color == null || color.a >= 1) {
++    return child;
++  }
++  return ClipPath(
++    clipper: ShapeBorderClipper(shape: shape ?? const RoundedRectangleBorder()),
++    child: BackdropFilter(
++      filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
++      child: child,
++    ),
++  );
++}
++
+ /// A Material Design alert dialog.
+ ///
+ /// An alert dialog (also known as a basic dialog) informs the user about

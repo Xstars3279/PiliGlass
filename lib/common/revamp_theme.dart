@@ -9,6 +9,11 @@ abstract final class RevampTheme {
     final textTheme = theme.textTheme;
     final isDark = colorScheme.brightness == Brightness.dark;
     final shadow = Colors.black.withValues(alpha: isDark ? 0.4 : 0.12);
+    // the light catching the edge of the glass surfaces
+    final rim = BorderSide(
+      color: Colors.white.withValues(alpha: isDark ? 0.12 : 0.6),
+      width: 0.8,
+    );
 
     return theme.copyWith(
       tabBarTheme: TabBarThemeData(
@@ -40,10 +45,7 @@ abstract final class RevampTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: const BorderRadius.all(Radius.circular(20)),
-          side: BorderSide(
-            color: Colors.white.withValues(alpha: isDark ? 0.12 : 0.6),
-            width: 0.8,
-          ),
+          side: rim,
         ),
         menuPadding: const EdgeInsets.symmetric(vertical: 8),
       ),
@@ -58,16 +60,27 @@ abstract final class RevampTheme {
           fontWeight: FontWeight.w700,
         ),
       ),
+      // translucent like the menus, and blurred by the same kind of patch
+      // (tool/patches/material-ui_glass_sheet.patch)
       dialogTheme: theme.dialogTheme.copyWith(
-        backgroundColor: colorScheme.surfaceContainerHigh,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(28)),
+        backgroundColor: colorScheme.surfaceContainerHigh.withValues(
+          alpha: 0.85,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(28)),
+          side: rim,
         ),
       ),
       bottomSheetTheme: theme.bottomSheetTheme.copyWith(
-        backgroundColor: colorScheme.surfaceContainerLow,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        backgroundColor: colorScheme.surfaceContainerLow.withValues(
+          alpha: 0.82,
+        ),
+        modalBackgroundColor: colorScheme.surfaceContainerLow.withValues(
+          alpha: 0.82,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          side: rim,
         ),
       ),
       appBarTheme: theme.appBarTheme.copyWith(
