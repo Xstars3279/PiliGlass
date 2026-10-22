@@ -7,6 +7,7 @@ import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/pages/video/reply/controller.dart';
 import 'package:PiliPlus/pages/video/reply/view.dart';
+import 'package:PiliPlus/pages/video/reply_reply/view.dart';
 import 'package:PiliPlus/pages/video/widgets/ambient_background.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:flutter/scheduler.dart' show SchedulerBinding;
@@ -55,7 +56,7 @@ class CommentSheet extends StatefulWidget {
 }
 
 class _CommentSheetState extends State<CommentSheet>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final VideoReplyController _replyCtr = Get.find(tag: widget.heroTag);
   late final ValueNotifier<bool> _isOpen = _openOf(_replyCtr);
   final _sheetCtr = DraggableScrollableController();
@@ -76,6 +77,13 @@ class _CommentSheetState extends State<CommentSheet>
 
   LocalHistoryEntry? _history;
 
+  /// The thread (评论详情) shown in the sheet in place of the list. It slides
+  /// in over the same glass, so the page below is blurred only once.
+  ({ReplyInfo item, int? id})? _thread;
+  late final _threadIn = AnimationController.unbounded(vsync: this);
+  LocalHistoryEntry? _threadHistory;
+  VoidCallback? _replyInThread;
+
   /// opened, waiting for the layout to know where half-way is
   bool _rising = false;
   double _half = 0.6;
@@ -93,6 +101,7 @@ class _CommentSheetState extends State<CommentSheet>
     _isOpen.addListener(_onOpenChanged);
     _sheetCtr.addListener(_onSize);
     _shown.addListener(_onShown);
+    _replyCtr.onShowReplies = _openThread;
     if (widget.openAtStart) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _isOpen.value = true;
@@ -109,7 +118,10 @@ class _CommentSheetState extends State<CommentSheet>
       ..removeListener(_onSize)
       ..dispose();
     _shown.dispose();
+    if (_replyCtr.onShowReplies == _openThread) _replyCtr.onShowReplies = null;
+    _threadIn.dispose();
     _history?.remove();
+    _threadHistory?.remove();
     super.dispose();
   }
 
@@ -175,11 +187,57 @@ class _CommentSheetState extends State<CommentSheet>
 
   void _finishClose() {
     if (!_isOpen.value) return;
+    _thread = null;
+    _threadIn.value = 0;
+    final threadHistory = _threadHistory;
+    _threadHistory = null;
+    threadHistory?.remove();
     final history = _history;
     _history = null;
     history?.remove();
     _isOpen.value = false;
     _shown.jumpTo(0);
+  }
+
+  void _openThread(ReplyInfo item, int? id) {
+    setState(() {
+      _thread = (item: item, id: id);
+      _replyInThread = null;
+    });
+    if (!_isOpen.value) {
+      _isOpen.value = true;
+    } else if (_sheetCtr.isAttached && _sheetCtr.size < 1) {
+      // a thread reads better with the room of the whole sheet
+      _sheetCtr.animateTo(
+        1,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      );
+    }
+    _threadIn
+      ..value = 0
+      ..springTo(1, Springs.bouncy);
+    if (_threadHistory == null) {
+      _threadHistory = LocalHistoryEntry(onRemove: _onThreadBack);
+      ModalRoute.of(context)?.addLocalHistoryEntry(_threadHistory!);
+    }
+  }
+
+  /// the back button leaves the thread before closing the sheet
+  void _onThreadBack() {
+    _threadHistory = null;
+    if (_thread == null) return;
+    _threadIn.springTo(0, Springs.smooth).whenCompleteOrCancel(() {
+      if (mounted && _threadIn.value <= 0.001) setState(() => _thread = null);
+    });
+  }
+
+  void _closeThread() {
+    if (_threadHistory case final history?) {
+      history.remove();
+    } else {
+      _onThreadBack();
+    }
   }
 
   /// Snaps the sheet after its handle was dragged: a flick goes on to the
@@ -318,7 +376,13 @@ class _CommentSheetState extends State<CommentSheet>
             height: _barHeight,
             child: child!,
           ),
-          child: _InputBar(onTap: _reply),
+          child: _InputBar(
+            label: switch (_thread) {
+              final thread? => '回复 @${thread.item.member.name}',
+              null => '发条友善的评论',
+            },
+            onTap: () => _thread != null ? _replyInThread?.call() : _reply(),
+          ),
         ),
       ],
     );
@@ -374,21 +438,72 @@ class _CommentSheetState extends State<CommentSheet>
             child: Column(
               children: [
                 _buildHeader(context),
-                Expanded(
-                  child: PrimaryScrollController(
-                    controller: scrollController,
-                    child: VideoReplyPanel(
-                      heroTag: widget.heroTag,
-                      isNested: true,
-                      inSheet: true,
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildContent(scrollController)),
               ],
             ),
           ),
         ),
       ],
+    );
+  }
+
+  /// The list, and the thread sliding in over it from the right: the list
+  /// drifts left and fades, like a page pushed in a navigation stack.
+  Widget _buildContent(ScrollController scrollController) {
+    // made once per build, so the animation below does not rebuild them
+    final list = PrimaryScrollController(
+      controller: scrollController,
+      child: VideoReplyPanel(
+        heroTag: widget.heroTag,
+        isNested: true,
+        inSheet: true,
+      ),
+    );
+    final thread = _thread;
+    final threadPanel = thread == null
+        ? null
+        : VideoReplyReplyPanel(
+            key: ValueKey(thread.item.id),
+            enableSlide: false,
+            id: thread.id,
+            oid: thread.item.oid.toInt(),
+            rpid: thread.item.id.toInt(),
+            firstFloor: thread.item.replyControl.isNote ? null : thread.item,
+            replyType: _replyCtr.videoType.replyType,
+            isVideoDetail: true,
+            upMid: _replyCtr.upMid,
+            inSheet: true,
+            onReplyReady: (reply) => _replyInThread = reply,
+          );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        return AnimatedBuilder(
+          animation: _threadIn,
+          builder: (context, _) {
+            final t = _threadIn.value;
+            return Stack(
+              children: [
+                IgnorePointer(
+                  ignoring: thread != null,
+                  child: Opacity(
+                    opacity: (1 - t).clamp(0.0, 1.0),
+                    child: Transform.translate(
+                      offset: Offset(-0.3 * width * t, 0),
+                      child: list,
+                    ),
+                  ),
+                ),
+                if (threadPanel != null)
+                  Transform.translate(
+                    offset: Offset(width * (1 - t), 0),
+                    child: threadPanel,
+                  ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -424,41 +539,63 @@ class _CommentSheetState extends State<CommentSheet>
             ),
             Expanded(
               child: Padding(
-                padding: const .only(left: 20, right: 6),
-                child: Row(
-                  crossAxisAlignment: .center,
-                  children: [
-                    const Text(
-                      '评论',
-                      style: TextStyle(fontSize: 17, fontWeight: .w800),
-                    ),
-                    const SizedBox(width: 8),
-                    Obx(() {
-                      final count = _replyCtr.count.value;
-                      return Text(
-                        count == -1 ? '' : NumUtils.numFormat(count),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: colorScheme.onSurfaceVariant,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
-                      );
-                    }),
-                    const Spacer(),
-                    Obx(
-                      () => TextButton.icon(
-                        onPressed: _replyCtr.queryBySort,
-                        icon: const Icon(Icons.sort_rounded, size: 18),
-                        label: Text(_replyCtr.sortType.value.descShort),
+                padding: .only(left: _thread != null ? 6 : 20, right: 6),
+                child: _thread != null
+                    ? Row(
+                        children: [
+                          IconButton(
+                            tooltip: '返回',
+                            onPressed: _closeThread,
+                            icon: const Icon(Icons.arrow_back_rounded),
+                          ),
+                          const Text(
+                            '评论详情',
+                            style: TextStyle(fontSize: 17, fontWeight: .w800),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            tooltip: '关闭',
+                            onPressed: _close,
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        crossAxisAlignment: .center,
+                        children: [
+                          const Text(
+                            '评论',
+                            style: TextStyle(fontSize: 17, fontWeight: .w800),
+                          ),
+                          const SizedBox(width: 8),
+                          Obx(() {
+                            final count = _replyCtr.count.value;
+                            return Text(
+                              count == -1 ? '' : NumUtils.numFormat(count),
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: colorScheme.onSurfaceVariant,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            );
+                          }),
+                          const Spacer(),
+                          Obx(
+                            () => TextButton.icon(
+                              onPressed: _replyCtr.queryBySort,
+                              icon: const Icon(Icons.sort_rounded, size: 18),
+                              label: Text(_replyCtr.sortType.value.descShort),
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: '关闭',
+                            onPressed: _close,
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                        ],
                       ),
-                    ),
-                    IconButton(
-                      tooltip: '关闭',
-                      onPressed: _close,
-                      icon: const Icon(Icons.close_rounded),
-                    ),
-                  ],
-                ),
               ),
             ),
           ],
@@ -470,8 +607,9 @@ class _CommentSheetState extends State<CommentSheet>
 
 /// 发条友善的评论: a capsule of liquid glass over the bottom of the sheet.
 class _InputBar extends StatelessWidget {
-  const _InputBar({required this.onTap});
+  const _InputBar({required this.label, required this.onTap});
 
+  final String label;
   final VoidCallback onTap;
 
   @override
@@ -513,7 +651,9 @@ class _InputBar extends StatelessWidget {
                   ),
                   Expanded(
                     child: Text(
-                      '发条友善的评论',
+                      label,
+                      maxLines: 1,
+                      overflow: .ellipsis,
                       style: TextStyle(
                         fontSize: 15,
                         color: colorScheme.onSurfaceVariant,

@@ -63,7 +63,14 @@ class VideoReplyController extends ReplyController<MainListReply>
     }
   }
 
+  /// set by the redesign's comment sheet, which shows a thread itself
+  void Function(ReplyInfo replyItem, int? id)? onShowReplies;
+
   void replyReply(ReplyInfo replyItem, int? id) {
+    if (onShowReplies case final show?) {
+      show(replyItem, id);
+      return;
+    }
     videoCtr.childKey.currentState?.showBottomSheet(
       constraints: const BoxConstraints(),
       (context) => VideoReplyReplyPanel(

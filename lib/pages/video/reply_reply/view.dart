@@ -38,6 +38,8 @@ class VideoReplyReplyPanel extends CommonSlidePage {
     required this.replyType,
     this.isNested = false,
     this.upMid,
+    this.inSheet = false,
+    this.onReplyReady,
   });
   final int? id;
   final int oid;
@@ -48,6 +50,12 @@ class VideoReplyReplyPanel extends CommonSlidePage {
   final int replyType;
   final bool isNested;
   final Int64? upMid;
+
+  /// inside the redesign's comment sheet: no header or background of its
+  /// own, and the sheet's input bar replies to the first floor through
+  /// [onReplyReady]
+  final bool inSheet;
+  final ValueChanged<VoidCallback>? onReplyReady;
 
   static Future<void>? toReply({
     required int oid,
@@ -128,6 +136,9 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
       ),
       tag: _tag,
     );
+    widget.onReplyReady?.call(
+      () => _controller.onReply(firstFloor, index: -1),
+    );
   }
 
   @override
@@ -139,6 +150,7 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
   @override
   Widget buildPage(ThemeData theme) {
     Widget child() => enableSlide ? slideList(theme) : buildList(theme);
+    if (widget.inSheet) return MiniScaffold(body: child());
     return SimpleColoredBox(
       color: theme.canvasColor,
       child: MiniScaffold(
@@ -231,7 +243,7 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
           child: Divider(
             height: 20,
             color: theme.dividerColor.withValues(alpha: 0.1),
-            thickness: 6,
+            thickness: widget.inSheet ? 1 : 6,
           ),
         ),
       ],
@@ -239,39 +251,40 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
   }
 
   Widget _sortWidget(ColorScheme colorScheme) {
-    return SliverPinnedHeader(
-      backgroundColor: colorScheme.surface,
-      child: Padding(
-        padding: const .fromLTRB(12, 2.5, 6, 2.5),
-        child: Row(
-          mainAxisAlignment: .spaceBetween,
-          children: [
-            Obx(
-              () {
-                final count = _controller.count.value;
-                return count != -1
-                    ? Text(
-                        '相关回复共${NumUtils.numFormat(count)}条',
-                        style: const TextStyle(fontSize: 13),
-                      )
-                    : const SizedBox.shrink();
-              },
-            ),
-            TextButton.icon(
-              style: Style.buttonStyle,
-              onPressed: _controller.queryBySort,
-              icon: Icon(Icons.sort, size: 16, color: colorScheme.secondary),
-              label: Obx(
-                () => Text(
-                  _controller.sortType.value.label,
-                  style: TextStyle(fontSize: 13, color: colorScheme.secondary),
-                ),
+    final row = Padding(
+      padding: const .fromLTRB(12, 2.5, 6, 2.5),
+      child: Row(
+        mainAxisAlignment: .spaceBetween,
+        children: [
+          Obx(
+            () {
+              final count = _controller.count.value;
+              return count != -1
+                  ? Text(
+                      '相关回复共${NumUtils.numFormat(count)}条',
+                      style: const TextStyle(fontSize: 13),
+                    )
+                  : const SizedBox.shrink();
+            },
+          ),
+          TextButton.icon(
+            style: Style.buttonStyle,
+            onPressed: _controller.queryBySort,
+            icon: Icon(Icons.sort, size: 16, color: colorScheme.secondary),
+            label: Obx(
+              () => Text(
+                _controller.sortType.value.label,
+                style: TextStyle(fontSize: 13, color: colorScheme.secondary),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+    // in the sheet it scrolls away: pinned, it would need a background
+    return widget.inSheet
+        ? SliverToBoxAdapter(child: row)
+        : SliverPinnedHeader(backgroundColor: colorScheme.surface, child: row);
   }
 
   Widget _buildBody(
