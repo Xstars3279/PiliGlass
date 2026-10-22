@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' show max;
 
+import 'package:PiliPlus/common/motion/pressable_scale.dart';
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/button/toolbar_icon_button.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart'
@@ -33,6 +35,8 @@ import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart' hide TextField;
+
+part 'revamp_view.dart';
 
 class ReplyPage extends CommonRichTextPubPage {
   const ReplyPage({
@@ -93,10 +97,14 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
         alignment: Alignment.bottomCenter,
         child: Container(
           constraints: const BoxConstraints(maxWidth: 640),
-          decoration: BoxDecoration(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            color: theme.colorScheme.surface,
-          ),
+          decoration: Revamp.enabled
+              ? _revampSheet
+              : BoxDecoration(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
+                  color: theme.colorScheme.surface,
+                ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,38 +145,43 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
   }
 
   List<Widget> buildInputView() {
+    final field = Obx(
+      () => RichTextField(
+        key: key,
+        controller: editController,
+        minLines: 4,
+        maxLines: 8,
+        autofocus: false,
+        readOnly: readOnly.value,
+        onChanged: onChanged,
+        onSubmitted: onSubmitted,
+        focusNode: focusNode,
+        decoration: InputDecoration(
+          hintText: widget.hint ?? "输入回复内容",
+          border: InputBorder.none,
+          hintStyle: const TextStyle(fontSize: 14),
+        ),
+        style: theme.textTheme.bodyLarge,
+      ),
+    );
     return [
-      Padding(
-        padding: const EdgeInsets.only(
-          top: 12,
-          right: 15,
-          left: 15,
-          bottom: 10,
-        ),
-        child: Obx(
-          () => RichTextField(
-            key: key,
-            controller: editController,
-            minLines: 4,
-            maxLines: 8,
-            autofocus: false,
-            readOnly: readOnly.value,
-            onChanged: onChanged,
-            onSubmitted: onSubmitted,
-            focusNode: focusNode,
-            decoration: InputDecoration(
-              hintText: widget.hint ?? "输入回复内容",
-              border: InputBorder.none,
-              hintStyle: const TextStyle(fontSize: 14),
-            ),
-            style: theme.textTheme.bodyLarge,
+      if (Revamp.enabled)
+        _revampField(field)
+      else
+        Padding(
+          padding: const EdgeInsets.only(
+            top: 12,
+            right: 15,
+            left: 15,
+            bottom: 10,
           ),
+          child: field,
         ),
-      ),
-      Divider(
-        height: 1,
-        color: theme.dividerColor.withValues(alpha: 0.1),
-      ),
+      if (!Revamp.enabled)
+        Divider(
+          height: 1,
+          color: theme.dividerColor.withValues(alpha: 0.1),
+        ),
       Container(
         height: 52,
         padding: const EdgeInsets.only(left: 12, right: 12),
@@ -207,20 +220,23 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
               ),
             ),
             const Spacer(),
-            Obx(
-              () => FilledButton.tonal(
-                onPressed: enablePublish.value ? onPublishThrottle : null,
-                style: FilledButton.styleFrom(
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
+            if (Revamp.enabled)
+              _revampSend
+            else
+              Obx(
+                () => FilledButton.tonal(
+                  onPressed: enablePublish.value ? onPublishThrottle : null,
+                  style: FilledButton.styleFrom(
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    visualDensity: VisualDensity.compact,
                   ),
-                  visualDensity: VisualDensity.compact,
+                  child: const Text('发送'),
                 ),
-                child: const Text('发送'),
               ),
-            ),
           ],
         ),
       ),

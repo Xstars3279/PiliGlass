@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -56,7 +57,8 @@ class PublishRoute<T> extends PopupRoute<T> {
       return _transitionBuilder(context, animation, secondaryAnimation, child);
     }
     return SlideTransition(
-      position: animation.drive(
+      // the redesign eases the panel in and out instead of a constant speed
+      position: (Revamp.enabled ? _eased : animation).drive(
         Tween<Offset>(
           begin: const Offset(0.0, 1.0),
           end: Offset.zero,
@@ -65,4 +67,10 @@ class PublishRoute<T> extends PopupRoute<T> {
       child: child,
     );
   }
+
+  late final Animation<double> _eased = CurvedAnimation(
+    parent: animation!,
+    curve: Curves.easeOutQuart,
+    reverseCurve: Curves.easeInCubic,
+  );
 }
