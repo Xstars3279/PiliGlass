@@ -68,7 +68,7 @@ mixin ReplyLocateMixin<T>
   AnimationController get colorAnimController =>
       _animController ??= AnimationController(
         // longer in the redesign: the flash waits for the rise
-        duration: Duration(milliseconds: Revamp.enabled ? 1700 : 1000),
+        duration: Duration(milliseconds: Revamp.enabled ? 2100 : 1000),
         vsync: this,
       );
 
@@ -91,7 +91,7 @@ mixin ReplyLocateMixin<T>
                   tween: ConstantTween(
                     colorScheme.primary.withValues(alpha: 0.18),
                   ),
-                  weight: 300,
+                  weight: 700,
                 ),
                 TweenSequenceItem(
                   tween: ColorTween(
