@@ -38,17 +38,31 @@ class _AppearInState extends State<AppearIn>
   @override
   void initState() {
     super.initState();
+    if (!_play()) _controller.value = 1;
+  }
+
+  /// A refresh brings a new list into the same cards: they rise in again,
+  /// as on the first load.
+  @override
+  void didUpdateWidget(AppearIn oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.since != oldWidget.since) _play();
+  }
+
+  /// Starts the rise if the list arrived just now; false if it did not.
+  bool _play() {
     final since = widget.since;
-    if (since != null && DateTime.now().difference(since) < AppearIn._window) {
-      Future.delayed(
-        AppearIn._stagger * math.min(widget.index, AppearIn._maxStaggered),
-        () {
-          if (mounted) _controller.forward();
-        },
-      );
-    } else {
-      _controller.value = 1;
+    if (since == null || DateTime.now().difference(since) >= AppearIn._window) {
+      return false;
     }
+    _controller.value = 0;
+    Future.delayed(
+      AppearIn._stagger * math.min(widget.index, AppearIn._maxStaggered),
+      () {
+        if (mounted) _controller.forward();
+      },
+    );
+    return true;
   }
 
   @override

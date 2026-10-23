@@ -1364,6 +1364,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             : videoDetailController.tabCtr.index.clamp(0, tabs.length - 1),
       );
     }
+    // a lone 简介 tab says nothing: the redesign shows the danmaku bar
+    if (!replyTab && tabs.length == 1) return _danmakuBar();
 
     Widget tabBar() {
       final flag = !needIndicator || tabs.length == 1;

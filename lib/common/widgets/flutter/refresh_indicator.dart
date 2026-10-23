@@ -6,6 +6,8 @@
 
 import 'dart:async' show Completer;
 
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/refresh_layout.dart';
 import 'package:PiliPlus/common/widgets/scroll_behavior.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart'
@@ -524,13 +526,17 @@ class RefreshIndicatorState extends State<RefreshIndicator>
           ? null
           : AnimatedBuilder(
               animation: _positionController,
-              builder: (context, child) => RefreshProgressIndicator(
-                value: showIndeterminateIndicator ? null : _value.value,
-                valueColor: _valueColor,
-                backgroundColor: widget.backgroundColor,
-                strokeWidth: widget.strokeWidth,
-                elevation: widget.elevation,
-              ),
+              builder: (context, child) => Revamp.enabled
+                  ? GlassRefreshIndicator(
+                      value: showIndeterminateIndicator ? null : _value.value,
+                    )
+                  : RefreshProgressIndicator(
+                      value: showIndeterminateIndicator ? null : _value.value,
+                      valueColor: _valueColor,
+                      backgroundColor: widget.backgroundColor,
+                      strokeWidth: widget.strokeWidth,
+                      elevation: widget.elevation,
+                    ),
             ),
     );
 
