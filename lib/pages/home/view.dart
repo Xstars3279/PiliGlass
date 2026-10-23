@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_height_widget.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -103,57 +104,71 @@ class _HomePageState extends CommonPageState<HomePage>
     final theme = Theme.of(context);
     return Padding(
       // the main page already pads the body below the status bar
-      padding: const EdgeInsets.only(top: 6),
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
       child: SizedBox(
-        height: 44,
+        height: 48,
         child: Row(
+          spacing: 8,
           children: [
             Expanded(
-              child: TabBar(
-                controller: _homeController.tabController,
-                tabs: _homeController.tabs
-                    .map((e) => Tab(text: e.label))
-                    .toList(),
-                isScrollable: true,
-                tabAlignment: TabAlignment.start,
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                labelPadding: const EdgeInsets.symmetric(horizontal: 14),
-                dividerColor: Colors.transparent,
-                dividerHeight: 0,
-                overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-                labelColor: _colorScheme.onSurface,
-                unselectedLabelColor: _colorScheme.onSurfaceVariant,
-                labelStyle: theme.textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-                unselectedLabelStyle: theme.textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-                indicatorSize: TabBarIndicatorSize.tab,
-                indicatorPadding: const EdgeInsets.symmetric(vertical: 4),
-                indicator: ShapeDecoration(
-                  shape: const StadiumBorder(
-                    side: BorderSide(color: Color(0x14FFFFFF)),
+              child: GlassCapsule(
+                child: TabBar(
+                  controller: _homeController.tabController,
+                  tabs: _homeController.tabs
+                      .map((e) => Tab(text: e.label))
+                      .toList(),
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
+                  padding: EdgeInsets.zero,
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 14),
+                  dividerColor: Colors.transparent,
+                  dividerHeight: 0,
+                  overlayColor: const WidgetStatePropertyAll(
+                    Colors.transparent,
                   ),
-                  color: _colorScheme.surfaceContainerHighest,
-                  shadows: [
-                    BoxShadow(
-                      color: _colorScheme.shadow.withValues(alpha: 0.08),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
+                  labelColor: _colorScheme.onSurface,
+                  unselectedLabelColor: _colorScheme.onSurfaceVariant,
+                  labelStyle: theme.textTheme.titleMedium!.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                  unselectedLabelStyle: theme.textTheme.titleMedium!.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  indicatorPadding: EdgeInsets.zero,
+                  indicator: ShapeDecoration(
+                    shape: const StadiumBorder(
+                      side: BorderSide(color: Color(0x14FFFFFF)),
                     ),
-                  ],
+                    color: _colorScheme.surfaceContainerHighest,
+                    shadows: [
+                      BoxShadow(
+                        color: _colorScheme.shadow.withValues(alpha: 0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  onTap: (_) {
+                    feedBack();
+                    if (!_homeController.tabController.indexIsChanging) {
+                      _homeController.animateToTop();
+                    }
+                  },
                 ),
-                onTap: (_) {
-                  feedBack();
-                  if (!_homeController.tabController.indexIsChanging) {
-                    _homeController.animateToTop();
-                  }
-                },
               ),
             ),
-            msgBadge(_mainController),
-            const SizedBox(width: 8),
+            Obx(
+              () => _mainController.accountService.isLogin.value
+                  ? GlassCapsule(
+                      padding: EdgeInsets.zero,
+                      child: SizedBox.square(
+                        dimension: 48,
+                        child: Center(child: msgBadge(_mainController)),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ],
         ),
       ),

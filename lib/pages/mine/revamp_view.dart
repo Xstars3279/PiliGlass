@@ -6,6 +6,17 @@ extension _MineRevamp on _MediaPageState {
   /// the redesigned page, together with the liquid glass dock
   bool get _modern => _mainController.dockSearch;
 
+  /// the header's buttons on one capsule of the dock's glass
+  Widget _headerGroup(Widget row) => _modern
+      ? Padding(
+          padding: const .only(right: 12),
+          child: GlassCapsule(
+            padding: const .symmetric(horizontal: 4, vertical: 2),
+            child: row,
+          ),
+        )
+      : row;
+
   Widget _buildModern() {
     return Column(
       children: [

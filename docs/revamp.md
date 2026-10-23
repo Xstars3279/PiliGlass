@@ -54,4 +54,5 @@
 - [x] 全 App 图片默认圆角统一为 14（NetworkImgLayer 默认圆角），约 30 种卡片的封面一起统一；历史、稍后再看、UP 主投稿、收藏夹卡片加按下回弹（Revamp.pressable）
 - [x] 关注/追番按钮统一：未关注为主色实心胶囊，已关注为淡色叠加（Revamp.followBg/followFg），覆盖视频简介、UP 主页、视频页 UP 面板、关注列表、番剧追番
 - [x] 弹幕发送改为键盘上方的玻璃框（与评论输入共用 GlassBox）；长按倍速提示改为烟灰玻璃胶囊（Revamp.overlayCapsuleDecoration）
+- [x] 页面顶部的控件也放上底栏同款玻璃胶囊（GlassCapsule）：首页分区标签、消息铃铛圆钮、「我的」页右上角图标组
 - [x] 楼中楼、图片占位改用统一的淡色叠加 Revamp.wash，不再是突兀的灰白块
