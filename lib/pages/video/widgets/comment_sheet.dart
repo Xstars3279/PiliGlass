@@ -100,12 +100,15 @@ class _CommentSheetState extends State<CommentSheet>
   /// a panel shown in place of the comments, see [CommentSheet.showPanel]
   Widget? _panel;
 
-  /// The thread (评论详情) shown in the sheet in place of the list. It slides
-  /// in over the same glass, so the page below is blurred only once.
-  ({ReplyInfo item, int? id})? _thread;
-  late final _threadIn = AnimationController.unbounded(vsync: this);
-  LocalHistoryEntry? _threadHistory;
-  VoidCallback? _replyInThread;
+  /// The threads shown in the sheet over the list: a 评论详情, and a 对话列表
+  /// opened from it. Each slides in over the same glass, so the page below
+  /// is blurred only once, and the back button takes them off one by one.
+  final List<_Thread> _threads = [];
+  final List<AnimationController> _threadIns = [];
+  final List<LocalHistoryEntry?> _threadHistories = [];
+
+  /// replies to a thread's first floor, given by its panel
+  final List<VoidCallback?> _threadReplies = [];
 
   /// opened, waiting for the layout to know where half-way is
   bool _rising = false;
@@ -144,9 +147,13 @@ class _CommentSheetState extends State<CommentSheet>
     _shown.dispose();
     if (_replyCtr.onShowReplies == _openThread) _replyCtr.onShowReplies = null;
     if (_panelOpeners[_replyCtr] == _openPanel) _panelOpeners[_replyCtr] = null;
-    _threadIn.dispose();
+    for (final controller in _threadIns) {
+      controller.dispose();
+    }
     _history?.remove();
-    _threadHistory?.remove();
+    for (final history in _threadHistories) {
+      history?.remove();
+    }
     super.dispose();
   }
 
@@ -213,11 +220,11 @@ class _CommentSheetState extends State<CommentSheet>
   void _finishClose() {
     if (!_isOpen.value) return;
     _panel = null;
-    _thread = null;
-    _threadIn.value = 0;
-    final threadHistory = _threadHistory;
-    _threadHistory = null;
-    threadHistory?.remove();
+    final threadHistories = [..._threadHistories];
+    _clearThreads(0);
+    for (final history in threadHistories) {
+      history?.remove();
+    }
     final history = _history;
     _history = null;
     history?.remove();
@@ -230,10 +237,32 @@ class _CommentSheetState extends State<CommentSheet>
     if (!_isOpen.value) _isOpen.value = true;
   }
 
-  void _openThread(ReplyInfo item, int? id) {
+  void _openThread(ReplyInfo item, int? id) => _pushThread((
+    oid: item.oid.toInt(),
+    rpid: item.id.toInt(),
+    dialog: null,
+    id: id,
+    firstFloor: item.replyControl.isNote ? null : item,
+    replyTo: item.member.name,
+  ));
+
+  void _openDialogue(ReplyInfo item) => _pushThread((
+    oid: item.oid.toInt(),
+    rpid: item.root.toInt(),
+    dialog: item.dialog.toInt(),
+    id: null,
+    firstFloor: null,
+    replyTo: null,
+  ));
+
+  void _pushThread(_Thread thread) {
+    final level = _threads.length;
+    final controller = AnimationController.unbounded(vsync: this);
     setState(() {
-      _thread = (item: item, id: id);
-      _replyInThread = null;
+      _threads.add(thread);
+      _threadIns.add(controller);
+      _threadReplies.add(null);
+      _threadHistories.add(null);
     });
     if (!_isOpen.value) {
       _isOpen.value = true;
@@ -245,29 +274,42 @@ class _CommentSheetState extends State<CommentSheet>
         curve: Curves.easeOutCubic,
       );
     }
-    _threadIn
-      ..value = 0
-      ..springTo(1, Springs.bouncy);
-    if (_threadHistory == null) {
-      _threadHistory = LocalHistoryEntry(onRemove: _onThreadBack);
-      ModalRoute.of(context)?.addLocalHistoryEntry(_threadHistory!);
-    }
+    controller.springTo(1, Springs.bouncy);
+    final history = LocalHistoryEntry(onRemove: () => _onThreadBack(level));
+    _threadHistories[level] = history;
+    ModalRoute.of(context)?.addLocalHistoryEntry(history);
   }
 
-  /// the back button leaves the thread before closing the sheet
-  void _onThreadBack() {
-    _threadHistory = null;
-    if (_thread == null) return;
-    _threadIn.springTo(0, Springs.smooth).whenCompleteOrCancel(() {
-      if (mounted && _threadIn.value <= 0.001) setState(() => _thread = null);
+  /// the back button leaves the top thread before closing the sheet
+  void _onThreadBack(int level) {
+    if (level >= _threads.length) return;
+    _threadHistories[level] = null;
+    final controller = _threadIns[level];
+    controller.springTo(0, Springs.smooth).whenCompleteOrCancel(() {
+      if (mounted && controller.value <= 0.001 && level < _threads.length) {
+        setState(() => _clearThreads(level));
+      }
     });
   }
 
+  /// drops the threads from [level] up
+  void _clearThreads(int level) {
+    for (final controller in _threadIns.skip(level)) {
+      controller.dispose();
+    }
+    _threads.removeRange(level, _threads.length);
+    _threadIns.removeRange(level, _threadIns.length);
+    _threadReplies.removeRange(level, _threadReplies.length);
+    _threadHistories.removeRange(level, _threadHistories.length);
+  }
+
   void _closeThread() {
-    if (_threadHistory case final history?) {
+    if (_threads.isEmpty) return;
+    final level = _threads.length - 1;
+    if (_threadHistories[level] case final history?) {
       history.remove();
     } else {
-      _onThreadBack();
+      _onThreadBack(level);
     }
   }
 
@@ -397,7 +439,9 @@ class _CommentSheetState extends State<CommentSheet>
           ),
         ),
         // the input bar floats over the bottom of the open sheet
-        if (_panel == null)
+        // a 对话列表 has no first floor to reply to
+        if (_panel == null &&
+            (_threads.isEmpty || _threads.last.replyTo != null))
           ListenableBuilder(
             listenable: _shown,
             builder: (context, child) => Positioned(
@@ -410,11 +454,11 @@ class _CommentSheetState extends State<CommentSheet>
               child: child!,
             ),
             child: _InputBar(
-              label: switch (_thread) {
-                final thread? => '回复 @${thread.item.member.name}',
-                null => '发条友善的评论',
-              },
-              onTap: () => _thread != null ? _replyInThread?.call() : _reply(),
+              label: _threads.isEmpty
+                  ? '发条友善的评论'
+                  : '回复 @${_threads.last.replyTo}',
+              onTap: () =>
+                  _threads.isEmpty ? _reply() : _threadReplies.last?.call(),
             ),
           ),
       ],
@@ -493,46 +537,57 @@ class _CommentSheetState extends State<CommentSheet>
         inSheet: true,
       ),
     );
-    final thread = _thread;
-    final threadPanel = thread == null
-        ? null
-        : VideoReplyReplyPanel(
-            key: ValueKey(thread.item.id),
-            enableSlide: false,
-            id: thread.id,
-            oid: thread.item.oid.toInt(),
-            rpid: thread.item.id.toInt(),
-            firstFloor: thread.item.replyControl.isNote ? null : thread.item,
-            replyType: _replyCtr.videoType.replyType,
-            isVideoDetail: true,
-            upMid: _replyCtr.upMid,
-            inSheet: true,
-            onReplyReady: (reply) => _replyInThread = reply,
-          );
+    final panels = [
+      for (final (level, thread) in _threads.indexed)
+        VideoReplyReplyPanel(
+          key: ValueKey('${thread.rpid}-${thread.dialog}'),
+          enableSlide: false,
+          id: thread.id,
+          oid: thread.oid,
+          rpid: thread.rpid,
+          dialog: thread.dialog,
+          firstFloor: thread.firstFloor,
+          replyType: _replyCtr.videoType.replyType,
+          isVideoDetail: true,
+          upMid: _replyCtr.upMid,
+          inSheet: true,
+          onReplyReady: (reply) => _threadReplies[level] = reply,
+          onShowDialogue: _openDialogue,
+        ),
+    ];
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         return AnimatedBuilder(
-          animation: _threadIn,
+          animation: Listenable.merge(_threadIns),
           builder: (context, _) {
-            final t = _threadIn.value;
-            return Stack(
-              children: [
-                IgnorePointer(
-                  ignoring: thread != null,
-                  child: Opacity(
-                    opacity: (1 - t).clamp(0.0, 1.0),
-                    child: Transform.translate(
-                      offset: Offset(-0.3 * width * t, 0),
-                      child: list,
-                    ),
+            // each level slides in from the right over the one below,
+            // which drifts left and fades; one flat stack, so a level
+            // pushed on top leaves the ones below in place in the tree,
+            // with their scroll positions
+            double t(int level) =>
+                level < _threadIns.length ? _threadIns[level].value : 0;
+            Widget layer(int level, Widget child) {
+              // the list is level -1; a thread at level i enters with t(i)
+              final enter = level < 0 ? 0.0 : width * (1 - t(level));
+              final next = t(level + 1);
+              return IgnorePointer(
+                ignoring: level + 1 < _threadIns.length,
+                child: Opacity(
+                  opacity: (1 - next).clamp(0.0, 1.0),
+                  child: Transform.translate(
+                    offset: Offset(enter - 0.3 * width * next, 0),
+                    child: child,
                   ),
                 ),
-                if (threadPanel != null)
-                  Transform.translate(
-                    offset: Offset(width * (1 - t), 0),
-                    child: threadPanel,
-                  ),
+              );
+            }
+
+            return Stack(
+              children: [
+                layer(-1, list),
+                for (final (level, panel) in panels.indexed)
+                  layer(level, panel),
               ],
             );
           },
@@ -575,8 +630,8 @@ class _CommentSheetState extends State<CommentSheet>
             if (_panel == null)
               Expanded(
                 child: Padding(
-                  padding: .only(left: _thread != null ? 6 : 20, right: 6),
-                  child: _thread != null
+                  padding: .only(left: _threads.isNotEmpty ? 6 : 20, right: 6),
+                  child: _threads.isNotEmpty
                       ? Row(
                           children: [
                             IconButton(
@@ -584,9 +639,12 @@ class _CommentSheetState extends State<CommentSheet>
                               onPressed: _closeThread,
                               icon: const Icon(Icons.arrow_back_rounded),
                             ),
-                            const Text(
-                              '评论详情',
-                              style: TextStyle(fontSize: 17, fontWeight: .w800),
+                            Text(
+                              _threads.last.dialog != null ? '对话列表' : '评论详情',
+                              style: const TextStyle(
+                                fontSize: 17,
+                                fontWeight: .w800,
+                              ),
                             ),
                             const Spacer(),
                             IconButton(
@@ -640,6 +698,18 @@ class _CommentSheetState extends State<CommentSheet>
     );
   }
 }
+
+/// a thread in the sheet: a comment's replies, or a 对话列表 in them
+typedef _Thread = ({
+  int oid,
+  int rpid,
+  int? dialog,
+  int? id,
+  ReplyInfo? firstFloor,
+
+  /// the name the input bar replies to; null for a 对话列表
+  String? replyTo,
+});
 
 /// 发条友善的评论: a capsule of liquid glass over the bottom of the sheet.
 class _InputBar extends StatelessWidget {

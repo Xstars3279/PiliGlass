@@ -40,6 +40,7 @@ class VideoReplyReplyPanel extends CommonSlidePage {
     this.upMid,
     this.inSheet = false,
     this.onReplyReady,
+    this.onShowDialogue,
   });
   final int? id;
   final int oid;
@@ -56,6 +57,9 @@ class VideoReplyReplyPanel extends CommonSlidePage {
   /// [onReplyReady]
   final bool inSheet;
   final ValueChanged<VoidCallback>? onReplyReady;
+
+  /// opens a 对话列表 in the sheet instead of a sheet of its own
+  final ValueChanged<ReplyInfo>? onShowDialogue;
 
   static Future<void>? toReply({
     required int oid,
@@ -117,7 +121,9 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
     final controller = PrimaryScrollController.of(context);
     _controller
       ..didChangeDependencies(context)
-      ..nestedController = controller is ExtendedNestedScrollController
+      // in the sheet it scrolls on its own, not the page's header
+      ..nestedController =
+          !widget.inSheet && controller is ExtendedNestedScrollController
           ? controller
           : null;
   }
@@ -341,17 +347,19 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
       onReply: (replyItem) => _controller.onReply(replyItem, index: index),
       onDelete: (item, subIndex) => _controller.onRemove(index, item, null),
       upMid: _controller.upMid,
-      showDialogue: () => MiniScaffold.of(context).showBottomSheet(
-        constraints: const BoxConstraints(),
-        (context) => VideoReplyReplyPanel(
-          oid: replyItem.oid.toInt(),
-          rpid: replyItem.root.toInt(),
-          dialog: replyItem.dialog.toInt(),
-          replyType: widget.replyType,
-          isVideoDetail: true,
-          isNested: widget.isNested,
-        ),
-      ),
+      showDialogue: widget.onShowDialogue != null
+          ? () => widget.onShowDialogue!(replyItem)
+          : () => MiniScaffold.of(context).showBottomSheet(
+              constraints: const BoxConstraints(),
+              (context) => VideoReplyReplyPanel(
+                oid: replyItem.oid.toInt(),
+                rpid: replyItem.root.toInt(),
+                dialog: replyItem.dialog.toInt(),
+                replyType: widget.replyType,
+                isVideoDetail: true,
+                isNested: widget.isNested,
+              ),
+            ),
       jumpToDialogue: () {
         if (!_controller.setIndexById(replyItem.parent)) {
           SmartDialog.showToast('评论可能已被删除');
