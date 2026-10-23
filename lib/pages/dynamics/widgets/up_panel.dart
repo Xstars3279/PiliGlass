@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/common/dynamic/up_panel_position.dart';
@@ -184,6 +185,43 @@ class _UpPanelState extends State<UpPanel> {
             ),
           ],
         );
+      } else if (Revamp.enabled) {
+        // a ring, as on stories: the chosen one in the primary color, one
+        // with something new in a gradient
+        final chosen = currentMid == item.mid;
+        final fresh = item.hasUpdate ?? false;
+        if (chosen || fresh) {
+          avatar = Container(
+            padding: const .all(2.5),
+            decoration: BoxDecoration(
+              shape: .circle,
+              color: chosen ? theme.colorScheme.primary : null,
+              gradient: chosen
+                  ? null
+                  : LinearGradient(
+                      begin: .topLeft,
+                      end: .bottomRight,
+                      colors: [
+                        theme.colorScheme.primary,
+                        theme.colorScheme.tertiary,
+                      ],
+                    ),
+            ),
+            child: Container(
+              padding: const .all(2),
+              decoration: BoxDecoration(
+                shape: .circle,
+                color: theme.colorScheme.surfaceContainerLow,
+              ),
+              child: NetworkImgLayer(
+                width: 34,
+                height: 34,
+                src: item.face,
+                type: .avatar,
+              ),
+            ),
+          );
+        }
       } else if (item.hasUpdate ?? false) {
         avatar = Stack(
           clipBehavior: .none,
@@ -205,7 +243,8 @@ class _UpPanelState extends State<UpPanel> {
     return SizedBox(
       height: 76,
       width: isTop ? 70 : null,
-      child: InkWell(
+      child: Revamp.pressable(InkWell(
+        borderRadius: Revamp.enabled ? Revamp.tileRadius : null,
         onTap: () {
           feedBack();
           if (isLive) {
@@ -243,7 +282,7 @@ class _UpPanelState extends State<UpPanel> {
             ],
           ),
         ),
-      ),
+      )),
     );
   }
 }

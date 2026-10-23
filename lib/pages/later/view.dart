@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/widgets/appbar/appbar.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart';
@@ -94,7 +95,7 @@ class _LaterPageState extends State<LaterPage>
                               _baseCtr.setIsPlayAll(
                                 details.localPosition.dx < _baseCtr.dx,
                               ),
-                          child: FloatingActionButton.extended(
+                          child: RevampFab.extended(
                             onPressed: () {
                               if (_baseCtr.isPlayAll.value) {
                                 currCtr().toViewPlayAll();

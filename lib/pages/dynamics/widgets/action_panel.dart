@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:PiliPlus/pages/dynamics_repost/view.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
@@ -26,8 +27,16 @@ class ActionPanel extends StatelessWidget {
       tapTargetSize: .padded,
       padding: const EdgeInsets.symmetric(horizontal: 15),
       foregroundColor: outline,
+      // the redesign: pills on the wash, like the intro's blocks
+      backgroundColor: Revamp.enabled ? Revamp.wash(theme.colorScheme) : null,
+      shape: Revamp.enabled ? const StadiumBorder() : null,
     );
-    return Row(
+    return Padding(
+      padding: Revamp.enabled
+          ? const .fromLTRB(12, 0, 12, 10)
+          : EdgeInsets.zero,
+      child: Row(
+      spacing: Revamp.enabled ? 8 : 0,
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         Expanded(
@@ -134,6 +143,7 @@ class ActionPanel extends StatelessWidget {
           ),
         ),
       ],
+      ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
 import 'package:PiliPlus/http/loading_state.dart';
@@ -52,9 +53,67 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
         ),
       );
 
+  /// The tabs on a capsule of the dock's glass, as on the home page; the
+  /// app's pill tabs from the theme.
+  Widget _glassTabs(Widget? leading, Widget actions) => Padding(
+    padding: const .fromLTRB(12, 6, 12, 8),
+    child: Row(
+      spacing: 4,
+      children: [
+        ?leading,
+        Expanded(
+          child: GlassCapsule(
+            child: TabBar(
+              isScrollable: true,
+              tabAlignment: .start,
+              padding: EdgeInsets.zero,
+              labelPadding: const .symmetric(horizontal: 14),
+              controller: _dynamicsController.tabController,
+              tabs: DynamicsTabType.values
+                  .map((e) => Tab(text: e.label, height: 40))
+                  .toList(),
+              onTap: (index) {
+                if (!_dynamicsController.tabController.indexIsChanging) {
+                  _dynamicsController.animateToTop();
+                }
+              },
+            ),
+          ),
+        ),
+        actions,
+      ],
+    ),
+  );
+
   Widget upPanelPart(ColorScheme colorScheme) {
     final isTop = upPanelPosition == .top;
     final needBg = upPanelPosition.index > 2;
+    // the redesign sets the strip above the posts off as a group
+    if (Revamp.enabled && (isTop || !needBg)) {
+      return RevampGroup(
+        margin: isTop
+            ? const .fromLTRB(12, 0, 12, 4)
+            : upPanelPosition == .leftFixed
+            ? const .only(left: 8)
+            : const .only(right: 8),
+        child: SizedBox(
+          width: isTop ? null : 64,
+          height: isTop ? 84 : null,
+          child: NotificationListener<ScrollEndNotification>(
+            onNotification: (notification) {
+              final metrics = notification.metrics;
+              if (metrics.pixels >= metrics.maxScrollExtent - 300) {
+                _dynamicsController.onLoadMore();
+              }
+              return false;
+            },
+            child: Obx(
+              () => _buildUpPanel(_dynamicsController.loadingState.value),
+            ),
+          ),
+        ),
+      );
+    }
     return Material(
       type: needBg ? .canvas : .transparency,
       color: needBg ? colorScheme.surface : null,
@@ -179,8 +238,10 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.transparent,
       appBar: PreferredSize(
-        preferredSize: const .fromHeight(50),
-        child: Row(
+        preferredSize: .fromHeight(Revamp.enabled ? 62 : 50),
+        child: Revamp.enabled
+            ? _glassTabs(leading, actions)
+            : Row(
           children: [
             ?leading,
             Expanded(
@@ -209,7 +270,7 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
             ),
             actions,
           ],
-        ),
+        )
       ),
       drawer: drawer,
       endDrawer: endDrawer,

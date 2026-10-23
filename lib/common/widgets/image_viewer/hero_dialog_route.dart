@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// https://github.com/qq326646683/interactiveviewer_gallery
@@ -23,7 +24,9 @@ class HeroDialogRoute<T> extends PageRoute<T> {
   String? get barrierLabel => null;
 
   @override
-  Duration get transitionDuration => const Duration(milliseconds: 300);
+  // the redesign's images fly on a spring, which needs the time to settle
+  Duration get transitionDuration =>
+      Duration(milliseconds: Revamp.enabled ? 460 : 300);
 
   @override
   bool get maintainState => true;

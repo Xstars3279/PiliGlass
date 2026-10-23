@@ -1,5 +1,6 @@
 import 'dart:ui' show ImageFilter;
 
+import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/skeleton/video_reply.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
@@ -141,7 +142,7 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
                       right: kFloatingActionButtonMargin,
                       bottom: kFloatingActionButtonMargin + bottom,
                     ),
-                    child: FloatingActionButton(
+                    child: RevampFab(
                       heroTag: null,
                       onPressed: () {
                         feedBack();

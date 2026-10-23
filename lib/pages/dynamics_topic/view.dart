@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/dynamic_sliver_app_bar/dynamic_sliver_app_bar.dart';
@@ -147,7 +148,7 @@ class _DynTopicPageState extends State<DynTopicPage>
             right: kFloatingActionButtonMargin + padding.right,
             bottom: kFloatingActionButtonMargin + padding.bottom,
           ),
-          child: FloatingActionButton.extended(
+          child: RevampFab.extended(
             onPressed: () {
               if (_controller.isLogin) {
                 CreateDynPanel.onCreateDyn(

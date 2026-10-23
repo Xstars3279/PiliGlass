@@ -17,6 +17,7 @@
 
 import 'dart:io' show Platform;
 
+import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -254,7 +255,12 @@ class ImageGridView extends StatelessWidget {
               ],
             );
             if (!item.isLongPic) {
-              child = Hero(tag: '${item.url}$hashCode', child: child);
+              child = Hero(
+                tag: '${item.url}$hashCode',
+                // lands back in the grid on a spring, see the viewer's hero
+                createRectTween: Revamp.enabled ? springRectTween : null,
+                child: child,
+              );
             }
             child = Semantics(
               label: '图片，第 ${index + 1} 张，共 ${picArr.length} 张',

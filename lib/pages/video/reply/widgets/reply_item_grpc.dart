@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:PiliPlus/common/motion/appear_in.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/constants.dart';
@@ -98,8 +99,12 @@ class ReplyItemGrpc extends StatelessWidget {
   static bool enableWordRe = Pref.enableWordRe;
   static int? replyLengthLimit = Pref.replyLengthLimit;
 
+  /// rises in when its list loads, see [RiseIn]
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      Revamp.enabled ? RiseIn(child: _build(context)) : _build(context);
+
+  Widget _build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
 
     void showMore() => showModalBottomSheet(

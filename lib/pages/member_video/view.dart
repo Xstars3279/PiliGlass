@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -161,7 +162,7 @@ class _MemberVideoState extends State<MemberVideo>
                       right: kFloatingActionButtonMargin,
                       bottom: kFloatingActionButtonMargin + padding.bottom,
                     ),
-                    child: FloatingActionButton.extended(
+                    child: RevampFab.extended(
                       onPressed: () {
                         final fromViewAid = _controller.fromViewAid;
                         final locatedIndex =

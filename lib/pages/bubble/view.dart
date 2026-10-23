@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
@@ -88,7 +89,7 @@ class _BubblePageState extends State<BubblePage>
                 (e) => e.sortType == sortInfo.curSortType,
               );
               if (item != null) {
-                return FloatingActionButton.extended(
+                return RevampFab.extended(
                   tooltip: '排序',
                   onPressed: () => showDialog(
                     context: context,

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/skeleton/video_reply.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -87,7 +88,7 @@ class _MainReplyPageState extends State<MainReplyPage>
             right: kFloatingActionButtonMargin + padding.right,
             bottom: kFloatingActionButtonMargin + padding.bottom,
           ),
-          child: FloatingActionButton(
+          child: RevampFab(
             heroTag: null,
             onPressed: () {
               try {

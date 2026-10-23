@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/motion/appear_in.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/avatars.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
@@ -41,8 +42,12 @@ class DynamicPanel extends StatelessWidget {
     this.onSetReplySubject,
   });
 
+  /// rises in when its list loads, see [RiseIn]
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      Revamp.enabled ? RiseIn(child: _build(context)) : _build(context);
+
+  Widget _build(BuildContext context) {
     if (item.visible == false) {
       return const SizedBox.shrink();
     }

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
@@ -75,7 +76,7 @@ class _FollowPageState extends State<FollowPage>
                   right: kFloatingActionButtonMargin + padding.right,
                   bottom: kFloatingActionButtonMargin + padding.bottom,
                 ),
-                child: FloatingActionButton.extended(
+                child: RevampFab.extended(
                   onPressed: _followController.toggleOrderType,
                   icon: const Icon(Icons.format_list_bulleted, size: 20),
                   label: Obx(

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
@@ -82,7 +83,7 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
                                 details.localPosition.dx <
                                     _favDetailController.dx,
                               ),
-                          child: FloatingActionButton.extended(
+                          child: RevampFab.extended(
                             onPressed: () {
                               if (_favDetailController.isPlayAll.value) {
                                 _favDetailController.toViewPlayAll();

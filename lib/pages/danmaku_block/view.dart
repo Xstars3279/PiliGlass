@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
@@ -88,7 +89,7 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
           right: kFloatingActionButtonMargin + padding.right,
           bottom: kFloatingActionButtonMargin + padding.bottom,
         ),
-        child: FloatingActionButton(
+        child: RevampFab(
           tooltip: '添加',
           onPressed: () => _showAddDialog(
             DmBlockType.values[_controller.tabController.index],

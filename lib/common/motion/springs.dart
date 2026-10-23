@@ -145,3 +145,22 @@ extension SpringAnimationController on AnimationController {
     return animateWith(SpringSimulation(spring, value, target, velocity));
   }
 }
+
+/// A [RectTween] that eases along a spring, so a hero overshoots where it
+/// lands and settles, e.g. an image flying open into the viewer.
+class SpringRectTween extends RectTween {
+  SpringRectTween({super.begin, super.end, SpringDescription? spring})
+    : _curve = SpringCurve(
+        spring ?? Springs.bouncy,
+        const Duration(milliseconds: 460),
+      );
+
+  final SpringCurve _curve;
+
+  @override
+  Rect? lerp(double t) => super.lerp(_curve.transform(t));
+}
+
+/// [Hero.createRectTween] for a spring, see [SpringRectTween]
+RectTween springRectTween(Rect? begin, Rect? end) =>
+    SpringRectTween(begin: begin, end: end);

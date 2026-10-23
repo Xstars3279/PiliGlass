@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/motion/appear_in.dart';
 import 'package:PiliPlus/common/motion/cover_hero.dart';
 import 'package:PiliPlus/common/motion/pressable_scale.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -82,8 +84,12 @@ class VideoCardV extends StatelessWidget {
     }
   }
 
+  /// rises in when its list loads, see [RiseIn]
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      Revamp.enabled ? RiseIn(child: _build(context)) : _build(context);
+
+  Widget _build(BuildContext context) {
     void onLongPress() => imageSaveDialog(
       title: videoItem.title,
       cover: videoItem.cover,

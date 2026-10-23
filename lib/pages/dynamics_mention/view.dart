@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -205,7 +206,7 @@ class _DynMentionPanelState
                         ? .zero
                         : const Offset(0, 3),
                     duration: const Duration(milliseconds: 120),
-                    child: FloatingActionButton(
+                    child: RevampFab(
                       onPressed: () {
                         if (_controller.mentionList.isNullOrEmpty) {
                           _controller.showBtn.value = false;

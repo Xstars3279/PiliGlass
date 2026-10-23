@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/motion/appear_in.dart';
 import 'package:PiliPlus/common/motion/pressable_scale.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
@@ -34,10 +35,11 @@ abstract final class Revamp {
       ? colorScheme.onSurfaceVariant
       : colorScheme.onPrimary;
 
-  /// A card that dips when pressed and springs back, like the feed's
-  /// cards; as it is when the redesign is off.
-  static Widget pressable(Widget card) =>
-      enabled ? PressableScale(pressedScale: 0.97, child: card) : card;
+  /// A card that dips when pressed and springs back and rises in when its
+  /// list loads, like the feed's cards; as it is when the redesign is off.
+  static Widget pressable(Widget card) => enabled
+      ? RiseIn(child: PressableScale(pressedScale: 0.97, child: card))
+      : card;
 
   /// corner radius of a tile; upstream's small blocks where it is off
   static final double tileCorner = enabled ? 14 : 6;

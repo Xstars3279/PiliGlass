@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/skeleton/msg_feed_top.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
@@ -176,12 +177,12 @@ class _BlackListPageState extends State<BlackListPage>
           spacing: kFloatingActionButtonMargin,
           mainAxisSize: .min,
           children: [
-            FloatingActionButton(
+            RevampFab(
               tooltip: '导入/导出',
               onPressed: _showImportExportDialog,
               child: const Icon(Icons.swap_vert, size: 26),
             ),
-            FloatingActionButton(
+            RevampFab(
               tooltip: '添加',
               onPressed: _showAddMidDialog,
               child: const Icon(Icons.add),

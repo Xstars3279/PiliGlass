@@ -18,6 +18,8 @@
 import 'dart:async';
 import 'dart:io' show File, Platform;
 
+import 'package:PiliPlus/common/motion/springs.dart';
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/colored_box_transition.dart';
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/common/widgets/gesture/image_double_tap_gesture_recognizer.dart';
@@ -524,7 +526,11 @@ class _GalleryViewerState extends State<GalleryViewer>
               : const SizedBox.shrink(),
         );
     }
-    return Hero(tag: '${item.url}${widget.tag}', child: child);
+    return Hero(
+      tag: '${item.url}${widget.tag}',
+      createRectTween: Revamp.enabled ? springRectTween : null,
+      child: child,
+    );
   }
 
   static const Duration _kTapDiff = Duration(milliseconds: 300);

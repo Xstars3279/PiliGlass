@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/skeleton/space_opus.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -93,7 +94,7 @@ class _MemberOpusState extends State<MemberOpus>
                   right: kFloatingActionButtonMargin,
                   bottom: kFloatingActionButtonMargin + bottom,
                 ),
-                child: FloatingActionButton.extended(
+                child: RevampFab.extended(
                   onPressed: () => showDialog(
                     context: context,
                     builder: (context) => SimpleDialog(

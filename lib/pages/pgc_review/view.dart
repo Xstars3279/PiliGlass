@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/models/common/pgc_review_type.dart';
@@ -112,7 +113,7 @@ class _PgcReviewPageState extends State<PgcReviewPage>
               MediaQuery.viewPaddingOf(context).bottom +
               kFloatingActionButtonMargin,
         ),
-        child: FloatingActionButton(
+        child: RevampFab(
           onPressed: () => showDialog(
             context: context,
             builder: (context) => SimpleDialog(

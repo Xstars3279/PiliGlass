@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/motion/springs.dart';
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:flutter/widgets.dart';
 
 Widget fromHero({
@@ -20,7 +22,11 @@ RectTween createEndRectTween(Rect? begin, Rect? end) {
       endWidth,
       endHeight,
     );
-    return RectTween(begin: beginRect, end: end);
+    return Revamp.enabled
+        ? SpringRectTween(begin: beginRect, end: end)
+        : RectTween(begin: beginRect, end: end);
   }
-  return RectTween(begin: begin, end: end);
+  return Revamp.enabled
+      ? SpringRectTween(begin: begin, end: end)
+      : RectTween(begin: begin, end: end);
 }
