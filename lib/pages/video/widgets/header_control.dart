@@ -1979,7 +1979,7 @@ class HeaderControlState extends State<HeaderControl>
             Row(
               mainAxisAlignment: .end,
               crossAxisAlignment: .start,
-              children: [
+              children: <Widget>[
                 SizedBox(
                   width: btnWidth,
                   height: btnHeight,
@@ -2071,7 +2071,7 @@ class HeaderControlState extends State<HeaderControl>
                     semanticsLabel: '分享',
                   ),
                 ),
-              ],
+              ].map(Revamp.overlayRound).toList(),
             ),
         ],
       ),

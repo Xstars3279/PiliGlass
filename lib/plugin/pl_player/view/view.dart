@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -764,9 +765,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 )
                 .toList();
           },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
+          child: Revamp.overlayChip(
+            Text(
               "${plPlayerController.playbackSpeed}X",
               style: const TextStyle(color: Colors.white, fontSize: 13),
               semanticsLabel: "${plPlayerController.playbackSpeed}倍速",
@@ -840,9 +840,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 },
               );
             },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
+            child: Revamp.overlayChip(
+              Text(
                 currentVideoQa.shortDesc,
                 style: const TextStyle(color: Colors.white, fontSize: 13),
               ),
@@ -1797,10 +1796,14 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                     () => Offstage(
                       offstage: !plPlayerController.showControls.value,
                       child: DecoratedBox(
-                        decoration: const BoxDecoration(
-                          color: Color(0x45000000),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
+                        decoration: Revamp.enabled
+                            ? Revamp.overlayRoundDecoration
+                            : const BoxDecoration(
+                                color: Color(0x45000000),
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(8),
+                                ),
+                              ),
                         child: Obx(() {
                           final controlsLock =
                               plPlayerController.controlsLock.value;
@@ -1841,10 +1844,14 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                     child: Offstage(
                       offstage: !plPlayerController.showControls.value,
                       child: DecoratedBox(
-                        decoration: const BoxDecoration(
-                          color: Color(0x45000000),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
+                        decoration: Revamp.enabled
+                            ? Revamp.overlayRoundDecoration
+                            : const BoxDecoration(
+                                color: Color(0x45000000),
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(8),
+                                ),
+                              ),
                         child: ComBtn(
                           tooltip: '截图',
                           icon: const Icon(

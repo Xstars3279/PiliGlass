@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/progress_bar/audio_video_progress_bar.dart';
 import 'package:PiliPlus/common/widgets/progress_bar/segment_progress_bar.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
@@ -75,9 +76,10 @@ class BottomControl extends StatelessWidget {
                         progressBarColor: primary,
                         baseBarColor: const Color(0x33FFFFFF),
                         bufferedBarColor: bufferedBarColor,
-                        thumbColor: primary,
+                        // white like the switches' thumb in the redesign
+                        thumbColor: Revamp.enabled ? Colors.white : primary,
                         thumbGlowColor: thumbGlowColor,
-                        barHeight: 3.5,
+                        barHeight: Revamp.enabled ? 4 : 3.5,
                         thumbRadius: 7,
                         thumbGlowRadius: 25,
                         onDragStart: onDragStart,

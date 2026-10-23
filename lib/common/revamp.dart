@@ -43,6 +43,43 @@ abstract final class Revamp {
     minimumSize: WidgetStatePropertyAll(Size.zero),
     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
   );
+
+  /// the smoked round of [overlayButtonStyle], for controls that are not
+  /// buttons of their own
+  static const overlayRoundDecoration = ShapeDecoration(
+    color: Color(0x47000000),
+    shape: CircleBorder(
+      side: BorderSide(color: Color(0x33FFFFFF), width: 0.8),
+    ),
+  );
+
+  /// [child] on the smoked round when the redesign is on
+  static Widget overlayRound(Widget child) => enabled
+      ? DecoratedBox(decoration: overlayRoundDecoration, child: child)
+      : child;
+
+  /// A label over the video, e.g. 1.0X or 1080P, on a capsule of the same
+  /// smoked glass as [overlayButtonStyle]; upstream's bare text if off.
+  static Widget overlayChip(Widget label) => enabled
+      ? Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 3),
+          child: DecoratedBox(
+            decoration: const ShapeDecoration(
+              color: Color(0x47000000),
+              shape: StadiumBorder(
+                side: BorderSide(color: Color(0x33FFFFFF), width: 0.8),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              child: label,
+            ),
+          ),
+        )
+      : Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: label,
+        );
 }
 
 /// A rounded group of rows, the way the redesign sets off a section.
