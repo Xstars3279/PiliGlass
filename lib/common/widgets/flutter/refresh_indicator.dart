@@ -524,8 +524,8 @@ class RefreshIndicatorState extends State<RefreshIndicator>
       position: _positionFactor,
       indicator: _status == null
           ? null
-          : Padding(
-              padding: EdgeInsets.only(top: RevampTopInset.of(context)),
+          : Transform.translate(
+              offset: Offset(0, RevampTopInset.of(context)),
               child: AnimatedBuilder(
               animation: _positionController,
               builder: (context, child) => Revamp.enabled

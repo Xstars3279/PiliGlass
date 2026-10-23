@@ -40,10 +40,10 @@ class GlassRefreshIndicator extends StatelessWidget {
             saturation: 1.5,
             color: colorScheme.surfaceContainer.withValues(alpha: 0.4),
             child: Padding(
-              padding: const EdgeInsets.all(11),
+              padding: const EdgeInsets.all(8),
               child: CircularProgressIndicator(
                 value: value,
-                strokeWidth: 2.5,
+                strokeWidth: 3,
                 strokeCap: StrokeCap.round,
                 color: color ?? colorScheme.primary,
               ),

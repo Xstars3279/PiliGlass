@@ -1,9 +1,12 @@
+import 'dart:ui' as ui;
+
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass.dart';
+import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show ReplyInfo;
 import 'package:PiliPlus/http/loading_state.dart';
@@ -29,13 +32,15 @@ final _panelOpeners = Expando<void Function(SheetPanelBuilder)>();
 /// builds a panel for the sheet, given the way to close the sheet
 typedef SheetPanelBuilder = Widget Function(VoidCallback close);
 
-/// The comments of the redesigned video page: a sheet of liquid glass that
-/// rises over the intro, below the player.
+/// The comments of the redesigned video page: a sheet of liquid glass over
+/// the whole page.
 ///
-/// Docked nowhere: it comes up from the bottom to [_halfOf] the space when
-/// the preview card is tapped, drags up to the player's edge, and drags down
-/// to close. The list inside scrolls once the sheet is all the way up, and
-/// pulling the list down past its top lowers the sheet again.
+/// Docked nowhere: tapping the preview card brings it up to the player's
+/// lower edge. Its handle drags it on up over the player, to the status
+/// bar, which pauses the video until it comes back down; dragging down
+/// from the player's edge slides it off the bottom. The list inside scrolls
+/// once the sheet rests, and pulling the list down past its top lowers the
+/// sheet.
 class CommentSheet extends StatefulWidget {
   const CommentSheet({
     super.key,
@@ -43,6 +48,10 @@ class CommentSheet extends StatefulWidget {
     required this.cover,
     required this.child,
     this.openAtStart = false,
+    this.playerBottom,
+    this.onCoverPlayer,
+    this.hidden = false,
+    this.playerPaused,
   });
 
   final String heroTag;
@@ -55,6 +64,20 @@ class CommentSheet extends StatefulWidget {
 
   /// for 默认显示评论 and links to a comment
   final bool openAtStart;
+
+  /// where the player ends, in global coordinates: the sheet's first stop
+  final double Function()? playerBottom;
+
+  /// called when the sheet comes to cover the player, and when it leaves it
+  final ValueChanged<bool>? onCoverPlayer;
+
+  /// e.g. while the video is full screen: the sheet closes and stays away
+  final bool hidden;
+
+  /// Whether the video is paused: then scrolling the list up may carry the
+  /// sheet over the player too, not only its handle. Asked when a finger
+  /// comes down on the sheet, before it can drag.
+  final bool Function()? playerPaused;
 
   static void open(VideoReplyController controller) =>
       _openOf(controller).value = true;
@@ -110,11 +133,56 @@ class _CommentSheetState extends State<CommentSheet>
   /// replies to a thread's first floor, given by its panel
   final List<VoidCallback?> _threadReplies = [];
 
-  /// opened, waiting for the layout to know where half-way is
+  /// opened, waiting for the layout to know where the player ends
   bool _rising = false;
-  double _half = 0.6;
+
+  /// the stop at the player's lower edge, and the one over the player, as
+  /// parts of [_height]
+  double _videoStop = 0.6;
+  double _fullStop = 1;
   List<double> _snapSizes = const [];
   double _height = 1;
+
+  /// the content is laid out as tall as the sheet at its upper stop
+  final _tall = ValueNotifier(false);
+
+  /// the sheet is over the player
+  bool _covering = false;
+
+  /// the video was paused when the finger came down
+  bool _playerPaused = false;
+
+  /// The page below, blurred when the sheet opens. A live backdrop filter
+  /// on a sheet this large reads and blurs most of the screen on every
+  /// frame the video draws, which costs frames while the sheet drags; the
+  /// intro behind the sheet hardly changes, so a still of it looks the same.
+  final _pageKey = GlobalKey();
+  ui.Image? _backdrop;
+
+  /// pixels of the still per logical pixel: the screen's own, so the still
+  /// is as sharp as the page it stands in for
+  double _backdropScale = 1;
+
+  /// the handle is carrying the sheet, which may then go over the player
+  bool _byHandle = false;
+
+  /// above the player's edge; it may stay there whatever moves it
+  bool _abovePlayer = false;
+
+  /// how far the sheet may rise: over the player only when the handle
+  /// takes it there, when the video is paused, or when it is there already
+  double get _maxStop =>
+      _byHandle || _abovePlayer || _playerPaused ? _fullStop : _videoStop;
+
+  /// Lets the handle take the sheet over the player until [move] is done.
+  Future<void> _withHandle(Future<void> Function() move) async {
+    if (!_byHandle) setState(() => _byHandle = true);
+    try {
+      await move();
+    } finally {
+      if (mounted) setState(() => _byHandle = false);
+    }
+  }
 
   static const _headerHeight = 60.0;
   static const _barHeight = 48.0;
@@ -145,6 +213,9 @@ class _CommentSheetState extends State<CommentSheet>
       ..removeListener(_onSize)
       ..dispose();
     _shown.dispose();
+    _tall.dispose();
+    _backdrop?.dispose();
+    if (_covering) widget.onCoverPlayer?.call(false);
     if (_replyCtr.onShowReplies == _openThread) _replyCtr.onShowReplies = null;
     if (_panelOpeners[_replyCtr] == _openPanel) _panelOpeners[_replyCtr] = null;
     for (final controller in _threadIns) {
@@ -161,10 +232,69 @@ class _CommentSheetState extends State<CommentSheet>
     if (_isOpen.value) {
       _shown.jumpTo(0);
       _rising = true;
+      _captureBackdrop();
+      // again once the images that were still loading have come in
+      Future.delayed(const Duration(milliseconds: 600), () {
+        if (mounted && _isOpen.value) _captureBackdrop();
+      });
       _history = LocalHistoryEntry(onRemove: _onBack);
       ModalRoute.of(context)?.addLocalHistoryEntry(_history!);
     }
     setState(() {});
+  }
+
+  Future<void> _captureBackdrop() async {
+    final boundary =
+        _pageKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null || !boundary.hasSize) return;
+    final scale = MediaQuery.devicePixelRatioOf(context);
+    final page = await boundary.toImage(pixelRatio: scale);
+    final recorder = ui.PictureRecorder();
+    final bounds =
+        Offset.zero &
+        Size(
+          page.width.toDouble(),
+          page.height.toDouble(),
+        );
+    // the filter on a layer: one on the paint of drawImage is not applied by
+    // every backend
+    Canvas(recorder)
+      ..saveLayer(
+        bounds,
+        Paint()
+          ..imageFilter = ui.ImageFilter.blur(
+            sigmaX: 24 * scale,
+            sigmaY: 24 * scale,
+            tileMode: .clamp,
+          )
+          ..colorFilter = ColorFilter.matrix(_saturation(1.7)),
+      )
+      ..drawImage(page, Offset.zero, Paint())
+      ..restore();
+    final picture = recorder.endRecording();
+    final blurred = await picture.toImage(page.width, page.height);
+    picture.dispose();
+    page.dispose();
+    if (!mounted || !_isOpen.value) {
+      blurred.dispose();
+      return;
+    }
+    setState(() {
+      _backdrop?.dispose();
+      _backdrop = blurred;
+      _backdropScale = scale;
+    });
+  }
+
+  static List<double> _saturation(double s) {
+    const r = 0.2126, g = 0.7152, b = 0.0722;
+    final ir = (1 - s) * r, ig = (1 - s) * g, ib = (1 - s) * b;
+    return [
+      ir + s, ig, ib, 0, 0, //
+      ir, ig + s, ib, 0, 0, //
+      ir, ig, ib + s, 0, 0, //
+      0, 0, 0, 1, 0, //
+    ];
   }
 
   void _onSize() {
@@ -180,6 +310,24 @@ class _CommentSheetState extends State<CommentSheet>
       _shown.animateTo(size);
     }
     _lastSize = size;
+    _tall.value = size > _videoStop + 0.005;
+    final abovePlayer = size > _videoStop + 0.01;
+    if (abovePlayer != _abovePlayer) setState(() => _abovePlayer = abovePlayer);
+    final covering = size > (_videoStop + _fullStop) / 2;
+    if (covering != _covering) {
+      _covering = covering;
+      widget.onCoverPlayer?.call(covering);
+    }
+  }
+
+  @override
+  void didUpdateWidget(CommentSheet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.hidden && !oldWidget.hidden && _isOpen.value) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _finishClose();
+      });
+    }
   }
 
   void _onPointerUp(PointerEvent e) {
@@ -230,6 +378,13 @@ class _CommentSheetState extends State<CommentSheet>
     history?.remove();
     _isOpen.value = false;
     _shown.jumpTo(0);
+    _tall.value = false;
+    _backdrop?.dispose();
+    _backdrop = null;
+    if (_covering) {
+      _covering = false;
+      widget.onCoverPlayer?.call(false);
+    }
   }
 
   void _openPanel(SheetPanelBuilder panel) {
@@ -266,10 +421,10 @@ class _CommentSheetState extends State<CommentSheet>
     });
     if (!_isOpen.value) {
       _isOpen.value = true;
-    } else if (_sheetCtr.isAttached && _sheetCtr.size < 1) {
-      // a thread reads better with the room of the whole sheet
+    } else if (_sheetCtr.isAttached && _sheetCtr.size < _videoStop - 0.01) {
+      // a thread reads better with the room of the sheet at its stop
       _sheetCtr.animateTo(
-        1,
+        _videoStop,
         duration: const Duration(milliseconds: 320),
         curve: Curves.easeOutCubic,
       );
@@ -318,26 +473,28 @@ class _CommentSheetState extends State<CommentSheet>
   void _settle(double velocity) {
     if (!_sheetCtr.isAttached) return;
     final size = _sheetCtr.size;
-    final stops = [0.0, _half, 1.0];
+    final stops = [0.0, _videoStop, _fullStop];
     final double target;
     if (velocity.abs() > 700) {
       target = velocity < 0
-          ? stops.firstWhere((s) => s > size + 0.01, orElse: () => 1)
+          ? stops.firstWhere((s) => s > size + 0.01, orElse: () => _fullStop)
           : stops.lastWhere((s) => s < size - 0.01, orElse: () => 0);
     } else {
       target = stops.reduce(
         (a, b) => (a - size).abs() < (b - size).abs() ? a : b,
       );
     }
-    _sheetCtr.animateTo(
-      target,
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
+    _withHandle(
+      () => _sheetCtr.animateTo(
+        target,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      ),
     );
   }
 
-  /// the part of the way from closed to the half-way stop, 0..1
-  double get _progress => (_shown.value / _half).clamp(0.0, 1.0);
+  /// the part of the way from closed to the player's edge, 0..1
+  double get _progress => (_shown.value / _videoStop).clamp(0.0, 1.0);
 
   void _reply() => _replyCtr.onReply(
     null,
@@ -350,29 +507,34 @@ class _CommentSheetState extends State<CommentSheet>
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        widget.child,
-        if (_isOpen.value)
+        RepaintBoundary(key: _pageKey, child: widget.child),
+        if (_isOpen.value && !widget.hidden)
           Positioned.fill(
             child: LayoutBuilder(
               builder: (context, constraints) {
                 _height = constraints.maxHeight;
-                final half =
-                    (MediaQuery.sizeOf(context).height * 0.56 / _height).clamp(
-                      0.4,
-                      0.85,
+                final top = MediaQuery.paddingOf(context).top;
+                final fullStop = ((_height - top) / _height).clamp(0.5, 1.0);
+                final videoStop =
+                    ((_height - _playerBottomLocal(context)) / _height).clamp(
+                      0.3,
+                      fullStop - 0.05,
                     );
                 // A new list of snap sizes makes the sheet snap at once, even
                 // in the middle of a drag, and the page rebuilds often while
                 // the player runs: keep the list unless the stop moved.
-                if (_snapSizes.isEmpty || (half - _half).abs() > 0.001) {
-                  _half = half;
-                  _snapSizes = [half];
+                if (_snapSizes.isEmpty ||
+                    (videoStop - _videoStop).abs() > 0.001 ||
+                    (fullStop - _fullStop).abs() > 0.001) {
+                  _videoStop = videoStop;
+                  _fullStop = fullStop;
+                  _snapSizes = [videoStop];
                 }
                 if (_rising) {
                   _rising = false;
-                  // rise from below the screen to the half-way stop
+                  // rise from below the screen to the player's edge
                   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) _shown.animateTo(_half);
+                    if (mounted) _shown.animateTo(_videoStop);
                   });
                 }
                 return _buildSheet(context);
@@ -383,12 +545,24 @@ class _CommentSheetState extends State<CommentSheet>
     );
   }
 
+  /// the player's lower edge in the sheet's own coordinates
+  double _playerBottomLocal(BuildContext context) {
+    final global = widget.playerBottom?.call();
+    final box = this.context.findRenderObject() as RenderBox?;
+    if (global == null || box == null || !box.hasSize) {
+      return _height * 0.4;
+    }
+    return box.globalToLocal(Offset(0, global)).dy;
+  }
+
   Widget _buildSheet(BuildContext context) {
     final bottom = MediaQuery.viewPaddingOf(context).bottom;
     return Stack(
       children: [
-        // the page below dims as the sheet comes up; tapping it closes
+        // the page below the player dims as the sheet comes up; tapping it
+        // closes, while taps on the video still reach the player
         Positioned.fill(
+          top: _height * (1 - _videoStop),
           child: ListenableBuilder(
             listenable: _shown,
             builder: (context, _) {
@@ -408,6 +582,10 @@ class _CommentSheetState extends State<CommentSheet>
         Positioned.fill(
           child: Listener(
             onPointerDown: (_) {
+              final paused = widget.playerPaused?.call() ?? false;
+              if (paused != _playerPaused) {
+                setState(() => _playerPaused = paused);
+              }
               _pressed = true;
               _lastStamp =
                   SchedulerBinding.instance.currentSystemFrameTimeStamp;
@@ -421,7 +599,7 @@ class _CommentSheetState extends State<CommentSheet>
               // it with the previous offset would jump it for that frame
               listenable: Listenable.merge([_shown, _sheetCtr]),
               builder: (context, child) {
-                final size = _sheetCtr.isAttached ? _sheetCtr.size : _half;
+                final size = _sheetCtr.isAttached ? _sheetCtr.size : _videoStop;
                 return Transform.translate(
                   offset: Offset(0, (size - _shown.value) * _height),
                   child: child,
@@ -429,8 +607,9 @@ class _CommentSheetState extends State<CommentSheet>
               },
               child: DraggableScrollableSheet(
                 controller: _sheetCtr,
-                initialChildSize: _half,
+                initialChildSize: _videoStop,
                 minChildSize: 0,
+                maxChildSize: _maxStop,
                 snap: true,
                 snapSizes: _snapSizes,
                 builder: _buildBody,
@@ -473,45 +652,60 @@ class _CommentSheetState extends State<CommentSheet>
       clipBehavior: .none,
       fit: .expand,
       children: [
-        // reaches below the screen, so only the top corners are rounded
+        // reaches a screen below the sheet's box: the box shrinks ahead of
+        // the sheet as drawn, which trails it on a spring, and the glass
+        // has to fill the screen down to the bottom all the same
         Positioned(
           left: 0,
           right: 0,
           top: 0,
-          bottom: -80,
+          bottom: -_height,
+          // no drop shadow: on a sheet this large its blur costs frames too
           child: CustomPaint(
-            painter: GlassShadowPainter(
-              radius: radius,
-              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.12),
-            ),
             foregroundPainter: GlassRimPainter(
               radius: radius,
               opacity: 0.8,
               isDark: isDark,
             ),
-            child: AmbientTintBuilder(
-              cover: widget.cover,
-              builder: (context, tint, _) => LiquidGlass(
-                radius: 28,
-                blurSigma: 24,
-                saturation: 1.7,
-                color: Color.lerp(
-                  colorScheme.surface,
-                  tint,
-                  0.35,
-                )!.withValues(alpha: isDark ? 0.6 : 0.64),
+            child: ClipRRect(
+              borderRadius: const .vertical(top: radius),
+              child: AmbientTintBuilder(
+                cover: widget.cover,
+                builder: (context, tint, _) {
+                  final glass = Color.lerp(colorScheme.surface, tint, 0.35)!;
+                  return CustomPaint(
+                    painter: _FrozenGlassPainter(
+                      backdrop: _backdrop,
+                      scale: _backdropScale,
+                      shown: _shown,
+                      height: _height,
+                      // until the still is ready: the glass's color, opaque
+                      // enough to read on
+                      base: glass.withValues(alpha: 0.94),
+                      color: glass.withValues(alpha: isDark ? 0.6 : 0.64),
+                    ),
+                  );
+                },
               ),
             ),
           ),
         ),
-        // laid out at the full height and clipped, so the list does not
-        // lay out again on every frame of a drag
+        // laid out as tall as the stop the sheet is at or heading for, so
+        // the end of the list is on screen there; it lays out again only
+        // when the sheet passes the player's edge
         ClipRRect(
-          borderRadius: const .vertical(top: radius),
-          child: OverflowBox(
-            alignment: .topCenter,
-            minHeight: _height,
-            maxHeight: _height,
+          clipper: _TopRounded(radius, below: _height),
+          child: ValueListenableBuilder(
+            valueListenable: _tall,
+            builder: (context, tall, child) {
+              final height = _height * (tall ? _fullStop : _videoStop);
+              return OverflowBox(
+                alignment: .topCenter,
+                minHeight: height,
+                maxHeight: height,
+                child: child,
+              );
+            },
             child: Column(
               children: [
                 _buildHeader(context),
@@ -600,18 +794,28 @@ class _CommentSheetState extends State<CommentSheet>
     final colorScheme = ColorScheme.of(context);
     return GestureDetector(
       behavior: .opaque,
+      onVerticalDragStart: (_) {
+        if (!_byHandle) setState(() => _byHandle = true);
+      },
+      onVerticalDragCancel: () {
+        if (_byHandle) setState(() => _byHandle = false);
+      },
       onVerticalDragUpdate: (details) {
         if (!_sheetCtr.isAttached) return;
         _sheetCtr.jumpTo(
-          (_sheetCtr.size - details.delta.dy / _height).clamp(0.0, 1.0),
+          (_sheetCtr.size - details.delta.dy / _height).clamp(0.0, _fullStop),
         );
       },
       onVerticalDragEnd: (details) =>
           _settle(details.velocity.pixelsPerSecond.dy),
-      onTap: () => _sheetCtr.animateTo(
-        _sheetCtr.size < (_half + 1) / 2 ? 1 : _half,
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
+      onTap: () => _withHandle(
+        () => _sheetCtr.animateTo(
+          _sheetCtr.size < (_videoStop + _fullStop) / 2
+              ? _fullStop
+              : _videoStop,
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+        ),
       ),
       child: SizedBox(
         // a panel brings its own title bar: only the handle to drag by
@@ -697,6 +901,74 @@ class _CommentSheetState extends State<CommentSheet>
       ),
     );
   }
+}
+
+/// The sheet's glass: the blurred still of the page, drawn where the page
+/// lies behind the sheet as it moves, under a tint.
+class _FrozenGlassPainter extends CustomPainter {
+  _FrozenGlassPainter({
+    required this.backdrop,
+    required this.scale,
+    required this.shown,
+    required this.height,
+    required this.base,
+    required this.color,
+  }) : super(repaint: shown);
+
+  final ui.Image? backdrop;
+  final double scale;
+  final SpringFollower shown;
+  final double height;
+  final Color base;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final image = backdrop;
+    if (image == null) {
+      canvas.drawRect(Offset.zero & size, Paint()..color = base);
+      return;
+    }
+    // the sheet as drawn starts (1 - shown) of the page down
+    canvas
+      ..save()
+      ..translate(0, -(1 - shown.value) * height)
+      ..scale(1 / scale)
+      ..drawImage(image, Offset.zero, Paint()..filterQuality = .low)
+      ..restore()
+      ..drawRect(Offset.zero & size, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(_FrozenGlassPainter old) =>
+      old.backdrop != backdrop ||
+      old.height != height ||
+      old.base != base ||
+      old.color != color ||
+      old.scale != scale;
+}
+
+/// Rounds the top corners and reaches [below] past the bottom, see the
+/// glass in [_CommentSheetState._buildBody].
+class _TopRounded extends CustomClipper<RRect> {
+  _TopRounded(this.radius, {required this.below});
+
+  final Radius radius;
+  final double below;
+
+  @override
+  RRect getClip(Size size) => RRect.fromLTRBAndCorners(
+    0,
+    0,
+    size.width,
+    size.height + below,
+    topLeft: radius,
+    topRight: radius,
+  );
+
+  @override
+  bool shouldReclip(_TopRounded old) =>
+      old.radius != radius || old.below != below;
 }
 
 /// a thread in the sheet: a comment's replies, or a 对话列表 in them

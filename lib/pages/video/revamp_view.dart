@@ -16,6 +16,22 @@ extension _VideoRevamp on _VideoDetailPageVState {
   bool _showInSheet(Widget Function(VoidCallback close) panel) =>
       _replyInSheet && CommentSheet.showPanel(_videoReplyController, panel);
 
+  /// The sheet covers the player: pause, and play again once it leaves, if
+  /// the sheet was what paused it.
+  void _onCoverPlayer(bool covering) {
+    final player = plPlayerController;
+    if (player == null) return;
+    if (covering) {
+      if (player.playerStatus.isPlaying) {
+        _pausedBySheet = true;
+        player.pause();
+      }
+    } else if (_pausedBySheet) {
+      _pausedBySheet = false;
+      player.play();
+    }
+  }
+
   /// In place of a tab bar with just 简介: a field to send a danmaku, as
   /// in the official app, and the switch to show them.
   Widget _danmakuBar() {
@@ -87,11 +103,30 @@ extension _VideoRevamp on _VideoDetailPageVState {
     );
   }
 
+  /// The comment sheet over the whole portrait page, so it can rise over
+  /// the player; it stays away while the video is full screen.
   Widget _withCommentSheet(Widget page) {
     if (!_replyInSheet) return page;
+    return Obx(() => _commentSheet(isFullScreen, page));
+  }
+
+  Widget _commentSheet(bool isFullScreen, Widget page) {
     return CommentSheet(
       heroTag: heroTag,
       cover: videoDetailController.cover,
+      hidden: isFullScreen,
+      // the intro starts where the player ends
+      playerBottom: () {
+        final box =
+            videoDetailController.childKey.currentContext?.findRenderObject()
+                as RenderBox?;
+        return box != null && box.hasSize
+            ? box.localToGlobal(Offset.zero).dy
+            : MediaQuery.sizeOf(context).height * 0.4;
+      },
+      onCoverPlayer: _onCoverPlayer,
+      playerPaused: () =>
+          !(plPlayerController?.playerStatus.isPlaying ?? false),
       // what used to open on the comments tab
       openAtStart:
           Pref.defaultShowComment ||

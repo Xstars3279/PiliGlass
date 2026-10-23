@@ -611,32 +611,29 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
               key: videoDetailController.childKey,
               body: AmbientBackground(
                 cover: videoDetailController.cover,
-                child: _withCommentSheet(
-                  Column(
-                    children: [
-                      buildTabBar(
-                        onTap: videoDetailController.animToTop,
-                        replyTab: !_replyInSheet,
+                child: Column(
+                  children: [
+                    buildTabBar(
+                      onTap: videoDetailController.animToTop,
+                      replyTab: !_replyInSheet,
+                    ),
+                    Expanded(
+                      child: tabBarView(
+                        hitTestBehavior: .translucent,
+                        controller: videoDetailController.tabCtr,
+                        children: [
+                          videoIntro(
+                            isHorizontal: false,
+                            needCtr: false,
+                            commentCard: _replyInSheet,
+                          ),
+                          if (videoDetailController.showReply && !_replyInSheet)
+                            videoReplyPanel(isNested: true),
+                          if (_shouldShowSeasonPanel) seasonPanel,
+                        ],
                       ),
-                      Expanded(
-                        child: tabBarView(
-                          hitTestBehavior: .translucent,
-                          controller: videoDetailController.tabCtr,
-                          children: [
-                            videoIntro(
-                              isHorizontal: false,
-                              needCtr: false,
-                              commentCard: _replyInSheet,
-                            ),
-                            if (videoDetailController.showReply &&
-                                !_replyInSheet)
-                              videoReplyPanel(isNested: true),
-                            if (_shouldShowSeasonPanel) seasonPanel,
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -1301,6 +1298,9 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   late ThemeData theme;
   ColorScheme get colorScheme => theme.colorScheme;
   late bool isPortrait;
+
+  /// the comment sheet paused the video, see _onCoverPlayer
+  bool _pausedBySheet = false;
   late double maxWidth;
   late double maxHeight;
   bool isWindowMode = false;
@@ -1312,11 +1312,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     if (videoDetailController.plPlayerController.isPipMode) {
       child = plPlayer(width: maxWidth, height: maxHeight, isPipMode: true);
     } else if (!videoDetailController.horizontalScreen) {
-      child = childWhenDisabled;
+      child = _withCommentSheet(childWhenDisabled);
     } else if (maxWidth / maxHeight >= kScreenRatio) {
       child = childWhenDisabledLandscape;
     } else if (maxWidth / Style.aspectRatio16x9 < 0.4 * maxHeight) {
-      child = childWhenDisabled;
+      child = _withCommentSheet(childWhenDisabled);
     } else {
       child = childWhenDisabledAlmostSquare;
     }
