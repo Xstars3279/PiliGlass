@@ -438,12 +438,16 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
           style: TextButton.styleFrom(
             tapTargetSize: .shrinkWrap,
             visualDensity: const VisualDensity(vertical: -2.8),
-            foregroundColor: attr != 0
-                ? colorScheme.outline
-                : colorScheme.onSecondaryContainer,
-            backgroundColor: attr != 0
-                ? colorScheme.onInverseSurface
-                : colorScheme.secondaryContainer,
+            foregroundColor:
+                Revamp.followFg(colorScheme, attr != 0) ??
+                (attr != 0
+                    ? colorScheme.outline
+                    : colorScheme.onSecondaryContainer),
+            backgroundColor:
+                Revamp.followBg(colorScheme, attr != 0) ??
+                (attr != 0
+                    ? colorScheme.onInverseSurface
+                    : colorScheme.secondaryContainer),
           ),
           child: Text(
             switch (attr) {

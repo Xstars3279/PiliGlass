@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/models_new/follow/list.dart';
 import 'package:PiliPlus/pages/share/view.dart' show UserModel;
@@ -37,8 +38,12 @@ class FollowItem extends StatelessWidget {
           visualDensity: .compact,
           tapTargetSize: .shrinkWrap,
           padding: const .symmetric(horizontal: 15),
-          foregroundColor: isFollow ? colorScheme.outline : null,
-          backgroundColor: isFollow ? colorScheme.onInverseSurface : null,
+          foregroundColor:
+              Revamp.followFg(colorScheme, isFollow) ??
+              (isFollow ? colorScheme.outline : null),
+          backgroundColor:
+              Revamp.followBg(colorScheme, isFollow) ??
+              (isFollow ? colorScheme.onInverseSurface : null),
         ),
         child: Text(
           '${isFollow ? '已' : ''}关注',

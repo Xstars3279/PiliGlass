@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/skeleton/video_card_h.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -345,12 +346,24 @@ class _HorizontalMemberPageState extends State<HorizontalMemberPage> {
           Expanded(
             child: FilledButton.tonal(
               style: FilledButton.styleFrom(
-                backgroundColor: memberInfoModel.isFollowed == true
-                    ? colorScheme.onInverseSurface
-                    : null,
-                foregroundColor: memberInfoModel.isFollowed == true
-                    ? colorScheme.outline
-                    : null,
+                backgroundColor:
+                    Revamp.followBg(
+                      colorScheme,
+                      memberInfoModel.isFollowed == true ||
+                          widget.mid == account.mid,
+                    ) ??
+                    (memberInfoModel.isFollowed == true
+                        ? colorScheme.onInverseSurface
+                        : null),
+                foregroundColor:
+                    Revamp.followFg(
+                      colorScheme,
+                      memberInfoModel.isFollowed == true ||
+                          widget.mid == account.mid,
+                    ) ??
+                    (memberInfoModel.isFollowed == true
+                        ? colorScheme.outline
+                        : null),
                 padding: EdgeInsets.zero,
                 tapTargetSize: .shrinkWrap,
                 visualDensity: const VisualDensity(vertical: -2),

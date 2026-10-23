@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/avatars.dart';
@@ -488,9 +489,23 @@ class UserInfoCard extends StatelessWidget {
               onPressed: !isOwner && relation == -1 ? null : onFollow,
               style: ButtonStyle(
                 padding: const WidgetStatePropertyAll(.zero),
-                backgroundColor: relation != 0
-                    ? WidgetStatePropertyAll(colorScheme.onInverseSurface)
-                    : null,
+                backgroundColor: switch (Revamp.followBg(
+                  colorScheme,
+                  isOwner || relation != 0,
+                )) {
+                  final color? => WidgetStatePropertyAll(color),
+                  null =>
+                    relation != 0
+                        ? WidgetStatePropertyAll(colorScheme.onInverseSurface)
+                        : null,
+                },
+                foregroundColor: switch (Revamp.followFg(
+                  colorScheme,
+                  isOwner || relation != 0,
+                )) {
+                  final color? => WidgetStatePropertyAll(color),
+                  null => null,
+                },
                 tapTargetSize: .padded,
                 visualDensity: const VisualDensity(vertical: -1.8),
               ),

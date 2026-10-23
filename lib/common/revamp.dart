@@ -21,6 +21,19 @@ abstract final class Revamp {
   /// corner radius of a group
   static const double groupRadius = 24;
 
+  /// 关注 and 追番 buttons: the primary color while the tap would follow,
+  /// the wash once followed. Null where the redesign is off, for upstream's.
+  static Color? followBg(ColorScheme colorScheme, bool followed) => !enabled
+      ? null
+      : followed
+      ? wash(colorScheme)
+      : colorScheme.primary;
+  static Color? followFg(ColorScheme colorScheme, bool followed) => !enabled
+      ? null
+      : followed
+      ? colorScheme.onSurfaceVariant
+      : colorScheme.onPrimary;
+
   /// A card that dips when pressed and springs back, like the feed's
   /// cards; as it is when the redesign is off.
   static Widget pressable(Widget card) =>

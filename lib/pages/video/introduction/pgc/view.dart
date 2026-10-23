@@ -221,8 +221,12 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
                 vertical: 10,
               ),
               visualDensity: VisualDensity.compact,
-              foregroundColor: isFollowed ? colorScheme.outline : null,
-              backgroundColor: isFollowed ? colorScheme.onInverseSurface : null,
+              foregroundColor:
+                  Revamp.followFg(colorScheme, isFollowed) ??
+                  (isFollowed ? colorScheme.outline : null),
+              backgroundColor:
+                  Revamp.followBg(colorScheme, isFollowed) ??
+                  (isFollowed ? colorScheme.onInverseSurface : null),
             ),
             onPressed: followStatus == -1
                 ? null
