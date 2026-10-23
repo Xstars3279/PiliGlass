@@ -56,34 +56,41 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
   /// The tabs on a capsule of the dock's glass, as on the home page; the
   /// app's pill tabs from the theme.
   Widget _glassTabs(Widget? leading, Widget actions) => Padding(
-    padding: const .fromLTRB(12, 6, 12, 8),
-    child: Row(
-      spacing: 4,
-      children: [
-        ?leading,
-        Expanded(
-          child: GlassCapsule(
-            child: TabBar(
-              isScrollable: true,
-              tabAlignment: .start,
-              padding: EdgeInsets.zero,
-              labelPadding: const .symmetric(horizontal: 14),
-              controller: _dynamicsController.tabController,
-              tabs: DynamicsTabType.values
-                  .map((e) => Tab(text: e.label, height: 40))
-                  .toList(),
-              onTap: (index) {
-                if (!_dynamicsController.tabController.indexIsChanging) {
-                  _dynamicsController.animateToTop();
-                }
-              },
+    // the same bar as the home tabs: size, margins and glass
+    padding: const .fromLTRB(12, 6, 12, 4),
+    child: SizedBox(
+      height: 48,
+      child: Row(
+        spacing: 8,
+        children: [
+          ?leading,
+          Expanded(
+            child: GlassCapsule(
+              refraction: true,
+              // five tabs fit: spread them evenly over the bar
+              child: TabBar(
+                padding: EdgeInsets.zero,
+                labelPadding: EdgeInsets.zero,
+                controller: _dynamicsController.tabController,
+                tabs: DynamicsTabType.values
+                    .map((e) => Tab(text: e.label))
+                    .toList(),
+                onTap: (index) {
+                  if (!_dynamicsController.tabController.indexIsChanging) {
+                    _dynamicsController.animateToTop();
+                  }
+                },
+              ),
             ),
           ),
-        ),
-        actions,
-      ],
+          if (actions is! SizedBox) actions,
+        ],
+      ),
     ),
   );
+
+  /// the room the floating tabs take, as on the home page
+  static const _barHeight = 6.0 + 48 + 4;
 
   Widget upPanelPart(ColorScheme colorScheme) {
     final isTop = upPanelPosition == .top;
@@ -91,11 +98,12 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
     // the redesign sets the strip above the posts off as a group
     if (Revamp.enabled && (isTop || !needBg)) {
       return RevampGroup(
+        // below the floating tabs
         margin: isTop
-            ? const .fromLTRB(12, 0, 12, 4)
+            ? const .fromLTRB(12, _barHeight, 12, 4)
             : upPanelPosition == .leftFixed
-            ? const .only(left: 8)
-            : const .only(right: 8),
+            ? const .only(left: 8, top: _barHeight)
+            : const .only(right: 8, top: _barHeight),
         child: SizedBox(
           width: isTop ? null : 64,
           height: isTop ? 84 : null,
@@ -233,44 +241,51 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
       }
     }
 
+    // the redesign: the posts run on under the tabs, which float on glass
+    if (Revamp.enabled) {
+      child = RevampTopInset(inset: _barHeight, child: child);
+    }
     return Scaffold(
       primary: false,
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: Revamp.enabled,
       appBar: PreferredSize(
-        preferredSize: .fromHeight(Revamp.enabled ? 62 : 50),
+        preferredSize: .fromHeight(Revamp.enabled ? _barHeight : 50),
         child: Revamp.enabled
             ? _glassTabs(leading, actions)
             : Row(
-          children: [
-            ?leading,
-            Expanded(
-              child: TabBar(
-                dividerHeight: 0,
-                isScrollable: true,
-                tabAlignment: .start,
-                dividerColor: Colors.transparent,
-                labelColor: colorScheme.primary,
-                indicatorColor: colorScheme.primary,
-                controller: _dynamicsController.tabController,
-                unselectedLabelColor: colorScheme.onSurface,
-                labelStyle:
-                    TabBarTheme.of(context).labelStyle
-                        ?.copyWith(fontSize: 13) ??
-                    const TextStyle(fontSize: 13),
-                tabs: DynamicsTabType.values
-                    .map((e) => Tab(text: e.label))
-                    .toList(),
-                onTap: (index) {
-                  if (!_dynamicsController.tabController.indexIsChanging) {
-                    _dynamicsController.animateToTop();
-                  }
-                },
+                children: [
+                  ?leading,
+                  Expanded(
+                    child: TabBar(
+                      dividerHeight: 0,
+                      isScrollable: true,
+                      tabAlignment: .start,
+                      dividerColor: Colors.transparent,
+                      labelColor: colorScheme.primary,
+                      indicatorColor: colorScheme.primary,
+                      controller: _dynamicsController.tabController,
+                      unselectedLabelColor: colorScheme.onSurface,
+                      labelStyle:
+                          TabBarTheme.of(context).labelStyle
+                              ?.copyWith(fontSize: 13) ??
+                          const TextStyle(fontSize: 13),
+                      tabs: DynamicsTabType.values
+                          .map((e) => Tab(text: e.label))
+                          .toList(),
+                      onTap: (index) {
+                        if (!_dynamicsController
+                            .tabController
+                            .indexIsChanging) {
+                          _dynamicsController.animateToTop();
+                        }
+                      },
+                    ),
+                  ),
+                  actions,
+                ],
               ),
-            ),
-            actions,
-          ],
-        )
       ),
       drawer: drawer,
       endDrawer: endDrawer,

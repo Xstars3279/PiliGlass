@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/colored_box_transition.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart';
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
@@ -73,10 +74,19 @@ mixin ReplyLocateMixin<T>
   Animation<Color?>? _colorAnim;
   Animation<Color?> colorAnim(ColorScheme colorScheme) =>
       _colorAnim ??= colorAnimController.drive(
-        ColorTween(
-          begin: colorScheme.onInverseSurface,
-          end: colorScheme.surface,
-        ).chain(CurveTween(curve: const Interval(0.8, 1.0))),
+        // the redesign's lists sit on glass: a light flash of the primary
+        // color that fades away, not a block of the page's color that stays
+        Revamp.enabled
+            ? ColorTween(
+                begin: colorScheme.primary.withValues(alpha: 0.18),
+                end: colorScheme.primary.withValues(alpha: 0),
+              ).chain(
+                CurveTween(curve: const Interval(0.35, 1, curve: Curves.easeOut)),
+              )
+            : ColorTween(
+                begin: colorScheme.onInverseSurface,
+                end: colorScheme.surface,
+              ).chain(CurveTween(curve: const Interval(0.8, 1.0))),
       );
 
   Widget colorAnimWrapper(ColorScheme colorScheme, Widget child) =>

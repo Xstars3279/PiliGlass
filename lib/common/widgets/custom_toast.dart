@@ -1,3 +1,6 @@
+import 'package:PiliPlus/common/motion/springs.dart';
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -11,6 +14,34 @@ class CustomToast extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
+    // the redesign: a capsule of the dock's glass that pops in on a spring
+    if (Revamp.enabled) {
+      return Padding(
+        padding: .only(bottom: MediaQuery.viewPaddingOf(context).bottom + 30),
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: const Duration(milliseconds: 460),
+          curve: SpringCurve(
+            Springs.bouncy,
+            const Duration(milliseconds: 460),
+          ),
+          builder: (context, t, child) =>
+              Transform.scale(scale: 0.8 + 0.2 * t, child: child),
+          child: GlassCapsule(
+            refraction: true,
+            padding: const .symmetric(horizontal: 18, vertical: 11),
+            child: Text(
+              msg,
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w500,
+                color: colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return Container(
       margin: .only(
         bottom: MediaQuery.viewPaddingOf(context).bottom + 30,

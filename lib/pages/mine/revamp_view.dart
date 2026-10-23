@@ -34,10 +34,16 @@ extension _MineRevamp on _MediaPageState {
                   padding: const .only(bottom: 150),
                   physics: const AlwaysScrollableScrollPhysics(),
                   children: [
-                    _buildProfile(),
-                    const SizedBox(height: 18),
-                    _buildStatChips(),
-                    const SizedBox(height: 12),
+                    // who and their numbers in one card, like the account
+                    // card on top of the settings
+                    RevampGroup(
+                      child: Padding(
+                        padding: const .only(top: 18, bottom: 8),
+                        child: Column(
+                          children: [_buildProfile(), _buildStatRow()],
+                        ),
+                      ),
+                    ),
                     _MineMenu(
                       controller: controller,
                       preview: (tab) => switch (tab) {
@@ -180,54 +186,58 @@ extension _MineRevamp on _MediaPageState {
     });
   }
 
-  Widget _buildStatChips() {
+  /// 动态, 关注, 粉丝 as one row of the profile card, split by thin rules
+  Widget _buildStatRow() {
     final colorScheme = theme.colorScheme;
-    Widget chip(int? count, String label, VoidCallback onTap) => Expanded(
-      child: Material(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: const .all(.circular(20)),
-        clipBehavior: .antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const .symmetric(horizontal: 14, vertical: 12),
-            child: Column(
-              crossAxisAlignment: .start,
-              spacing: 2,
-              children: [
-                Text(
-                  count?.toString() ?? '-',
-                  style: theme.textTheme.titleLarge!.copyWith(
-                    fontWeight: .w800,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
+    Widget stat(int? count, String label, VoidCallback onTap) => Expanded(
+      child: InkWell(
+        borderRadius: Revamp.tileRadius,
+        onTap: onTap,
+        child: Padding(
+          padding: const .symmetric(vertical: 10),
+          child: Column(
+            spacing: 2,
+            children: [
+              Text(
+                count?.toString() ?? '-',
+                style: theme.textTheme.titleLarge!.copyWith(
+                  fontWeight: .w800,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
-                Text(
-                  label,
-                  style: theme.textTheme.labelMedium!.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+              ),
+              Text(
+                label,
+                style: theme.textTheme.labelMedium!.copyWith(
+                  color: colorScheme.onSurfaceVariant,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
+    final rule = SizedBox(
+      height: 28,
+      child: VerticalDivider(
+        width: 1,
+        color: colorScheme.outline.withValues(alpha: 0.2),
+      ),
+    );
     return Obx(() {
-      final stat = controller.userStat.value;
+      final stat0 = controller.userStat.value;
       return Padding(
-        padding: const .symmetric(horizontal: 12),
+        padding: const .fromLTRB(8, 14, 8, 0),
         child: Row(
-          spacing: 10,
           children: [
-            chip(
-              stat.dynamicCount,
+            stat(
+              stat0.dynamicCount,
               '动态',
               () => controller.push('memberDynamics'),
             ),
-            chip(stat.following, '关注', () => controller.push('follow')),
-            chip(stat.follower, '粉丝', () => controller.push('fan')),
+            rule,
+            stat(stat0.following, '关注', () => controller.push('follow')),
+            rule,
+            stat(stat0.follower, '粉丝', () => controller.push('fan')),
           ],
         ),
       );
@@ -390,7 +400,7 @@ class _MineMenuState extends State<_MineMenu> {
               ),
               ListTile(
                 leading: const RevampIconTile(icon: Icon(Icons.info_rounded)),
-                title: const Text('关于 PiliPlus'),
+                title: const Text('关于 PiliGlass'),
                 trailing: Row(
                   mainAxisSize: .min,
                   spacing: 6,

@@ -25,7 +25,8 @@ class ActionPanel extends StatelessWidget {
     final like = moduleStat.like!;
     final btnStyle = TextButton.styleFrom(
       tapTargetSize: .padded,
-      padding: const EdgeInsets.symmetric(horizontal: 15),
+      // narrower in the redesign's pills, so 4 digits fit on one line
+      padding: EdgeInsets.symmetric(horizontal: Revamp.enabled ? 8 : 15),
       foregroundColor: outline,
       // the redesign: pills on the wash, like the intro's blocks
       backgroundColor: Revamp.enabled ? Revamp.wash(theme.colorScheme) : null,

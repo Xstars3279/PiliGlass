@@ -1,3 +1,6 @@
+import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:PiliPlus/services/account_service.dart';
+import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
@@ -111,74 +114,177 @@ class _SettingPageState extends State<SettingPage> {
   /// Large title that collapses as the list scrolls, and the entries in
   /// rounded groups: the settings, the account, about.
   Widget _buildRevamp() {
+    final colorScheme = theme.colorScheme;
     final titleStyle = theme.textTheme.titleMedium!;
     final subTitleStyle = theme.textTheme.labelMedium!.copyWith(
-      color: theme.colorScheme.outline,
+      color: colorScheme.outline,
     );
     final chevron = Icon(
       Icons.chevron_right_rounded,
-      color: theme.colorScheme.outline,
+      color: colorScheme.outline,
     );
-    Widget tile(_SettingsModel item, {bool showSubtitle = true}) => ListTile(
-      onTap: () => _toPage(item.type),
-      leading: RevampIconTile(icon: item.icon),
-      title: Text(item.type.title, style: titleStyle),
-      subtitle: !showSubtitle || item.subtitle == null
-          ? null
-          : Text(item.subtitle!, style: subTitleStyle),
-      trailing: chevron,
+    _SettingsModel item(SettingType type) =>
+        _items.firstWhere((e) => e.type == type);
+    Widget tile(SettingType type, {bool showSubtitle = true}) {
+      final model = item(type);
+      return ListTile(
+        onTap: () => _toPage(type),
+        leading: RevampIconTile(icon: model.icon),
+        title: Text(type.title, style: titleStyle),
+        subtitle: !showSubtitle || model.subtitle == null
+            ? null
+            : Text(
+                model.subtitle!,
+                style: subTitleStyle,
+                maxLines: 1,
+                overflow: .ellipsis,
+              ),
+        trailing: chevron,
+      );
+    }
+
+    // a small label above a group, as in the system settings
+    Widget section(String label, List<SettingType> types) => SliverToBoxAdapter(
+      child: Column(
+        crossAxisAlignment: .start,
+        children: [
+          Padding(
+            padding: const .fromLTRB(28, 6, 28, 6),
+            child: Text(
+              label,
+              style: theme.textTheme.labelLarge!.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          RevampGroup(child: Column(children: types.map(tile).toList())),
+        ],
+      ),
     );
     final padding = MediaQuery.viewPaddingOf(context);
     return Scaffold(
       body: CustomScrollView(
         slivers: [
           const RevampLargeAppBar(title: '设置'),
-          SliverToBoxAdapter(child: _buildSearchItem(theme)),
-          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+          SliverToBoxAdapter(child: _revampSearch()),
+          SliverToBoxAdapter(child: _revampAccount(titleStyle, chevron)),
+          section('内容', const [
+            .privacySetting,
+            .recommendSetting,
+            .replySetting,
+            .dynSetting,
+          ]),
+          section('播放', const [.videoSetting, .playSetting, .dmSetting]),
+          section('外观与其他', const [
+            .styleSetting,
+            .extraSetting,
+            .webdavSetting,
+          ]),
           SliverToBoxAdapter(
-            child: RevampGroup(
-              child: Column(
-                children: _items.take(_items.length - 1).map(tile).toList(),
-              ),
+            child: Padding(
+              padding: const .only(top: 6),
+              child: RevampGroup(child: tile(.about, showSubtitle: false)),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: RevampGroup(
-              child: Column(
-                children: [
-                  ListTile(
-                    onTap: () =>
-                        LoginPageController.switchAccountDialog(context),
-                    leading: const RevampIconTile(
-                      icon: Icon(Icons.switch_account_outlined),
-                    ),
-                    title: Text('切换账号', style: titleStyle),
-                    trailing: chevron,
-                  ),
-                  Obx(
-                    () => _noAccount.value
-                        ? const SizedBox.shrink()
-                        : ListTile(
-                            onTap: () => _logoutDialog(context),
-                            leading: const RevampIconTile(
-                              icon: Icon(Icons.logout_outlined),
-                            ),
-                            title: Text(
-                              '退出登录',
-                              style: titleStyle.copyWith(
-                                color: theme.colorScheme.error,
-                              ),
-                            ),
-                          ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: RevampGroup(child: tile(_items.last, showSubtitle: false)),
           ),
           SliverPadding(padding: EdgeInsets.only(bottom: padding.bottom + 60)),
+        ],
+      ),
+    );
+  }
+
+  /// A field-like capsule on the wash that opens the settings search.
+  Widget _revampSearch() {
+    final colorScheme = theme.colorScheme;
+    return Padding(
+      padding: const .fromLTRB(16, 0, 16, 12),
+      child: Material(
+        color: Revamp.wash(colorScheme),
+        shape: const StadiumBorder(),
+        clipBehavior: .antiAlias,
+        child: InkWell(
+          onTap: () => Get.toNamed('/settingsSearch'),
+          child: Padding(
+            padding: const .symmetric(horizontal: 16, vertical: 11),
+            child: Row(
+              spacing: 10,
+              children: [
+                Icon(
+                  Icons.search,
+                  size: 20,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                Text(
+                  '搜索设置',
+                  style: TextStyle(color: colorScheme.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// The account on top, like the system settings' own card: who is
+  /// signed in, switching account, signing out.
+  Widget _revampAccount(TextStyle titleStyle, Widget chevron) {
+    final colorScheme = theme.colorScheme;
+    final user = Pref.userInfoCache;
+    final face = Get.find<AccountService>().face;
+    return RevampGroup(
+      margin: const .fromLTRB(12, 0, 12, 18),
+      child: Column(
+        children: [
+          ListTile(
+            contentPadding: const .fromLTRB(16, 10, 16, 10),
+            onTap: () => LoginPageController.switchAccountDialog(context),
+            leading: Obx(
+              () => face.value.isEmpty
+                  ? CircleAvatar(
+                      radius: 26,
+                      backgroundColor: colorScheme.primaryContainer,
+                      child: Icon(
+                        Icons.person_outline,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
+                    )
+                  : NetworkImgLayer(
+                      src: face.value,
+                      width: 52,
+                      height: 52,
+                      type: .avatar,
+                    ),
+            ),
+            title: Text(
+              user?.uname ?? '未登录',
+              style: titleStyle.copyWith(fontWeight: FontWeight.w700),
+            ),
+            subtitle: Text(
+              '切换账号',
+              style: theme.textTheme.labelMedium!.copyWith(
+                color: colorScheme.outline,
+              ),
+            ),
+            trailing: chevron,
+          ),
+          Obx(
+            () => _noAccount.value
+                ? const SizedBox.shrink()
+                : ListTile(
+                    onTap: () => _logoutDialog(context),
+                    leading: RevampIconTile(
+                      icon: Icon(
+                        Icons.logout_outlined,
+                        color: colorScheme.error,
+                      ),
+                    ),
+                    title: Text(
+                      '退出登录',
+                      style: titleStyle.copyWith(color: colorScheme.error),
+                    ),
+                  ),
+          ),
         ],
       ),
     );

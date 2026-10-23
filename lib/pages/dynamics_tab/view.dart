@@ -57,6 +57,7 @@ class _DynamicsTabPageState extends State<DynamicsTabPage>
         physics: const AlwaysScrollableScrollPhysics(),
         controller: controller.scrollController,
         slivers: [
+          RevampTopInset.sliver(context),
           SliverPadding(
             padding: EdgeInsets.only(top: Revamp.enabled ? 8 : 0, bottom: 100),
             sliver: buildPage(

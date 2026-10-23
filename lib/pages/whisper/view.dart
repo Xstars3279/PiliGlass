@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/skeleton/whisper_item.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
@@ -121,6 +122,7 @@ class _WhisperPageState extends State<WhisperPage> {
         );
       case Success(:final response):
         if (response != null && response.isNotEmpty) {
+          if (Revamp.enabled) return _revampSessions(response);
           final divider = Divider(
             indent: 72,
             endIndent: 20,
@@ -156,6 +158,7 @@ class _WhisperPageState extends State<WhisperPage> {
   }
 
   Widget _buildTopItems(ThemeData theme, EdgeInsets padding) {
+    if (Revamp.enabled) return _revampTopItems(theme, padding);
     return SliverPadding(
       padding: EdgeInsets.only(left: padding.left, right: padding.right),
       sliver: SliverToBoxAdapter(
@@ -214,6 +217,117 @@ class _WhisperPageState extends State<WhisperPage> {
             );
           }),
         ),
+      ),
+    );
+  }
+
+  Widget _revampTopItems(ThemeData theme, EdgeInsets padding) {
+    final colorScheme = theme.colorScheme;
+    return SliverPadding(
+      padding: EdgeInsets.only(
+        left: padding.left,
+        right: padding.right,
+        top: 4,
+      ),
+      sliver: SliverToBoxAdapter(
+        child: RevampGroup(
+          child: Padding(
+            padding: const .symmetric(vertical: 12),
+            child: Row(
+              mainAxisAlignment: .spaceEvenly,
+              children: List.generate(_controller.msgFeedTopItems.length, (
+                index,
+              ) {
+                final item = _controller.msgFeedTopItems[index];
+                return Revamp.pressable(
+                  InkWell(
+                    borderRadius: Revamp.tileRadius,
+                    onTap: () {
+                      if (!item.enabled) {
+                        SmartDialog.showToast('已禁用');
+                        return;
+                      }
+                      _controller.unreadCounts[index] = 0;
+                      Get.toNamed(item.route);
+                    },
+                    child: Padding(
+                      padding: const .symmetric(horizontal: 8, vertical: 4),
+                      child: Column(
+                        mainAxisSize: .min,
+                        spacing: 6,
+                        children: [
+                          Obx(() {
+                            final count = _controller.unreadCounts[index];
+                            return Badge(
+                              isLabelVisible: count > 0,
+                              label: Text(' $count '),
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primaryContainer,
+                                  borderRadius: Revamp.tileRadius,
+                                ),
+                                child: SizedBox.square(
+                                  dimension: 46,
+                                  child: Icon(
+                                    item.icon,
+                                    size: 22,
+                                    color: colorScheme.onPrimaryContainer,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                          Text(
+                            item.name,
+                            style: theme.textTheme.labelMedium!.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// The sessions as the rows of one rounded group. Each row is a Material
+  /// of the group's color: its ripple shows, and the first and last round
+  /// the group's corners.
+  Widget _revampSessions(List<Session> response) {
+    final colorScheme = ColorScheme.of(context);
+    const corner = Radius.circular(Revamp.groupRadius);
+    return SliverPadding(
+      padding: const .symmetric(horizontal: 12),
+      sliver: SliverList.builder(
+        itemCount: response.length,
+        itemBuilder: (context, index) {
+          if (index == response.length - 1) {
+            _controller.onLoadMore();
+          }
+          final item = response[index];
+          return Material(
+            color: colorScheme.surfaceContainerLow,
+            clipBehavior: .antiAlias,
+            borderRadius: BorderRadius.vertical(
+              top: index == 0 ? corner : Radius.zero,
+              bottom: index == response.length - 1 ? corner : Radius.zero,
+            ),
+            child: WhisperSessionItem(
+              item: item,
+              onSetTop: (isTop, id) =>
+                  _controller.onSetTop(item, index, isTop, id),
+              onSetMute: (isMuted, talkerUid) =>
+                  _controller.onSetMute(item, isMuted, talkerUid),
+              onRemove: (talkerId) => _controller.onRemove(index, talkerId),
+            ),
+          );
+        },
       ),
     );
   }

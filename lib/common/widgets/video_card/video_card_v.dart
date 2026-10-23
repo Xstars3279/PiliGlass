@@ -228,7 +228,7 @@ class VideoCardV extends StatelessWidget {
               videoItem.title,
               maxLines: 2,
               overflow: .ellipsis,
-              style: const TextStyle(height: 1.35, fontWeight: .w600),
+              style: const TextStyle(height: 1.35),
             ),
             const SizedBox(height: 4),
             Row(
