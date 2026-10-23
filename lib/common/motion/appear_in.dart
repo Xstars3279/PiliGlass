@@ -169,3 +169,14 @@ class _RiseScope extends InheritedWidget {
   @override
   bool updateShouldNotify(_RiseScope oldWidget) => false;
 }
+
+/// The [RiseIn]s below appear at once, e.g. a comment the list jumps to and
+/// highlights: a rise on top of the highlight would muddy both.
+class NoRise extends StatelessWidget {
+  const NoRise({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => _RiseScope(child: child);
+}
