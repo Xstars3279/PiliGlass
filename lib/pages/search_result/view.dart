@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
@@ -69,12 +70,14 @@ class _SearchResultPageState extends State<SearchResultPage>
     final theme = Theme.of(context);
     return SimpleScaffold(
       appBar: AppBar(
-        shape: Border(
-          bottom: BorderSide(
-            color: theme.dividerColor.withValues(alpha: 0.08),
-            width: 1,
-          ),
-        ),
+        shape: Revamp.enabled
+            ? null
+            : Border(
+                bottom: BorderSide(
+                  color: theme.dividerColor.withValues(alpha: 0.08),
+                  width: 1,
+                ),
+              ),
         title: GestureDetector(
           onTap: () {
             if (_isFromSearch) {
@@ -120,25 +123,32 @@ class _SearchResultPageState extends State<SearchResultPage>
                   )
                   .toList(),
               isScrollable: true,
+              // the redesign takes the app's tabs from the theme: a raised
+              // pill, bold labels
               indicatorWeight: 0,
-              indicatorPadding: const EdgeInsets.symmetric(
-                horizontal: 3,
-                vertical: 8,
-              ),
-              indicator: BoxDecoration(
-                color: theme.colorScheme.secondaryContainer,
-                borderRadius: const BorderRadius.all(Radius.circular(20)),
-              ),
+              indicatorPadding: Revamp.enabled
+                  ? EdgeInsets.zero
+                  : const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
+              indicator: Revamp.enabled
+                  ? null
+                  : BoxDecoration(
+                      color: theme.colorScheme.secondaryContainer,
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
+                    ),
               indicatorSize: TabBarIndicatorSize.tab,
-              labelColor: theme.colorScheme.onSecondaryContainer,
-              labelStyle:
-                  TabBarTheme.of(
-                    context,
-                  ).labelStyle?.copyWith(fontSize: 13) ??
-                  const TextStyle(fontSize: 13),
+              labelColor: Revamp.enabled
+                  ? null
+                  : theme.colorScheme.onSecondaryContainer,
+              labelStyle: Revamp.enabled
+                  ? null
+                  : TabBarTheme.of(context).labelStyle
+                            ?.copyWith(fontSize: 13) ??
+                        const TextStyle(fontSize: 13),
               dividerColor: Colors.transparent,
               dividerHeight: 0,
-              unselectedLabelColor: theme.colorScheme.outline,
+              unselectedLabelColor: Revamp.enabled
+                  ? null
+                  : theme.colorScheme.outline,
               tabAlignment: TabAlignment.start,
               onTap: (index) {
                 if (!_tabController.indexIsChanging) {

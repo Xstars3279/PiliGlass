@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/sliver/sliver_floating_header.dart';
 import 'package:PiliPlus/common/widgets/video_card/video_card_h.dart';
 import 'package:PiliPlus/models/common/search/video_search_type.dart';
@@ -71,9 +72,16 @@ mixin SearchVideoPanelMixin<S extends SearchVideoPanel>
                         () => SearchText(
                           fontSize: 13,
                           text: e.desc,
-                          bgColor: Colors.transparent,
+                          // the redesign marks the order on a pill, like a tab
+                          bgColor:
+                              Revamp.enabled &&
+                                  controller.selectedType.value == e
+                              ? colorScheme.surfaceContainerHighest
+                              : Colors.transparent,
                           textColor: controller.selectedType.value == e
-                              ? colorScheme.primary
+                              ? (Revamp.enabled
+                                    ? colorScheme.onSurface
+                                    : colorScheme.primary)
                               : colorScheme.outline,
                           onTap: (_) => controller
                             ..order = e == .totalrank ? '' : e.name
@@ -85,7 +93,7 @@ mixin SearchVideoPanelMixin<S extends SearchVideoPanel>
                 ),
               ),
             ),
-            const VerticalDivider(indent: 7, endIndent: 8),
+            if (!Revamp.enabled) const VerticalDivider(indent: 7, endIndent: 8),
             const SizedBox(width: 3),
             SizedBox(
               width: 32,

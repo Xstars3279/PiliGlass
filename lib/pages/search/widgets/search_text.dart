@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -35,8 +36,18 @@ class SearchText extends StatelessWidget {
   Widget build(BuildContext context) {
     late final colorScheme = ColorScheme.of(context);
     final hasLongPress = onLongPress != null;
+    // the redesign's chips are capsules on the wash, like its tags
+    final borderRadius =
+        Revamp.enabled &&
+            this.borderRadius == const BorderRadius.all(.circular(6))
+        ? const BorderRadius.all(.circular(20))
+        : this.borderRadius;
     return Material(
-      color: bgColor ?? colorScheme.onInverseSurface,
+      color:
+          bgColor ??
+          (Revamp.enabled
+              ? Revamp.wash(colorScheme)
+              : colorScheme.onInverseSurface),
       borderRadius: borderRadius,
       child: InkWell(
         onTap: () => onTap?.call(text),
