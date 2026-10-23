@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_box.dart';
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart'
     show platformClampingPhysics;
@@ -136,6 +138,33 @@ class _SendDanmakuPanelState extends CommonTextPubPageState<SendDanmakuPanel> {
 
   @override
   Widget build(BuildContext context) {
+    // the redesign: the same glass box over the keyboard as the reply box
+    if (Revamp.enabled) {
+      return ViewSafeArea(
+        child: Align(
+          alignment: .bottomCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 450),
+            child: Column(
+              mainAxisSize: .min,
+              crossAxisAlignment: .stretch,
+              children: [
+                Padding(
+                  padding: const .fromLTRB(12, 0, 12, 8),
+                  child: GlassBox(
+                    child: Padding(
+                      padding: const .symmetric(vertical: 4),
+                      child: _buildInputView(),
+                    ),
+                  ),
+                ),
+                buildPanelContainer(theme.colorScheme.surfaceContainerLow),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     return ViewSafeArea(
       child: Align(
         alignment: Alignment.bottomCenter,

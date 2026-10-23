@@ -3,8 +3,7 @@ import 'dart:io';
 import 'dart:math' show max;
 
 import 'package:PiliPlus/pages/common/publish/publish_route.dart';
-import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass.dart';
-import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_box.dart';
 import 'package:PiliPlus/common/motion/pressable_scale.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/button/toolbar_icon_button.dart';

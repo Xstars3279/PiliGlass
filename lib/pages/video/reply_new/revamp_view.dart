@@ -9,30 +9,12 @@ extension _ReplyRevamp on _ReplyPageState {
 
   Widget _revampBody() {
     final colorScheme = theme.colorScheme;
-    final isDark = colorScheme.brightness == .dark;
-    const radius = Radius.circular(_radius);
-    Widget box = CustomPaint(
-      painter: GlassShadowPainter(
-        radius: radius,
-        color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.12),
-      ),
-      foregroundPainter: GlassRimPainter(
-        radius: radius,
-        opacity: 0.75,
-        isDark: isDark,
-      ),
-      child: LiquidGlass(
-        radius: _radius,
-        blurSigma: 16,
-        refractionHeight: 16,
-        refractionAmount: 18,
-        saturation: 1.5,
-        color: colorScheme.surfaceContainer.withValues(alpha: 0.78),
-        child: Column(
-          mainAxisSize: .min,
-          crossAxisAlignment: .start,
-          children: [...buildInputView(), buildImagePreview()],
-        ),
+    Widget box = GlassBox(
+      radius: _radius,
+      child: Column(
+        mainAxisSize: .min,
+        crossAxisAlignment: .start,
+        children: [...buildInputView(), buildImagePreview()],
       ),
     );
     final route = ModalRoute.of(context);

@@ -1398,11 +1398,20 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                         : 0.0,
                     duration: const Duration(milliseconds: 150),
                     child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: Color(0x88000000),
-                        borderRadius: BorderRadius.all(Radius.circular(16)),
-                      ),
+                      padding: Revamp.enabled
+                          ? const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 7,
+                            )
+                          : const EdgeInsets.all(6),
+                      decoration: Revamp.enabled
+                          ? Revamp.overlayCapsuleDecoration
+                          : const BoxDecoration(
+                              color: Color(0x88000000),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(16),
+                              ),
+                            ),
                       child: Obx(
                         () => Text(
                           '${plPlayerController.enableAutoLongPressSpeed ? (plPlayerController.longPressStatus.value ? plPlayerController.lastPlaybackSpeed : plPlayerController.playbackSpeed) * 2 : plPlayerController.longPressSpeed}倍速中',

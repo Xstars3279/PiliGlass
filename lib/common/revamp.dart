@@ -77,18 +77,21 @@ abstract final class Revamp {
       ? DecoratedBox(decoration: overlayRoundDecoration, child: child)
       : child;
 
+  /// the smoked glass of [overlayRoundDecoration] as a capsule
+  static const overlayCapsuleDecoration = ShapeDecoration(
+    color: Color(0x47000000),
+    shape: StadiumBorder(
+      side: BorderSide(color: Color(0x33FFFFFF), width: 0.8),
+    ),
+  );
+
   /// A label over the video, e.g. 1.0X or 1080P, on a capsule of the same
   /// smoked glass as [overlayButtonStyle]; upstream's bare text if off.
   static Widget overlayChip(Widget label) => enabled
       ? Padding(
           padding: const EdgeInsets.symmetric(horizontal: 3),
           child: DecoratedBox(
-            decoration: const ShapeDecoration(
-              color: Color(0x47000000),
-              shape: StadiumBorder(
-                side: BorderSide(color: Color(0x33FFFFFF), width: 0.8),
-              ),
-            ),
+            decoration: overlayCapsuleDecoration,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               child: label,
