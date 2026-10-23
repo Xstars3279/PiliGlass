@@ -28,7 +28,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.piliplus"
+        // PiliGlass's own id for its releases, beside PiliPlus on a phone;
+        // the dev builds keep theirs, so they update over what is installed
+        applicationId =
+            if (project.hasProperty("dev")) "com.example.piliplus"
+            else "io.github.xstars3279.piliglass"
         minSdk = flutter.minSdkVersion
         targetSdk = 37
         versionCode = flutter.versionCode
@@ -62,7 +66,11 @@ android {
 
     buildTypes {
         all {
-            signingConfig = config ?: signingConfigs["debug"]
+            // the release key signs releases only: a dev build signed with
+            // it could not update the debug-signed one on the phone
+            signingConfig =
+                if (project.hasProperty("dev")) signingConfigs["debug"]
+                else config ?: signingConfigs["debug"]
         }
         release {
             if (project.hasProperty("dev")) {
