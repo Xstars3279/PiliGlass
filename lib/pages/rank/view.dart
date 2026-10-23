@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/flutter/vertical_tabs.dart';
 import 'package:PiliPlus/models/common/rank_type.dart';
 import 'package:PiliPlus/pages/rank/controller.dart';
@@ -23,7 +24,9 @@ class _RankPageState extends State<RankPage>
   Widget build(BuildContext context) {
     super.build(context);
     final theme = Theme.of(context);
-    return Row(
+    return Padding(
+      padding: EdgeInsets.only(top: RevampTopInset.of(context)),
+      child: Row(
       children: [
         _buildTab(theme),
         Expanded(
@@ -41,6 +44,7 @@ class _RankPageState extends State<RankPage>
           ),
         ),
       ],
+      ),
     );
   }
 

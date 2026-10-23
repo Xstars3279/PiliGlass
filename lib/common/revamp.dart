@@ -198,3 +198,26 @@ class RevampIconTile extends StatelessWidget {
 /// A settings row's leading icon, on a tile when the redesign is on.
 Widget? revampLeading(Widget? leading) =>
     Revamp.enabled && leading != null ? RevampIconTile(icon: leading) : leading;
+
+/// The height of a bar floating over the top of a feed, e.g. the home tabs
+/// on glass: the feed starts below it and scrolls on under it. Zero where
+/// nothing floats.
+class RevampTopInset extends InheritedWidget {
+  const RevampTopInset({super.key, required this.inset, required super.child});
+
+  final double inset;
+
+  static double of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<RevampTopInset>()?.inset ?? 0;
+
+  /// room for the bar at the start of a scroll view's slivers
+  static Widget sliver(BuildContext context) {
+    final inset = of(context);
+    return SliverToBoxAdapter(
+      child: inset > 0 ? SizedBox(height: inset) : null,
+    );
+  }
+
+  @override
+  bool updateShouldNotify(RevampTopInset oldWidget) => oldWidget.inset != inset;
+}

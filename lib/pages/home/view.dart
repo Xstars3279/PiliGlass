@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_height_widget.dart';
@@ -79,6 +80,7 @@ class _HomePageState extends CommonPageState<HomePage>
     } else {
       tabBar = const SizedBox(height: 6);
     }
+    if (dockSearch) return _floatingTabs(tabBar);
     return Column(
       children: [
         if (!_mainController.useSideBar &&
@@ -98,6 +100,28 @@ class _HomePageState extends CommonPageState<HomePage>
     );
   }
 
+  /// The feed fills the page and runs on under the tabs, which float on
+  /// glass at the top.
+  Widget _floatingTabs(Widget tabBar) => Stack(
+    children: [
+      Positioned.fill(
+        child: RevampTopInset(
+          inset: _floatingTabsHeight,
+          child: onBuild(
+            tabBarView(
+              controller: _homeController.tabController,
+              children: _homeController.tabs.map((e) => e.page).toList(),
+            ),
+          ),
+        ),
+      ),
+      Positioned(top: 0, left: 0, right: 0, child: tabBar),
+    ],
+  );
+
+  /// the room the floating tabs take: their bar and its margins
+  static const _floatingTabsHeight = 6.0 + 48 + 4;
+
   /// One row of text tabs; the selected one sits on a raised pill.
   /// Used when search lives in the bottom dock, so the top bar is just this.
   Widget _glassTabBar() {
@@ -112,6 +136,8 @@ class _HomePageState extends CommonPageState<HomePage>
           children: [
             Expanded(
               child: GlassCapsule(
+                // the feed passes under it: bend it like the dock does
+                refraction: true,
                 child: TabBar(
                   controller: _homeController.tabController,
                   tabs: _homeController.tabs
@@ -161,6 +187,7 @@ class _HomePageState extends CommonPageState<HomePage>
             Obx(
               () => _mainController.accountService.isLogin.value
                   ? GlassCapsule(
+                      refraction: true,
                       padding: EdgeInsets.zero,
                       child: SizedBox.square(
                         dimension: 48,

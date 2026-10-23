@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/skeleton/video_card_v.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -60,6 +61,7 @@ class _LivePageState extends State<LivePage>
           controller: controller.scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
+            RevampTopInset.sliver(context),
             SliverPadding(
               padding: const EdgeInsets.only(
                 top: Style.cardSpace,

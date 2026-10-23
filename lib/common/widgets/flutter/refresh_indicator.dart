@@ -524,7 +524,9 @@ class RefreshIndicatorState extends State<RefreshIndicator>
       position: _positionFactor,
       indicator: _status == null
           ? null
-          : AnimatedBuilder(
+          : Padding(
+              padding: EdgeInsets.only(top: RevampTopInset.of(context)),
+              child: AnimatedBuilder(
               animation: _positionController,
               builder: (context, child) => Revamp.enabled
                   ? GlassRefreshIndicator(
@@ -537,6 +539,7 @@ class RefreshIndicatorState extends State<RefreshIndicator>
                       strokeWidth: widget.strokeWidth,
                       elevation: widget.elevation,
                     ),
+            ),
             ),
     );
 

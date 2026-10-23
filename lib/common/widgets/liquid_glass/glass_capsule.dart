@@ -10,10 +10,15 @@ class GlassCapsule extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(4),
+    this.refraction = false,
   });
 
   final Widget child;
   final EdgeInsetsGeometry padding;
+
+  /// over content that moves, e.g. a feed: clearer, and bending it at the
+  /// rim like the dock
+  final bool refraction;
 
   @override
   Widget build(BuildContext context) {
@@ -27,8 +32,12 @@ class GlassCapsule extends StatelessWidget {
       foregroundPainter: _StadiumRim(isDark),
       child: LiquidGlass(
         blurSigma: 3,
+        refractionHeight: refraction ? 16 : 0,
+        refractionAmount: refraction ? 18 : 0,
         saturation: 1.5,
-        color: colorScheme.surfaceContainer.withValues(alpha: 0.55),
+        color: colorScheme.surfaceContainer.withValues(
+          alpha: refraction ? 0.32 : 0.55,
+        ),
         child: Padding(padding: padding, child: child),
       ),
     );
