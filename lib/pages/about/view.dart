@@ -116,7 +116,8 @@ class _AboutPageState extends State<AboutPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              '使用Flutter开发的B站第三方客户端',
+              // GPL-3.0: say whose work this builds on
+              '基于 PiliPlus 的B站第三方客户端',
               style: TextStyle(color: outline),
               semanticsLabel: '与你一起，发现不一样的世界',
             ),
