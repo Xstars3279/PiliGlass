@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/motion/pressable_scale.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -19,6 +20,11 @@ abstract final class Revamp {
 
   /// corner radius of a group
   static const double groupRadius = 24;
+
+  /// A card that dips when pressed and springs back, like the feed's
+  /// cards; as it is when the redesign is off.
+  static Widget pressable(Widget card) =>
+      enabled ? PressableScale(pressedScale: 0.97, child: card) : card;
 
   /// corner radius of a tile; upstream's small blocks where it is off
   static final double tileCorner = enabled ? 14 : 6;

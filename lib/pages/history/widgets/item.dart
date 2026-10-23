@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/select_mask.dart';
@@ -28,7 +29,9 @@ class HistoryItem extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => Revamp.pressable(_build(context));
+
+  Widget _build(BuildContext context) {
     final theme = Theme.of(context);
     final hasDuration = item.hasDuration;
     final business = item.history.business;

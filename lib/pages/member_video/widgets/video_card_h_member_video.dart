@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
@@ -30,7 +31,9 @@ class VideoCardHMemberVideo extends StatelessWidget {
   final String? fromViewAid;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => Revamp.pressable(_build(context));
+
+  Widget _build(BuildContext context) {
     final theme = Theme.of(context);
     void onLongPress() => imageSaveDialog(
       title: videoItem.title,

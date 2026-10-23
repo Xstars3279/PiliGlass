@@ -41,6 +41,12 @@ class NetworkImgLayer extends StatelessWidget {
   static Color? reduceLuxColor = Pref.reduceLuxColor;
   static bool reduce = false;
 
+  /// Covers left with the default corners take the redesign's tile
+  /// corners, so every card in the app rounds its cover alike.
+  BorderRadius get _radius => Revamp.enabled && borderRadius == Style.mdRadius
+      ? Revamp.tileRadius
+      : borderRadius;
+
   @override
   Widget build(BuildContext context) {
     final isEmote = type == ImageType.emote;
@@ -52,7 +58,7 @@ class NetworkImgLayer extends StatelessWidget {
       } else if (isAvatar) {
         return ClipOval(child: child);
       } else {
-        return ClipRRect(borderRadius: borderRadius, child: child);
+        return ClipRRect(borderRadius: _radius, child: child);
       }
     } else {
       return getPlaceHolder?.call() ??
@@ -107,7 +113,7 @@ class NetworkImgLayer extends StatelessWidget {
         color: Revamp.enabled
             ? Revamp.wash(ColorScheme.of(context))
             : ColorScheme.of(context).onInverseSurface.withValues(alpha: 0.4),
-        borderRadius: isEmote || isAvatar ? null : borderRadius,
+        borderRadius: isEmote || isAvatar ? null : _radius,
       ),
       child: Center(
         child: Image.asset(

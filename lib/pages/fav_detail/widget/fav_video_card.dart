@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
@@ -62,7 +63,9 @@ class FavVideoCardH extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => Revamp.pressable(_build(context));
+
+  Widget _build(BuildContext context) {
     final isOwner = !isSort && ctr!.isOwner;
     late final enableMultiSelect = ctr?.enableMultiSelect.value ?? false;
     final colorScheme = ColorScheme.of(context);
