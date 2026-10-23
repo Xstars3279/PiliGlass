@@ -1,4 +1,3 @@
-import 'package:PiliPlus/common/motion/appear_in.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/colored_box_transition.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart';
@@ -68,8 +67,8 @@ mixin ReplyLocateMixin<T>
   bool get hasAnimController => _animController != null;
   AnimationController get colorAnimController =>
       _animController ??= AnimationController(
-        // longer in the redesign: the list scrolls to the comment first
-        duration: Duration(milliseconds: Revamp.enabled ? 1600 : 1000),
+        // longer in the redesign: the flash waits for the rise
+        duration: Duration(milliseconds: Revamp.enabled ? 1700 : 1000),
         vsync: this,
       );
 
@@ -78,28 +77,28 @@ mixin ReplyLocateMixin<T>
       _colorAnim ??= colorAnimController.drive(
         // the redesign's lists sit on glass: a light flash of the primary
         // color that fades away, not a block of the page's color that stays
-        // soft in, a moment held, then gone
+        // the comments rise in first (about 0.7s, see RiseIn); then one
+        // flash, held a moment, and gone
         Revamp.enabled
             ? TweenSequence<Color?>([
                 TweenSequenceItem(
-                  tween: ColorTween(
-                    begin: colorScheme.primary.withValues(alpha: 0),
-                    end: colorScheme.primary.withValues(alpha: 0.14),
-                  ).chain(CurveTween(curve: Curves.easeOut)),
-                  weight: 25,
+                  tween: ConstantTween(
+                    colorScheme.primary.withValues(alpha: 0),
+                  ),
+                  weight: 700,
                 ),
                 TweenSequenceItem(
                   tween: ConstantTween(
-                    colorScheme.primary.withValues(alpha: 0.14),
+                    colorScheme.primary.withValues(alpha: 0.18),
                   ),
-                  weight: 25,
+                  weight: 300,
                 ),
                 TweenSequenceItem(
                   tween: ColorTween(
-                    begin: colorScheme.primary.withValues(alpha: 0.14),
+                    begin: colorScheme.primary.withValues(alpha: 0.18),
                     end: colorScheme.primary.withValues(alpha: 0),
-                  ).chain(CurveTween(curve: Curves.easeInOut)),
-                  weight: 50,
+                  ).chain(CurveTween(curve: Curves.easeOut)),
+                  weight: 700,
                 ),
               ])
             : ColorTween(
@@ -108,14 +107,8 @@ mixin ReplyLocateMixin<T>
               ).chain(CurveTween(curve: const Interval(0.8, 1.0))),
       );
 
-  Widget colorAnimWrapper(ColorScheme colorScheme, Widget child) {
-    final highlighted = ColoredBoxTransition(
-      color: colorAnim(colorScheme),
-      child: child,
-    );
-    // shown at once: rising in under the highlight would muddy it
-    return Revamp.enabled ? NoRise(child: highlighted) : highlighted;
-  }
+  Widget colorAnimWrapper(ColorScheme colorScheme, Widget child) =>
+      ColoredBoxTransition(color: colorAnim(colorScheme), child: child);
 
   @override
   void didChangeDependencies(BuildContext context) {
