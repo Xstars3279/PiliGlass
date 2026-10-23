@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/revamp_switch.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
@@ -92,14 +93,16 @@ class _SetSwitchItemState extends State<SetSwitchItem> {
       color: theme.colorScheme.outline,
     );
 
-    final switchBtn = Transform.scale(
-      scale: 0.8,
-      alignment: .centerRight,
-      child: Switch(
-        value: val,
-        onChanged: switchChange,
-      ),
-    );
+    final Widget switchBtn = Revamp.enabled
+        ? RevampSwitch(value: val, onChanged: switchChange)
+        : Transform.scale(
+            scale: 0.8,
+            alignment: .centerRight,
+            child: Switch(
+              value: val,
+              onChanged: switchChange,
+            ),
+          );
 
     Widget child(Widget? trailing) => ListTile(
       contentPadding: widget.contentPadding,

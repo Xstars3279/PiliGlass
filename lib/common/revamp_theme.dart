@@ -49,6 +49,18 @@ abstract final class RevampTheme {
       ),
       // translucent, so the patched menu blurs what is behind it like the
       // dock's glass (tool/patches/material-ui_glass_menu.patch)
+      // every other switch looks like RevampSwitch: a white thumb of one
+      // size on a filled track, no outline, no tick
+      switchTheme: theme.switchTheme.copyWith(
+        thumbColor: const WidgetStatePropertyAll(Colors.white),
+        thumbIcon: const WidgetStatePropertyAll(Icon(null)),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? colorScheme.primary
+              : colorScheme.surfaceContainerHighest,
+        ),
+        trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
+      ),
       popupMenuTheme: theme.popupMenuTheme.copyWith(
         color: colorScheme.surfaceContainer.withValues(alpha: 0.72),
         elevation: 0,
