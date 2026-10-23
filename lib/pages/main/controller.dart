@@ -64,6 +64,7 @@ class MainController extends GetxController
   /// search lives in the liquid glass dock instead of the home top bar
   late final dockSearch = floatingNavBar && liquidGlassNavBar;
   final useSideBar = Pref.useSideBar;
+  final hideSideBarLabel = Pref.hideSideBarLabel;
   final mainTabBarView = Pref.mainTabBarView;
   late final optTabletNav = Pref.optTabletNav;
 

@@ -23,7 +23,7 @@ import 'package:PiliPlus/models/common/sponsor_block/action_type.dart';
 import 'package:PiliPlus/models/common/sponsor_block/post_segment_model.dart';
 import 'package:PiliPlus/models/common/sponsor_block/segment_type.dart';
 import 'package:PiliPlus/models/common/super_resolution_type.dart';
-import 'package:PiliPlus/models/common/video/video_quality.dart';
+import 'package:PiliPlus/models/common/video/base_quality.dart';
 import 'package:PiliPlus/models/video/play/url.dart';
 import 'package:PiliPlus/models_new/video/video_detail/episode.dart' as ugc;
 import 'package:PiliPlus/models_new/video/video_detail/ugc_season.dart';
@@ -2022,7 +2022,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       child: Obx(
         () => MouseInteractiveViewer(
           scaleEnabled: !plPlayerController.controlsLock.value,
-          pointerSignalFallback: _onPointerSignal,
+          pointerSignalFallback: plPlayerController.enableScrollVolume
+              ? _onPointerSignal
+              : null,
           onPointerPanZoomUpdate: _onPointerPanZoomUpdate,
           onPointerPanZoomEnd: _onPointerPanZoomEnd,
           onPointerDown: _onPointerDown,
