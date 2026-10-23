@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:PiliPlus/pages/dynamics/widgets/dyn_content.dart';
@@ -47,11 +48,22 @@ Widget forwardPanel(
     );
   }
 
-  child = Container(
-    padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-    color: theme.dividerColor.withValues(alpha: 0.08),
-    child: child,
-  );
+  child = Revamp.enabled
+      // a tile inside the post's group
+      ? Container(
+          margin: const .symmetric(horizontal: 12),
+          padding: const .symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Revamp.tile(theme.colorScheme),
+            borderRadius: Revamp.tileRadius,
+          ),
+          child: child,
+        )
+      : Container(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+          color: theme.dividerColor.withValues(alpha: 0.08),
+          child: child,
+        );
 
   if (isNoneMajor) {
     return child;

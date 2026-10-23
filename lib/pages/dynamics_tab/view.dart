@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:PiliPlus/common/motion/appear_in.dart';
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -56,7 +58,7 @@ class _DynamicsTabPageState extends State<DynamicsTabPage>
         controller: controller.scrollController,
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.only(bottom: 100),
+            padding: EdgeInsets.only(top: Revamp.enabled ? 8 : 0, bottom: 100),
             sliver: buildPage(
               Obx(() => _buildBody(controller.loadingState.value)),
             ),
@@ -66,7 +68,16 @@ class _DynamicsTabPageState extends State<DynamicsTabPage>
     );
   }
 
+  /// when the current list arrived, so its posts can rise in
+  Object? _shownList;
+  DateTime? _shownAt;
+
   Widget _buildBody(LoadingState<List<DynamicItemModel>?> loadingState) {
+    if (loadingState case Success(:final response)
+        when !identical(response, _shownList)) {
+      _shownList = response;
+      _shownAt = DateTime.now();
+    }
     return switch (loadingState) {
       Loading() => dynSkeleton,
       Success(:final response) =>
@@ -98,11 +109,14 @@ class _DynamicsTabPageState extends State<DynamicsTabPage>
       controller.onLoadMore();
     }
     final item = list[index];
-    return DynamicPanel(
+    final panel = DynamicPanel(
       item: item,
       onRemove: (idStr) => controller.onRemove(index, idStr),
       onBlock: () => controller.onBlock(index),
       onUnfold: () => controller.onUnfold(item, index),
     );
+    return Revamp.enabled
+        ? AppearIn(index: index, since: _shownAt, child: panel)
+        : panel;
   }
 }

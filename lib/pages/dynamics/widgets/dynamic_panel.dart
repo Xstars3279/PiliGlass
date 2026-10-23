@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/avatars.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -123,6 +124,18 @@ class DynamicPanel extends StatelessWidget {
     );
     if (isSave || (isDetail && !isDetailPortraitW)) {
       return child;
+    }
+    // the redesign sets each post apart as a group, not with a gray band
+    if (Revamp.enabled && !isDetail) {
+      return Padding(
+        padding: const .fromLTRB(12, 0, 12, 12),
+        child: Material(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: const .all(.circular(Revamp.groupRadius)),
+          clipBehavior: .antiAlias,
+          child: child,
+        ),
+      );
     }
     return DecoratedBox(
       decoration: BoxDecoration(
