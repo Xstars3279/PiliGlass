@@ -43,6 +43,7 @@ import 'package:PiliPlus/plugin/pl_player/models/double_tap_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/fullscreen_mode.dart';
 import 'package:PiliPlus/plugin/pl_player/models/gesture_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/video_fit_type.dart';
+import 'package:PiliPlus/plugin/pl_player/widgets/revamp_danmaku_bar.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/app_bar_ani.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/backward_seek.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/bottom_control.dart';
@@ -890,6 +891,22 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       if (!plPlayerController.isDesktopPip) .fullscreen,
     ];
     return PlayerBar(
+      // the redesign: sending and showing danmaku from the bottom of the
+      // full screen video
+      title:
+          Revamp.enabled &&
+              isFullScreen &&
+              isNotFileSource &&
+              !plPlayerController.isLive
+          ? RevampDanmakuBar(
+              controller: plPlayerController,
+              onSend: videoDetailController.showShootDanmakuSheet,
+              onSettings: () =>
+                  (videoDetailController.headerCtrKey.currentState
+                          as HeaderControlState?)
+                      ?.showSetDanmaku(),
+            )
+          : null,
       left: Row(
         mainAxisSize: .min,
         children: userSpecifyItemLeft.map(progressWidget).toList(),

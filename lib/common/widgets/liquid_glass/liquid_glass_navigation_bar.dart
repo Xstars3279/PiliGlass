@@ -3,6 +3,7 @@ import 'dart:ui' show lerpDouble;
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass.dart';
+import 'package:flutter/gestures.dart' show kTouchSlop;
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -145,6 +146,9 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
   late int _currentIndex = widget.selectedIndex;
   int? _pointer;
 
+  /// where the finger came down, to tell a tap from a drag
+  double _downX = 0;
+
   int get _count => widget.destinations.length;
   double get _width => _count * _kTabWidth + 2 * _kBarPadding;
 
@@ -220,6 +224,7 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
       return;
     }
     _pointer = event.pointer;
+    _downX = event.position.dx;
     _press.animateTo(1);
     _scaleX.animateTo(_kPressedScale);
     _scaleY.animateTo(_kPressedScale);
@@ -245,6 +250,9 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     _panel.animateTo(0);
     if (index != _currentIndex) {
       _currentIndex = index;
+      widget.onDestinationSelected?.call(index);
+    } else if ((event.position.dx - _downX).abs() < kTouchSlop) {
+      // a tap on the current tab: the page goes to its top, or refreshes
       widget.onDestinationSelected?.call(index);
     }
   }

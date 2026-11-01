@@ -1868,7 +1868,11 @@ class HeaderControlState extends State<HeaderControl>
                           )
                         : const SizedBox.shrink(),
                   ),
-                if (!isPortrait || isFullScreen || PlatformUtils.isDesktop) ...[
+                // the redesign has them at the bottom in full screen
+                if (!(Revamp.enabled && isFullScreen) &&
+                    (!isPortrait ||
+                        isFullScreen ||
+                        PlatformUtils.isDesktop)) ...[
                   SizedBox(
                     width: btnWidth,
                     height: btnHeight,
@@ -1919,20 +1923,21 @@ class HeaderControlState extends State<HeaderControl>
                     ),
                   ),
                 ],
-                SizedBox(
-                  width: btnWidth,
-                  height: btnHeight,
-                  child: IconButton(
-                    tooltip: '弹幕设置',
-                    style: btnStyle,
-                    onPressed: showSetDanmaku,
-                    icon: const Icon(
-                      size: 20,
-                      CustomIcons.dm_settings,
-                      color: Colors.white,
+                if (!(Revamp.enabled && isFullScreen))
+                  SizedBox(
+                    width: btnWidth,
+                    height: btnHeight,
+                    child: IconButton(
+                      tooltip: '弹幕设置',
+                      style: btnStyle,
+                      onPressed: showSetDanmaku,
+                      icon: const Icon(
+                        size: 20,
+                        CustomIcons.dm_settings,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                ),
                 if ((Platform.isAndroid && PiliAndroidHelper.isPipAvailable) ||
                     (Platform.isIOS && IOSPipHelper.isAvailable) ||
                     (PlatformUtils.isDesktop && !isFullScreen))

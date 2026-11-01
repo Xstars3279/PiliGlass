@@ -310,6 +310,9 @@ class _CommentSheetState extends State<CommentSheet>
       _shown.animateTo(size);
     }
     _lastSize = size;
+    if (!_pressed && _justUnderTop(size)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _settleOnTop());
+    }
     _tall.value = size > _videoStop + 0.005;
     final abovePlayer = size > _videoStop + 0.01;
     if (abovePlayer != _abovePlayer) setState(() => _abovePlayer = abovePlayer);
@@ -327,6 +330,20 @@ class _CommentSheetState extends State<CommentSheet>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _finishClose();
       });
+    }
+  }
+
+  /// At rest a hair below its top (a snap ends in pixels, rounded), the
+  /// sheet would take a fling of the list for itself, snapping instead of
+  /// letting the list scroll on: it has to sit exactly on its top.
+  bool _justUnderTop(double size) {
+    final top = _maxStop;
+    return size < top && top - size < 0.003;
+  }
+
+  void _settleOnTop() {
+    if (mounted && _sheetCtr.isAttached && _justUnderTop(_sheetCtr.size)) {
+      _sheetCtr.jumpTo(_maxStop);
     }
   }
 
@@ -586,6 +603,7 @@ class _CommentSheetState extends State<CommentSheet>
               if (paused != _playerPaused) {
                 setState(() => _playerPaused = paused);
               }
+              _settleOnTop();
               _pressed = true;
               _lastStamp =
                   SchedulerBinding.instance.currentSystemFrameTimeStamp;

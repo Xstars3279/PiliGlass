@@ -36,6 +36,11 @@ class _SearchPageState extends State<SearchPage> {
   late final SSearchController _searchController;
   late ThemeData theme;
   late bool isPortrait;
+
+  /// The dock's layout, decided when the page opens: switching on rotation,
+  /// e.g. when a video under it goes full screen, would build the other
+  /// layout's field, whose autofocus brings the keyboard up over the video.
+  late final bool _dockLayout = _dockSearch && isPortrait;
   late EdgeInsets padding;
 
   @override
@@ -61,7 +66,7 @@ class _SearchPageState extends State<SearchPage> {
         ? _buildHotSearch(isTrending: false)
         : null;
 
-    if (_dockSearch && isPortrait) {
+    if (_dockLayout) {
       return _buildDockLayout(trending: trending, rcmd: rcmd);
     }
 

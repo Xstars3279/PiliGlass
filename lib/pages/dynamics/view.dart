@@ -1,4 +1,4 @@
-import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
 import 'package:PiliPlus/http/loading_state.dart';
@@ -57,30 +57,22 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
   /// app's pill tabs from the theme.
   Widget _glassTabs(Widget? leading, Widget actions) => Padding(
     // the same bar as the home tabs: size, margins and glass
-    padding: const .fromLTRB(12, 6, 12, 4),
+    padding: GlassTabBar.margin,
     child: SizedBox(
-      height: 48,
+      height: GlassTabBar.height,
       child: Row(
         spacing: 8,
         children: [
           ?leading,
           Expanded(
-            child: GlassCapsule(
-              refraction: true,
-              // five tabs fit: spread them evenly over the bar
-              child: TabBar(
-                padding: EdgeInsets.zero,
-                labelPadding: EdgeInsets.zero,
-                controller: _dynamicsController.tabController,
-                tabs: DynamicsTabType.values
-                    .map((e) => Tab(text: e.label))
-                    .toList(),
-                onTap: (index) {
-                  if (!_dynamicsController.tabController.indexIsChanging) {
-                    _dynamicsController.animateToTop();
-                  }
-                },
-              ),
+            child: GlassTabBar(
+              controller: _dynamicsController.tabController,
+              labels: DynamicsTabType.values.map((e) => e.label).toList(),
+              onTap: (index) {
+                if (!_dynamicsController.tabController.indexIsChanging) {
+                  _dynamicsController.animateToTop();
+                }
+              },
             ),
           ),
           if (actions is! SizedBox) actions,
@@ -90,7 +82,7 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
   );
 
   /// the room the floating tabs take, as on the home page
-  static const _barHeight = 6.0 + 48 + 4;
+  static const _barHeight = GlassTabBar.extent;
 
   Widget upPanelPart(ColorScheme colorScheme) {
     final isTop = upPanelPosition == .top;

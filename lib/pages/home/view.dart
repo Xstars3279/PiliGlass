@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -120,68 +121,28 @@ class _HomePageState extends CommonPageState<HomePage>
   );
 
   /// the room the floating tabs take: their bar and its margins
-  static const _floatingTabsHeight = 6.0 + 48 + 4;
+  static const _floatingTabsHeight = GlassTabBar.extent;
 
   /// One row of text tabs; the selected one sits on a raised pill.
   /// Used when search lives in the bottom dock, so the top bar is just this.
   Widget _glassTabBar() {
-    final theme = Theme.of(context);
     return Padding(
       // the main page already pads the body below the status bar
-      padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
+      padding: GlassTabBar.margin,
       child: SizedBox(
-        height: 48,
+        height: GlassTabBar.height,
         child: Row(
           spacing: 8,
           children: [
             Expanded(
-              child: GlassCapsule(
-                // the feed passes under it: bend it like the dock does
-                refraction: true,
-                child: TabBar(
-                  controller: _homeController.tabController,
-                  tabs: _homeController.tabs
-                      .map((e) => Tab(text: e.label))
-                      .toList(),
-                  isScrollable: true,
-                  tabAlignment: TabAlignment.start,
-                  padding: EdgeInsets.zero,
-                  labelPadding: const EdgeInsets.symmetric(horizontal: 14),
-                  dividerColor: Colors.transparent,
-                  dividerHeight: 0,
-                  overlayColor: const WidgetStatePropertyAll(
-                    Colors.transparent,
-                  ),
-                  labelColor: _colorScheme.onSurface,
-                  unselectedLabelColor: _colorScheme.onSurfaceVariant,
-                  labelStyle: theme.textTheme.titleMedium!.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                  unselectedLabelStyle: theme.textTheme.titleMedium!.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  indicatorPadding: EdgeInsets.zero,
-                  indicator: ShapeDecoration(
-                    shape: const StadiumBorder(
-                      side: BorderSide(color: Color(0x14FFFFFF)),
-                    ),
-                    color: _colorScheme.surfaceContainerHighest,
-                    shadows: [
-                      BoxShadow(
-                        color: _colorScheme.shadow.withValues(alpha: 0.08),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  onTap: (_) {
-                    feedBack();
-                    if (!_homeController.tabController.indexIsChanging) {
-                      _homeController.animateToTop();
-                    }
-                  },
-                ),
+              child: GlassTabBar(
+                controller: _homeController.tabController,
+                labels: _homeController.tabs.map((e) => e.label).toList(),
+                onTap: (_) {
+                  if (!_homeController.tabController.indexIsChanging) {
+                    _homeController.animateToTop();
+                  }
+                },
               ),
             ),
             Obx(
