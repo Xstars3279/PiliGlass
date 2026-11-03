@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/pages/fav/pgc/child_view.dart';
 import 'package:PiliPlus/pages/fav/pgc/controller.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
@@ -55,22 +56,31 @@ class _FavPgcPageState extends State<FavPgcPage>
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 dividerHeight: 0,
                 indicatorWeight: 0,
-                indicatorPadding: const EdgeInsets.symmetric(
-                  horizontal: 3,
-                  vertical: 8,
-                ),
-                indicator: BoxDecoration(
-                  color: theme.colorScheme.secondaryContainer,
-                  borderRadius: const BorderRadius.all(Radius.circular(20)),
-                ),
+                // the redesign takes the app's tabs from the theme: a raised
+                // pill, bold labels
+                indicatorPadding: Revamp.enabled
+                    ? EdgeInsets.zero
+                    : const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
+                indicator: Revamp.enabled
+                    ? null
+                    : BoxDecoration(
+                        color: theme.colorScheme.secondaryContainer,
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(20),
+                        ),
+                      ),
                 indicatorSize: TabBarIndicatorSize.tab,
-                labelStyle:
-                    TabBarTheme.of(
-                      context,
-                    ).labelStyle?.copyWith(fontSize: 14) ??
-                    const TextStyle(fontSize: 14),
-                labelColor: theme.colorScheme.onSecondaryContainer,
-                unselectedLabelColor: theme.colorScheme.outline,
+                labelStyle: Revamp.enabled
+                    ? null
+                    : TabBarTheme.of(context).labelStyle
+                              ?.copyWith(fontSize: 14) ??
+                          const TextStyle(fontSize: 14),
+                labelColor: Revamp.enabled
+                    ? null
+                    : theme.colorScheme.onSecondaryContainer,
+                unselectedLabelColor: Revamp.enabled
+                    ? null
+                    : theme.colorScheme.outline,
                 tabs: const [
                   Tab(text: '想看'),
                   Tab(text: '在看'),

@@ -117,24 +117,33 @@ class _PgcPageState extends State<PgcPage> with AutomaticKeepAliveClientMixin {
                               ),
                               splashFactory: NoSplash.splashFactory,
                               padding: const EdgeInsets.only(right: 10),
-                              indicatorPadding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 10,
-                              ),
-                              indicator: BoxDecoration(
-                                color: theme.colorScheme.secondaryContainer,
-                                borderRadius: const BorderRadius.all(
-                                  Radius.circular(20),
-                                ),
-                              ),
+                              // the redesign takes the app's tabs from the
+                              // theme: a raised pill, bold labels
+                              indicatorPadding: Revamp.enabled
+                                  ? EdgeInsets.zero
+                                  : const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 10,
+                                    ),
+                              indicator: Revamp.enabled
+                                  ? null
+                                  : BoxDecoration(
+                                      color:
+                                          theme.colorScheme.secondaryContainer,
+                                      borderRadius: const BorderRadius.all(
+                                        Radius.circular(20),
+                                      ),
+                                    ),
                               indicatorSize: TabBarIndicatorSize.tab,
-                              labelColor:
-                                  theme.colorScheme.onSecondaryContainer,
-                              labelStyle:
-                                  TabBarTheme.of(
-                                    context,
-                                  ).labelStyle?.copyWith(fontSize: 14) ??
-                                  const TextStyle(fontSize: 14),
+                              labelColor: Revamp.enabled
+                                  ? null
+                                  : theme.colorScheme.onSecondaryContainer,
+                              labelStyle: Revamp.enabled
+                                  ? null
+                                  : TabBarTheme.of(
+                                          context,
+                                        ).labelStyle?.copyWith(fontSize: 14) ??
+                                        const TextStyle(fontSize: 14),
                               dividerColor: Colors.transparent,
                               tabs: response.map(
                                 (item) {

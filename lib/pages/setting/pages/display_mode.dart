@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
@@ -63,46 +64,55 @@ class _SetDisplayModeState extends State<SetDisplayMode> {
   @override
   Widget build(BuildContext context) {
     return SimpleScaffold(
-      appBar: AppBar(title: const Text('屏幕帧率设置')),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding:
-                MediaQuery.viewPaddingOf(context).copyWith(top: 0, bottom: 0) +
-                const EdgeInsets.only(left: 25, top: 10, bottom: 5),
-            child: Text(
-              '没有生效？重启app试试',
-              style: TextStyle(color: Theme.of(context).colorScheme.outline),
-            ),
+      appBar: Revamp.enabled ? null : AppBar(title: const Text('屏幕帧率设置')),
+      body: RevampLargeTitle(title: '屏幕帧率设置', body: _body()),
+    );
+  }
+
+  Widget _body() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding:
+              MediaQuery.viewPaddingOf(context).copyWith(top: 0, bottom: 0) +
+              const EdgeInsets.only(left: 25, top: 10, bottom: 5),
+          child: Text(
+            '没有生效？重启app试试',
+            style: TextStyle(color: Theme.of(context).colorScheme.outline),
           ),
-          Expanded(
-            child: RadioGroup(
-              onChanged: (newMode) {
-                FlutterDisplayMode.setPreferredMode(newMode!).whenComplete(
-                  () => Timer(const Duration(milliseconds: 100), fetchAll),
-                );
-              },
-              groupValue: preferred,
-              child: ListView.builder(
-                itemCount: modes.length,
-                padding: .only(
-                  bottom: MediaQuery.viewPaddingOf(context).bottom,
-                ),
-                itemBuilder: (context, index) {
-                  final DisplayMode mode = modes[index];
-                  return RadioListTile<DisplayMode>(
+        ),
+        Expanded(
+          child: RadioGroup(
+            onChanged: (newMode) {
+              FlutterDisplayMode.setPreferredMode(newMode!).whenComplete(
+                () => Timer(const Duration(milliseconds: 100), fetchAll),
+              );
+            },
+            groupValue: preferred,
+            child: ListView.builder(
+              itemCount: modes.length,
+              padding: .only(
+                bottom: MediaQuery.viewPaddingOf(context).bottom,
+              ),
+              itemBuilder: (context, index) {
+                final DisplayMode mode = modes[index];
+                return revampGroupRow(
+                  context: context,
+                  index: index,
+                  count: modes.length,
+                  child: RadioListTile<DisplayMode>(
                     value: mode,
                     title: mode == DisplayMode.auto
                         ? const Text('自动')
                         : Text('$mode${mode == active ? '  [系统]' : ''}'),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -24,12 +25,13 @@ class LoginDevicesPageState extends State<LoginDevicesPage> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return SimpleScaffold(
-      appBar: AppBar(title: const Text('登录设备')),
+      appBar: Revamp.enabled ? null : AppBar(title: const Text('登录设备')),
       body: refreshIndicator(
         onRefresh: _controller.onRefresh,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
+            if (Revamp.enabled) const RevampLargeAppBar(title: '登录设备'),
             ViewSliverSafeArea(
               sliver: Obx(
                 () => _buildBody(colorScheme, _controller.loadingState.value),
@@ -50,13 +52,20 @@ class LoginDevicesPageState extends State<LoginDevicesPage> {
         return const SliverToBoxAdapter();
       case Success<List<LoginDevice>?>(:final response):
         if (response != null && response.isNotEmpty) {
-          final divider = Divider(
-            height: 1,
-            color: colorScheme.outline.withValues(alpha: 0.1),
-          );
+          final divider = Revamp.enabled
+              ? const SizedBox.shrink()
+              : Divider(
+                  height: 1,
+                  color: colorScheme.outline.withValues(alpha: 0.1),
+                );
           return SliverList.separated(
             itemBuilder: (context, index) {
-              return _buildItem(colorScheme, response[index]);
+              return revampGroupRow(
+                context: context,
+                index: index,
+                count: response.length,
+                child: _buildItem(colorScheme, response[index]),
+              );
             },
             itemCount: response.length,
             separatorBuilder: (_, _) => divider,

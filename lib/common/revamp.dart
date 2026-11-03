@@ -137,9 +137,10 @@ class RevampGroup extends StatelessWidget {
 /// the expanded large title; it is left out here so the large title gets
 /// its full size (the rest of the AppBar theme is kept).
 class RevampLargeAppBar extends StatelessWidget {
-  const RevampLargeAppBar({super.key, required this.title});
+  const RevampLargeAppBar({super.key, required this.title, this.actions});
 
   final String title;
+  final List<Widget>? actions;
 
   @override
   Widget build(BuildContext context) {
@@ -164,9 +165,86 @@ class RevampLargeAppBar extends StatelessWidget {
       ),
       child: SliverAppBar.large(
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+        actions: actions,
       ),
     );
   }
+}
+
+/// The large title of [RevampLargeAppBar] over a page whose body scrolls on
+/// its own, e.g. a settings page with a list: the title collapses into the
+/// bar as the body scrolls. Just [body] where the redesign is off, and the
+/// page keeps its own AppBar.
+class RevampLargeTitle extends StatelessWidget {
+  const RevampLargeTitle({
+    super.key,
+    required this.title,
+    this.actions,
+    required this.body,
+  });
+
+  final String title;
+  final List<Widget>? actions;
+  final Widget body;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!Revamp.enabled) return body;
+    return NestedScrollView(
+      headerSliverBuilder: (context, _) => [
+        RevampLargeAppBar(title: title, actions: actions),
+      ],
+      // the bar keeps the status bar's room
+      body: MediaQuery.removePadding(
+        context: context,
+        removeTop: true,
+        child: body,
+      ),
+    );
+  }
+}
+
+/// [rows] drawn as one rounded group, see [revampGroupRow]
+List<Widget> revampGroupRows(BuildContext context, List<Widget> rows) => [
+  for (final (index, row) in rows.indexed)
+    revampGroupRow(
+      context: context,
+      index: index,
+      count: rows.length,
+      child: row,
+    ),
+];
+
+/// A row of a list built row by row, drawn as a part of one rounded group
+/// like [RevampGroup]: the first row rounds the top, the last the bottom.
+/// Just [child] where the redesign is off.
+Widget revampGroupRow({
+  required BuildContext context,
+  required int index,
+  required int count,
+  required Widget child,
+}) {
+  if (!Revamp.enabled) return child;
+  const radius = Radius.circular(Revamp.groupRadius);
+  final first = index == 0;
+  final last = index == count - 1;
+  return Padding(
+    padding: EdgeInsets.fromLTRB(12, first ? 4 : 0, 12, last ? 12 : 0),
+    // a Material, not a ColoredBox: ink ripples paint on the nearest
+    // Material, and one below the group would be hidden by its color
+    child: Material(
+      color: ColorScheme.of(context).surfaceContainerLow,
+      borderRadius: BorderRadius.vertical(
+        top: first ? radius : Radius.zero,
+        bottom: last ? radius : Radius.zero,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: EdgeInsets.only(top: first ? 8 : 0, bottom: last ? 8 : 0),
+        child: child,
+      ),
+    ),
+  );
 }
 
 /// An icon on a tinted rounded square, as in a settings list.

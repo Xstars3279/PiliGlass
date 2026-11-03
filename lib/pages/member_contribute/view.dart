@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/hit_test.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/models/common/member/contribute_type.dart';
@@ -69,22 +70,31 @@ class _MemberContributeState extends State<MemberContribute>
                   controller: _controller.tabController,
                   dividerHeight: 0,
                   indicatorWeight: 0,
-                  indicatorPadding: const .symmetric(
-                    horizontal: 3,
-                    vertical: 8,
-                  ),
-                  indicator: BoxDecoration(
-                    color: theme.colorScheme.secondaryContainer,
-                    borderRadius: const BorderRadius.all(Radius.circular(20)),
-                  ),
+                  // the redesign takes the app's tabs from the theme: a
+                  // raised pill, bold labels
+                  indicatorPadding: Revamp.enabled
+                      ? EdgeInsets.zero
+                      : const .symmetric(horizontal: 3, vertical: 8),
+                  indicator: Revamp.enabled
+                      ? null
+                      : BoxDecoration(
+                          color: theme.colorScheme.secondaryContainer,
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(20),
+                          ),
+                        ),
                   indicatorSize: .tab,
-                  labelStyle:
-                      TabBarTheme.of(
-                        context,
-                      ).labelStyle?.copyWith(fontSize: 14) ??
-                      const TextStyle(fontSize: 14),
-                  labelColor: theme.colorScheme.onSecondaryContainer,
-                  unselectedLabelColor: theme.colorScheme.outline,
+                  labelStyle: Revamp.enabled
+                      ? null
+                      : TabBarTheme.of(context).labelStyle
+                                ?.copyWith(fontSize: 14) ??
+                            const TextStyle(fontSize: 14),
+                  labelColor: Revamp.enabled
+                      ? null
+                      : theme.colorScheme.onSecondaryContainer,
+                  unselectedLabelColor: Revamp.enabled
+                      ? null
+                      : theme.colorScheme.outline,
                 ),
               ),
               Expanded(

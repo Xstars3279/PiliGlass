@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -37,89 +38,99 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
     super.dispose();
   }
 
+  /// the large title of the redesign, where the page has a bar of its own
+  Widget _withTitle(Widget body) => widget.showAppBar
+      ? RevampLargeTitle(title: 'WebDAV 设置', body: body)
+      : body;
+
   @override
   Widget build(BuildContext context) {
     final showAppBar = widget.showAppBar;
     final padding = MediaQuery.viewPaddingOf(context);
     return SimpleScaffold(
-      appBar: showAppBar ? AppBar(title: const Text('WebDAV 设置')) : null,
-      body: ViewInsetsSafeArea(
-        child: ListView(
-          padding: padding.copyWith(
-            top: 20,
-            left: 20 + (showAppBar ? padding.left : 0),
-            right: 20 + (showAppBar ? padding.right : 0),
-            bottom: padding.bottom + 100,
+      appBar: showAppBar && !Revamp.enabled
+          ? AppBar(title: const Text('WebDAV 设置'))
+          : null,
+      body: _withTitle(
+        ViewInsetsSafeArea(
+          child: ListView(
+            padding: padding.copyWith(
+              top: 20,
+              left: 20 + (showAppBar ? padding.left : 0),
+              right: 20 + (showAppBar ? padding.right : 0),
+              bottom: padding.bottom + 100,
+            ),
+            children: [
+              TextField(
+                controller: _uriCtr,
+                decoration: const InputDecoration(
+                  labelText: '地址',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _usernameCtr,
+                decoration: const InputDecoration(
+                  labelText: '用户',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _passwordCtr,
+                autofillHints: const [AutofillHints.password],
+                decoration: InputDecoration(
+                  labelText: '密码',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    onPressed: () =>
+                        setState(() => _obscureText = !_obscureText),
+                    icon: _obscureText
+                        ? const Icon(Icons.visibility)
+                        : const Icon(Icons.visibility_off),
+                  ),
+                ),
+                obscureText: _obscureText,
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _directoryCtr,
+                decoration: const InputDecoration(
+                  labelText: '路径',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.tonal(
+                      style: FilledButton.styleFrom(
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: Style.mdRadius,
+                        ),
+                      ),
+                      onPressed: WebDav().backup,
+                      child: const Text('备份设置'),
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: FilledButton.tonal(
+                      style: FilledButton.styleFrom(
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: Style.mdRadius,
+                        ),
+                      ),
+                      onPressed: WebDav().restore,
+                      child: const Text('恢复设置'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          children: [
-            TextField(
-              controller: _uriCtr,
-              decoration: const InputDecoration(
-                labelText: '地址',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _usernameCtr,
-              decoration: const InputDecoration(
-                labelText: '用户',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _passwordCtr,
-              autofillHints: const [AutofillHints.password],
-              decoration: InputDecoration(
-                labelText: '密码',
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  onPressed: () => setState(() => _obscureText = !_obscureText),
-                  icon: _obscureText
-                      ? const Icon(Icons.visibility)
-                      : const Icon(Icons.visibility_off),
-                ),
-              ),
-              obscureText: _obscureText,
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _directoryCtr,
-              decoration: const InputDecoration(
-                labelText: '路径',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.tonal(
-                    style: FilledButton.styleFrom(
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: Style.mdRadius,
-                      ),
-                    ),
-                    onPressed: WebDav().backup,
-                    child: const Text('备份设置'),
-                  ),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: FilledButton.tonal(
-                    style: FilledButton.styleFrom(
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: Style.mdRadius,
-                      ),
-                    ),
-                    onPressed: WebDav().restore,
-                    child: const Text('恢复设置'),
-                  ),
-                ),
-              ],
-            ),
-          ],
         ),
       ),
       fab: Padding(

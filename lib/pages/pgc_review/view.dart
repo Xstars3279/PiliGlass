@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -60,22 +61,28 @@ class _PgcReviewPageState extends State<PgcReviewPage>
             overlayColor: const WidgetStatePropertyAll(Colors.transparent),
             splashFactory: NoSplash.splashFactory,
             padding: const EdgeInsets.only(left: 6),
-            indicatorPadding: const EdgeInsets.symmetric(
-              horizontal: 3,
-              vertical: 8,
-            ),
-            indicator: BoxDecoration(
-              color: theme.colorScheme.secondaryContainer,
-              borderRadius: const BorderRadius.all(Radius.circular(20)),
-            ),
+            // the redesign takes the app's tabs from the theme: a raised
+            // pill, bold labels
+            indicatorPadding: Revamp.enabled
+                ? EdgeInsets.zero
+                : const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
+            indicator: Revamp.enabled
+                ? null
+                : BoxDecoration(
+                    color: theme.colorScheme.secondaryContainer,
+                    borderRadius: const BorderRadius.all(Radius.circular(20)),
+                  ),
             indicatorSize: TabBarIndicatorSize.tab,
-            labelColor: theme.colorScheme.onSecondaryContainer,
-            unselectedLabelColor: theme.colorScheme.outline,
-            labelStyle:
-                TabBarTheme.of(
-                  context,
-                ).labelStyle?.copyWith(fontSize: 13) ??
-                const TextStyle(fontSize: 13),
+            labelColor: Revamp.enabled
+                ? null
+                : theme.colorScheme.onSecondaryContainer,
+            unselectedLabelColor: Revamp.enabled
+                ? null
+                : theme.colorScheme.outline,
+            labelStyle: Revamp.enabled
+                ? null
+                : TabBarTheme.of(context).labelStyle?.copyWith(fontSize: 13) ??
+                      const TextStyle(fontSize: 13),
             dividerColor: Colors.transparent,
             tabs: PgcReviewType.values.map((e) => Tab(text: e.label)).toList(),
             onTap: (index) {

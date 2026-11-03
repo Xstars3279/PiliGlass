@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/pair.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/http/constants.dart';
@@ -480,6 +481,10 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
       ),
     );
 
+    if (Revamp.enabled) {
+      return _buildRevamp(theme, titleStyle, subTitleStyle);
+    }
+
     return SimpleScaffold(
       appBar: AppBar(title: const Text('空降助手')),
       body: CustomScrollView(
@@ -516,6 +521,56 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
           dividerL,
           SliverToBoxAdapter(child: _aboutItem(titleStyle, subTitleStyle)),
           dividerL,
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 55 + MediaQuery.viewPaddingOf(context).bottom,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// The redesign: a large title, and each section, where the page had a
+  /// thick divider, in a rounded group.
+  Widget _buildRevamp(
+    ThemeData theme,
+    TextStyle titleStyle,
+    TextStyle subTitleStyle,
+  ) {
+    Widget group(List<Widget> rows) => SliverToBoxAdapter(
+      child: RevampGroup(
+        child: Padding(
+          padding: const .symmetric(vertical: 8),
+          child: Column(mainAxisSize: .min, children: rows),
+        ),
+      ),
+    );
+    return SimpleScaffold(
+      body: CustomScrollView(
+        slivers: [
+          const RevampLargeAppBar(title: '空降助手'),
+          group([_serverStatusItem(theme, titleStyle)]),
+          group([
+            _blockLimitItem(theme, titleStyle, subTitleStyle),
+            _blockToastItem(titleStyle),
+            _blockTrackItem(titleStyle, subTitleStyle),
+            _blockUserInfo(theme, titleStyle, subTitleStyle),
+          ]),
+          SliverList.builder(
+            itemCount: _blockSettings.length,
+            itemBuilder: (context, index) => revampGroupRow(
+              context: context,
+              index: index,
+              count: _blockSettings.length,
+              child: _buildItem(theme, index, _blockSettings[index]),
+            ),
+          ),
+          group([
+            _userIdItem(theme, titleStyle, subTitleStyle),
+            _blockServerItem(theme, titleStyle, subTitleStyle),
+          ]),
+          group([_aboutItem(titleStyle, subTitleStyle)]),
           SliverToBoxAdapter(
             child: SizedBox(
               height: 55 + MediaQuery.viewPaddingOf(context).bottom,

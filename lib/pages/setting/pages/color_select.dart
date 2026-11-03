@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/animated_height.dart';
 import 'package:PiliPlus/common/widgets/color_palette.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -80,12 +81,27 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
       context,
     ).copyWith(top: 0, bottom: 0);
     return SimpleScaffold(
-      appBar: AppBar(title: const Text('选择应用主题')),
-      body: ListView(
-        padding: .only(
-          bottom: MediaQuery.viewPaddingOf(context).bottom + 100,
-        ),
-        children: [
+      appBar: Revamp.enabled ? null : AppBar(title: const Text('选择应用主题')),
+      body: RevampLargeTitle(
+        title: '选择应用主题',
+        body: _list(theme, titleStyle, subTitleStyle, size, padding),
+      ),
+    );
+  }
+
+  Widget _list(
+    ThemeData theme,
+    TextStyle titleStyle,
+    TextStyle subTitleStyle,
+    Size size,
+    EdgeInsets padding,
+  ) {
+    return ListView(
+      padding: .only(
+        bottom: MediaQuery.viewPaddingOf(context).bottom + 100,
+      ),
+      children: [
+        ...revampGroupRows(context, [
           ListTile(
             onTap: () async {
               final result = await showDialog<ThemeType>(
@@ -105,7 +121,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
                 Get.changeThemeMode(ThemeUtils.themeMode = result.toThemeMode);
               }
             },
-            leading: const Icon(Icons.flashlight_on_outlined),
+            leading: revampLeading(const Icon(Icons.flashlight_on_outlined)),
             title: Text('主题模式', style: titleStyle),
             subtitle: Obx(
               () => Text(
@@ -149,39 +165,39 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
                 onTap: _onChanged,
               ),
             ),
-          Padding(
-            padding: padding + const .all(12),
-            child: Obx(_buildColorPanel),
-          ),
-          Padding(
-            padding: padding,
-            child: ExcludeFocus(
-              child: IgnorePointer(
-                child: Container(
-                  height: size.height / 2,
-                  width: size.width,
-                  color: theme.colorScheme.surface,
-                  child: const HomePage(),
-                ),
-              ),
-            ),
-          ),
-          ExcludeFocus(
+        ]),
+        Padding(
+          padding: padding + const .all(12),
+          child: Obx(_buildColorPanel),
+        ),
+        Padding(
+          padding: padding,
+          child: ExcludeFocus(
             child: IgnorePointer(
-              child: NavigationBar(
-                destinations: NavigationBarType.values
-                    .map(
-                      (item) => NavigationDestination(
-                        icon: item.icon,
-                        label: item.label,
-                      ),
-                    )
-                    .toList(),
+              child: Container(
+                height: size.height / 2,
+                width: size.width,
+                color: theme.colorScheme.surface,
+                child: const HomePage(),
               ),
             ),
           ),
-        ],
-      ),
+        ),
+        ExcludeFocus(
+          child: IgnorePointer(
+            child: NavigationBar(
+              destinations: NavigationBarType.values
+                  .map(
+                    (item) => NavigationDestination(
+                      icon: item.icon,
+                      label: item.label,
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

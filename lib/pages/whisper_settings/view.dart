@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -41,10 +42,17 @@ class _WhisperSettingsPageState extends State<WhisperSettingsPage> {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     return SimpleScaffold(
-      appBar: AppBar(
-        title: Obx(() => Text(_controller.title.value)),
+      appBar: Revamp.enabled
+          ? null
+          : AppBar(
+              title: Obx(() => Text(_controller.title.value)),
+            ),
+      body: Obx(
+        () => RevampLargeTitle(
+          title: _controller.title.value,
+          body: _buildBody(theme, _controller.loadingState.value),
+        ),
       ),
-      body: Obx(() => _buildBody(theme, _controller.loadingState.value)),
     );
   }
 
@@ -157,10 +165,12 @@ class _WhisperSettingsPageState extends State<WhisperSettingsPage> {
       case Loading():
         return const SizedBox.shrink();
       case Success<PbMap<int, Setting>>(:final response):
-        final divider = Divider(
-          height: 1,
-          color: theme.colorScheme.outline.withValues(alpha: 0.1),
-        );
+        final divider = Revamp.enabled
+            ? const SizedBox.shrink()
+            : Divider(
+                height: 1,
+                color: theme.colorScheme.outline.withValues(alpha: 0.1),
+              );
         return Builder(
           builder: (context) {
             final keys = response.keys.toList()..sort();
@@ -172,10 +182,15 @@ class _WhisperSettingsPageState extends State<WhisperSettingsPage> {
               itemBuilder: (context, index) {
                 final key = keys[index];
                 final item = response[key]!;
-                return ImSettingsItem(
-                  item: item,
-                  onSet: () => onSet(key, response, item),
-                  onRedirect: () => onRedirect(theme, key, response, item),
+                return revampGroupRow(
+                  context: context,
+                  index: index,
+                  count: keys.length,
+                  child: ImSettingsItem(
+                    item: item,
+                    onSet: () => onSet(key, response, item),
+                    onRedirect: () => onRedirect(theme, key, response, item),
+                  ),
                 );
               },
               separatorBuilder: (context, index) => divider,

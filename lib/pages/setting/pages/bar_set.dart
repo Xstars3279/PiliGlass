@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/pair.dart';
 import 'package:PiliPlus/common/widgets/reorder_mixin.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -68,40 +69,55 @@ class _BarSetPageState extends State<BarSetPage> with ReorderMixin {
 
   @override
   Widget build(BuildContext context) {
+    final actions = [
+      TextButton(onPressed: onReset, child: const Text('重置')),
+      TextButton(onPressed: saveEdit, child: const Text('保存')),
+      const SizedBox(width: 12),
+    ];
     return SimpleScaffold(
-      appBar: AppBar(
-        title: Text('$title编辑'),
-        actions: [
-          TextButton(onPressed: onReset, child: const Text('重置')),
-          TextButton(onPressed: saveEdit, child: const Text('保存')),
-          const SizedBox(width: 12),
-        ],
+      appBar: Revamp.enabled
+          ? null
+          : AppBar(title: Text('$title编辑'), actions: actions),
+      body: RevampLargeTitle(
+        title: '$title编辑',
+        actions: actions,
+        body: _list(),
       ),
-      body: ReorderableListView(
-        onReorderItem: onReorderItem,
-        proxyDecorator: proxyDecorator,
-        footer: Padding(
-          padding: padding,
-          child: const Align(
-            alignment: Alignment.centerRight,
-            child: Text('*长按拖动排序'),
-          ),
+    );
+  }
+
+  Widget _list() {
+    return ReorderableListView(
+      onReorderItem: onReorderItem,
+      proxyDecorator: proxyDecorator,
+      footer: Padding(
+        padding: padding,
+        child: const Align(
+          alignment: Alignment.centerRight,
+          child: Text('*长按拖动排序'),
         ),
-        children: list
-            .map(
-              (e) => CheckboxListTile(
-                key: ValueKey(e.hashCode),
-                value: e.second,
-                onChanged: (bool? value) {
-                  e.second = value!;
-                  setState(() {});
-                },
-                title: Text(e.first.label),
-                secondary: const Icon(Icons.drag_indicator_rounded),
-              ),
-            )
-            .toList(),
       ),
+      children: list.indexed
+          .map(
+            (e) => KeyedSubtree(
+              key: ValueKey(e.$2.hashCode),
+              child: revampGroupRow(
+                context: context,
+                index: e.$1,
+                count: list.length,
+                child: CheckboxListTile(
+                  value: e.$2.second,
+                  onChanged: (bool? value) {
+                    e.$2.second = value!;
+                    setState(() {});
+                  },
+                  title: Text(e.$2.first.label),
+                  secondary: const Icon(Icons.drag_indicator_rounded),
+                ),
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 }

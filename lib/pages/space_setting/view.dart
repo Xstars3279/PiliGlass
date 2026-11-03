@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -22,8 +23,11 @@ class _SpaceSettingPageState extends State<SpaceSettingPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return SimpleScaffold(
-      appBar: AppBar(title: const Text('空间设置')),
-      body: Obx(() => _buildBody(theme, _controller.loadingState.value)),
+      appBar: Revamp.enabled ? null : AppBar(title: const Text('空间设置')),
+      body: RevampLargeTitle(
+        title: '空间设置',
+        body: Obx(() => _buildBody(theme, _controller.loadingState.value)),
+      ),
     );
   }
 
@@ -54,6 +58,29 @@ class _SpaceSettingPageState extends State<SpaceSettingPage> {
                       color: theme.colorScheme.outline.withValues(alpha: 0.1),
                     ),
                   );
+                  // the redesign: each list in a rounded group
+                  if (Revamp.enabled) {
+                    Widget group(List<SpaceSettingModel> list) =>
+                        SliverList.builder(
+                          itemCount: list.length,
+                          itemBuilder: (context, index) => revampGroupRow(
+                            context: context,
+                            index: index,
+                            count: list.length,
+                            child: _item(list[index]),
+                          ),
+                        );
+                    return CustomScrollView(
+                      slivers: [
+                        group(response.list1),
+                        group(response.list2),
+                        group(response.list3),
+                        SliverToBoxAdapter(
+                          child: SizedBox(height: padding.bottom + 100),
+                        ),
+                      ],
+                    );
+                  }
                   return CustomScrollView(
                     slivers: [
                       dividerL,

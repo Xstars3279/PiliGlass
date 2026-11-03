@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
@@ -182,39 +183,62 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return SimpleScaffold(
-      appBar: AppBar(
-        title: const Text('倍速设置'),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              await video.delete(VideoBoxKey.speedsList);
-              speedList = Pref.speedList;
-              setState(() {});
-            },
-            child: const Text('重置'),
-          ),
-          const SizedBox(width: 16),
-        ],
+    final actions = [
+      TextButton(
+        onPressed: () async {
+          await video.delete(VideoBoxKey.speedsList);
+          speedList = Pref.speedList;
+          setState(() {});
+        },
+        child: const Text('重置'),
       ),
-      body: ViewSafeArea(
-        child: ListView(
-          padding: .only(
-            bottom: MediaQuery.viewPaddingOf(context).bottom + 100,
-          ),
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(
-                left: 14,
-                right: 14,
-                top: 6,
-                bottom: 0,
-              ),
-              child: Text(
-                '点击下方按钮设置默认（长按）倍速',
-                style: TextStyle(color: theme.colorScheme.outline),
-              ),
+      const SizedBox(width: 16),
+    ];
+    return SimpleScaffold(
+      appBar: Revamp.enabled
+          ? null
+          : AppBar(title: const Text('倍速设置'), actions: actions),
+      body: RevampLargeTitle(
+        title: '倍速设置',
+        actions: actions,
+        body: _body(theme),
+      ),
+    );
+  }
+
+  Widget _body(ThemeData theme) {
+    final speeds = Wrap(
+      alignment: WrapAlignment.start,
+      spacing: 8,
+      runSpacing: 2,
+      children: List.generate(
+        speedList.length,
+        (index) => FilledButton.tonal(
+          style: FilledButton.styleFrom(tapTargetSize: .padded),
+          onPressed: () => showBottomSheet(theme, index),
+          child: Text(speedList[index].toString()),
+        ),
+      ),
+    );
+    return ViewSafeArea(
+      child: ListView(
+        padding: .only(
+          bottom: MediaQuery.viewPaddingOf(context).bottom + 100,
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 14,
+              right: 14,
+              top: 6,
+              bottom: 0,
             ),
+            child: Text(
+              '点击下方按钮设置默认（长按）倍速',
+              style: TextStyle(color: theme.colorScheme.outline),
+            ),
+          ),
+          ...revampGroupRows(context, [
             ListTile(
               title: const Text('默认倍速'),
               subtitle: Text(playSpeedDefault.toString()),
@@ -232,49 +256,46 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
                 title: const Text('默认长按倍速'),
                 subtitle: Text(longPressSpeedDefault.toString()),
               ),
-            Padding(
-              padding: const EdgeInsets.only(
-                left: 14,
-                right: 14,
-                bottom: 10,
-                top: 20,
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    '倍速列表',
-                    style: theme.textTheme.titleMedium,
-                  ),
-                  const SizedBox(width: 12),
-                  TextButton(
-                    onPressed: onAddSpeed,
-                    child: const Text('添加'),
-                  ),
-                ],
-              ),
+          ]),
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 14,
+              right: 14,
+              bottom: 10,
+              top: 20,
             ),
+            child: Row(
+              children: [
+                Text(
+                  '倍速列表',
+                  style: theme.textTheme.titleMedium,
+                ),
+                const SizedBox(width: 12),
+                TextButton(
+                  onPressed: onAddSpeed,
+                  child: const Text('添加'),
+                ),
+              ],
+            ),
+          ),
+          if (Revamp.enabled)
+            RevampGroup(
+              margin: const EdgeInsets.fromLTRB(12, 0, 12, 30),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: speeds,
+              ),
+            )
+          else
             Padding(
               padding: const EdgeInsets.only(
                 left: 18,
                 right: 18,
                 bottom: 30,
               ),
-              child: Wrap(
-                alignment: WrapAlignment.start,
-                spacing: 8,
-                runSpacing: 2,
-                children: List.generate(
-                  speedList.length,
-                  (index) => FilledButton.tonal(
-                    style: FilledButton.styleFrom(tapTargetSize: .padded),
-                    onPressed: () => showBottomSheet(theme, index),
-                    child: Text(speedList[index].toString()),
-                  ),
-                ),
-              ),
+              child: speeds,
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
