@@ -75,22 +75,26 @@ class ActionItem extends StatelessWidget {
 
     child = Material(
       type: .transparency,
-      child: InkWell(
-        borderRadius: const .all(.circular(6)),
-        onTap: _isThumbsUp ? null : onTap,
-        onLongPress: _isThumbsUp ? null : onLongPress,
-        onSecondaryTap: PlatformUtils.isMobile || _isThumbsUp
-            ? null
-            : onLongPress,
-        onTapDown: _isThumbsUp ? (_) => onStartTriple!() : null,
-        onTapUp: _isThumbsUp ? (_) => onCancelTriple!(true) : null,
-        onTapCancel: _isThumbsUp ? onCancelTriple : null,
-        child: expand
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [child, _buildText(theme)],
-              )
-            : child,
+      // the icons pop only after a touch, see _PopIcon
+      child: Listener(
+        onPointerDown: (_) => _PopIconState.touchedAt = DateTime.now(),
+        child: InkWell(
+          borderRadius: const .all(.circular(6)),
+          onTap: _isThumbsUp ? null : onTap,
+          onLongPress: _isThumbsUp ? null : onLongPress,
+          onSecondaryTap: PlatformUtils.isMobile || _isThumbsUp
+              ? null
+              : onLongPress,
+          onTapDown: _isThumbsUp ? (_) => onStartTriple!() : null,
+          onTapUp: _isThumbsUp ? (_) => onCancelTriple!(true) : null,
+          onTapCancel: _isThumbsUp ? onCancelTriple : null,
+          child: expand
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [child, _buildText(theme)],
+                )
+              : child,
+        ),
       ),
     );
     return expand ? Expanded(child: child) : child;
@@ -152,10 +156,21 @@ class _PopIconState extends State<_PopIcon> with TickerProviderStateMixin {
     ratio: 0.35,
   );
 
+  /// When a finger last came down on one of the buttons. The states also
+  /// change on their own, e.g. 已点赞 arriving after the page opens, or
+  /// reset for another part; those should not pop, only what follows a
+  /// touch, allowing for the coin and favourite dialogs in between.
+  static DateTime? touchedAt;
+  static const _touchWindow = Duration(seconds: 10);
+
   @override
   void didUpdateWidget(_PopIcon oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.selected == oldWidget.selected) return;
+    final touched = touchedAt;
+    if (touched == null || DateTime.now().difference(touched) > _touchWindow) {
+      return;
+    }
     if (widget.selected) {
       // an upward kick: it swells to about 1.3x and bounces back
       _scale.animateWith(

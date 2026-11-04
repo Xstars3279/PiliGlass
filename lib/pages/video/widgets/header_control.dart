@@ -1868,8 +1868,9 @@ class HeaderControlState extends State<HeaderControl>
                           )
                         : const SizedBox.shrink(),
                   ),
-                // the redesign has them at the bottom in full screen
-                if (!(Revamp.enabled && isFullScreen) &&
+                // the redesign has them at the bottom in full screen, where the
+                // danmaku bar shows: not for a downloaded video
+                if (!(Revamp.enabled && isFullScreen && !isFileSource) &&
                     (!isPortrait ||
                         isFullScreen ||
                         PlatformUtils.isDesktop)) ...[
@@ -1923,7 +1924,7 @@ class HeaderControlState extends State<HeaderControl>
                     ),
                   ),
                 ],
-                if (!(Revamp.enabled && isFullScreen))
+                if (!(Revamp.enabled && isFullScreen && !isFileSource))
                   SizedBox(
                     width: btnWidth,
                     height: btnHeight,

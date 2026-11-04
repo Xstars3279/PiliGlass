@@ -1,118 +1,168 @@
-# PiliGlass 改版代码审计（第一轮）
+# PiliGlass 改版代码审计（第二轮）
 
-审计对象：`ui-revamp` 分支相对上游 `upstream/main` 的 117 个文件改动（+8147 / −901）。
-方法：按六条设计理念逐条核对代码，不跑 App。标记为「需真机」的条目只能从代码推断，要上手确认。
+审计对象：`ui-revamp` 分支 HEAD（`64a3d6df1`）相对 `git merge-base HEAD upstream/main` 的 `lib/` 改动，128 个文件（+8777 / −1227）。
+方法：只读代码，不跑 App。每条都追到了调用链的末端（主题字段、`tool/patches/` 里的三个补丁、上游控制器和 Flutter 框架的相关行为）。
+不在范围内：平板左侧玻璃侧栏 `liquid_glass_navigation_rail.dart`，以及工作区里 `main/view.dart`、`home/view.dart` 尚未提交的侧栏接入改动（另一个会话在改）。
 
-严重度：🔴 影响功能/明显割裂　🟠 体验不一致　🟡 小问题/清理项
-
----
-
-## 一、确定问题（读代码已能确认）
-
-### 🔴 1. 横屏/平板下「发布动态」入口消失
-- `lib/pages/dynamics/view.dart`：`Revamp.enabled` 时把顶栏的 `+` 按钮去掉了，理由是“底栏圆钮负责发布”。
-- 但 `lib/pages/main/view.dart` 在横屏或开启侧边栏（`useBottomNav == false`）时不显示底栏，只显示侧边栏，而侧边栏里没有发布按钮。
-- 结果：平板、横屏手机、开了侧边栏的用户，动态页没有任何发布入口。
-- 修法：去掉 `+` 的条件改成 `Revamp.enabled && _mainController.useBottomNav`。
-
-### 🔴 2. 视频卡片改版不受总开关控制
-- `video_card_v.dart` / `video_card_h.dart`：去掉卡片底、16/14 圆角、`PressableScale`、`delayTap` 都是无条件生效的，`Revamp.enabled` 只控制了 `RiseIn`。
-- 关掉「液态玻璃底栏」后，首页、搜索、历史等列表仍是新卡片，违背“关掉即回原版”。
-- 同样无条件生效的还有：`ugc/widgets/action_item.dart`（点赞投币图标 18→22、`_PopIcon` 动画）。
-- 修法：卡片把原版 `Card` 分支保留在 `!Revamp.enabled` 下（git 历史里有原代码）。
-
-### 🟠 3. 点视频卡片固定延迟 150ms 才跳转
-- `PressableScale.delayTap` 用 `Future.delayed(150ms)` 等按压动画回弹再跳转，**所有**视频卡片都有，每次打开视频都慢 150ms。
-- 延迟期间没有防重入，快速双击会推两次播放页（原版直接 `onTap` 时窗口很小，现在拉长了）。
-- 建议：延迟降到约 60–80ms，或者按下就跳转、让回弹和转场同时走；加一个 `_pushing` 标志防双击。
-
-### ~~🟠 4. 纯黑主题把所有玻璃浮层都盖成了不透明~~（更正：结论夸大）
-> 复核：`darkenTheme` 没有覆盖 `modalBackgroundColor`，所以底部弹出面板在纯黑模式下仍是玻璃。真正变成不透明的只有对话框和长按菜单；它们本来就叠在纯黑背景上，模糊后的差别几乎看不出来，实际体验正常（已由真机确认）。降级为 🟡，不处理。
-
-原描述：
-- `theme_utils.dart`：`darkenTheme` 在 `RevampTheme.apply` **之后**执行，把 `dialogTheme`、`bottomSheetTheme`、`popupMenuTheme` 的背景重设为不透明色。
-- 结果：纯黑模式下弹窗、菜单、底部面板没有玻璃效果，而且失去了 rim 边框以外的所有改版观感。
-- 另外 `surfaceContainerLow`（`RevampGroup` 的底色）没被压暗，纯黑背景上分组卡片是普通深灰，和其他被压暗的卡片色阶不一致。
-- 修法：改版开启时，`darkenTheme` 用带 alpha 的颜色（保持 0.72/0.82/0.85），并补上 `surfaceContainerLow`。
-
-### 🟠 5. 五个页面的标签栏还是旧胶囊样式
-`search_result` 已经改为跟随主题的凸起 pill，但下面这些页面仍在本地写死 `indicator: BoxDecoration(secondaryContainer…)` + `labelColor: onSecondaryContainer`，绕过了 `RevampTheme` 的 `tabBarTheme`：
-- `lib/pages/fav/note/view.dart`
-- `lib/pages/fav/pgc/view.dart`
-- `lib/pages/member_contribute/view.dart`（UP 主空间「投稿」）
-- `lib/pages/pgc/view.dart`
-- `lib/pages/pgc_review/view.dart`
-
-修法与 `search_result/view.dart` 相同：`Revamp.enabled` 时 indicator/labelColor 传 null。
-
-### 🟠 6. 设置的二级页面风格不一致
-- `common_setting.dart` 改成了大标题 + 圆角分组，但 `lib/pages/setting/pages/` 下的 7 个页面（底栏设置、取色、显示模式、字体、全屏快捷、日志、倍速）以及 webdav、sponsor_block、login_devices、whisper_settings、space_setting、settings_search 仍是普通 `AppBar` + 平铺列表。
-- 从「设置」一路点进去，会在新旧两种风格间来回跳。
-
-### 🟡 7. 令牌没被复用
-- `common_setting.dart` 手写了一份 `DecoratedSliver` + `circular(24)`，和 `RevampGroup` 重复；应改成引用 `Revamp.groupRadius`，或抽一个 `RevampSliverGroup`。
-- 改版代码里写死的圆角有 28/24/20/16/14/10/8/6 共 8 种。建议在 `Revamp` 里补上 `sheetRadius = 28`、`menuRadius = 20`、`coverRadius = 16`，避免各处自行取值。
-
-### 🟡 8. 部分动效仍用固定曲线模拟弹簧
-理念是“统一用 Springs”，但这些地方用了 `Duration + Curves.easeOutBack/easeOutCubic`：
-- `mine/revamp_view.dart`（250ms easeOutBack、320ms easeOutCubic）
-- `search/revamp_view.dart`（520ms easeOutBack）
-- `liquid_glass_navigation_bar.dart`（AnimatedSwitcher 260ms easeOutBack）
-- `comment_sheet.dart` 里 4 处 260–320ms 曲线动画
-- `ambient_background.dart`（600ms easeOut）、`publish_route.dart`
-
-颜色/透明度渐变用曲线没问题；**位移和缩放**建议换成 `Springs.*`，否则被打断时会跳变，不能接住手势速度。
+严重度：🔴 功能错误　🟠 体验问题或明显不一致　🟡 小问题或清理项
 
 ---
 
-## 二、可疑点（需要真机确认）
+## 〇、第一轮条目的状态
 
-| # | 怀疑的问题 | 依据 | 复现方法 |
+| 第一轮 | 状态 | 说明 |
+|---|---|---|
+| 1 横屏没有发布入口 | 修复中 | HEAD 里 `dynamics/view.dart:228-234` 仍然在 `Revamp.enabled` 时去掉 `+`。新侧栏（工作区未提交）带了「发布动态」按钮，提交后就能补上，以侧栏会话的结果为准。 |
+| 2 卡片不受总开关控制 | 不处理 | 用户已定：不需要退回上游原版。 |
+| 3 150ms 点击延迟 | 延迟保留 | 延迟本身是有意设计。其中的「双击推两页」已在这一轮确认，见下面第 1 条。 |
+| 4 纯黑主题 | 不处理 | 第一轮已更正，真机确认正常。 |
+| 5 五个页面的标签样式 | 已修 | `64a3d6df1` |
+| 6 设置子页风格 | 已修 | `64a3d6df1`。字体、全屏 SC、日志、设置搜索保留小标题栏，是有意的。 |
+| 7 令牌复用 | 仍未处理 | 这一轮又找到两处，见第 10 条。 |
+| 8 固定曲线代替弹簧 | 仍未处理 | 清单不变，这里不重复。 |
+| A 退出时视频响一下 | 仍未处理，仍需真机 | `comment_sheet.dart:218` 在 `dispose` 里调用 `onCoverPlayer(false)`，进而执行 `video/revamp_view.dart:29-31` 的 `player.play()`。子组件先于页面 `dispose`，所以这次 `play()` 一定会发生在 `plPlayerController.dispose()` 之前（`video/view.dart:350-380`）。会不会听到声音，要看播放器停下来有多快。 |
+| B 切后台再回来视频自己播放 | **否定** | `pl_player/view/view.dart:337-353` 只会恢复它自己暂停的播放（`_pauseDueToPauseUponEnteringBackgroundMode`）。面板盖住视频时视频已经被面板暂停，切后台时这个标志不会被设上，回到前台也不会自动播放。 |
+| C 转屏后评论面板状态丢失 | 仍未处理，仍需真机 | `comment_sheet.dart:194` 在 `initState` 里仍然执行 `_isOpen.value = false`。 |
+| D 横屏评论区实时模糊 | 仍未处理，仍需真机 | `video/reply/view.dart` 的 `_revampHeader` 仍然用 `BackdropFilter(sigma 20)`。 |
+| E 两次截图乱序 | 仍未处理 | `comment_sheet.dart:237-239`、`:246-287` 没有改。 |
+| F 双击打开两个播放页 | **已确认** | 见下面第 1 条。 |
+| G 高分屏截图耗时 | 仍需真机 | 没有改。 |
+
+---
+
+## 一、确定问题（读代码已经能确认）
+
+### 🔴 1. 快速连点视频卡片会打开两个播放页
+- **位置**：`lib/common/motion/pressable_scale.dart:33-34`（`delayTap`）；用到它的地方在 `video_card_v.dart:106`、`video_card_h.dart:61`。
+- **问题**：`delayTap` 返回 `() => Future.delayed(150ms, onTap)`，没有防重入。150ms 内点两下，会排进两个 `onTap`，各自执行一次 `PageUtils.toVideoPage`。
+- **依据**：上游是在手指抬起时直接 push。push 后 `NavigatorState._afterNavigation` 会调用 `_cancelActivePointers()`，同一帧里的第二次点击被吸收；下一帧新页面已经盖在最上层，点击落到新页面上。改版把 push 推迟了 150ms，这段时间里旧页面照常接收点击。而 `toVideoPage` 用的是 `toDupNamed('/videoV')`（`page_utils.dart:568`），允许重复路由，GetX 的 `preventDuplicates` 也挡不住。
+- **修法**：保留 150ms 延迟，只加防重入。最简单的做法是在 `delayTap` 里加一个静态标志：
+
+  ```dart
+  static bool _pending = false;
+  static VoidCallback delayTap(FutureOr<void> Function() onTap) => () {
+    if (_pending) return;
+    _pending = true;
+    Future.delayed(tapDelay, () async {
+      try { await onTap(); } finally { _pending = false; }
+    });
+  };
+  ```
+
+### 🟠 2. 打开已经点过赞、投过币或收藏过的视频，图标会自己“爆一下”
+- **位置**：`lib/pages/video/introduction/ugc/widgets/action_item.dart:156-170`（`_PopIcon.didUpdateWidget`）
+- **问题**：只要 `selected` 从 false 变成 true，就播放弹跳和八颗粒子的动画；变回 false 时播放下沉动画。
+- **依据**：`hasLike`、`hasCoin`、`hasFav` 等状态是在进入页面后异步查询回来的，初始都是 false。查询结果一到，`selectStatus` 就从 false 变成 true，触发同样的动画。切换分 P 或相关视频时状态重置成 false，又会播一次下沉动画。用户什么都没点，图标却在动。
+- **修法**：只有用户自己点击时才播放动画。`ActionItem` 可以在 `onTap` 里设一个“本次是用户点击”的标志，`_PopIcon` 只在这个标志为真时播放；也可以要求状态变化发生在最近一次点击后的大约 3 秒内才播放。
+
+### 🟠 3. 离线视频全屏时，弹幕开关和弹幕设置都没有了
+- **位置**：`lib/pages/video/widgets/header_control.dart:1872`、`:1926`；`lib/plugin/pl_player/view/view.dart:897-900`
+- **问题**：改版在全屏时把顶栏的「发弹幕 / 弹幕开关 / 弹幕设置」隐藏了（条件是 `!(Revamp.enabled && isFullScreen)`），改由底部的 `RevampDanmakuBar` 提供。但底栏只在 `isNotFileSource && !isLive` 时出现。
+- **依据**：顶栏这一组按钮不在 `if (!isFileSource)` 里面（`header_control.dart:1804` 的 `if (!isFileSource) ...[` 在 `:1852` 之前已经结束），说明上游离线视频全屏时这些按钮是有的。改版后离线视频全屏既没有顶栏按钮也没有底栏，下载时带下来的弹幕在全屏下无法开关，也无法调整。
+- **修法**：顶栏的隐藏条件改成 `!(Revamp.enabled && isFullScreen && !videoDetailCtr.isFileSource)`；或者让 `RevampDanmakuBar` 在离线视频时也显示，但去掉发送框，只留开关和设置。
+
+### 🟠 4. 设置页账号卡片的昵称不会跟着切换账号或退出登录更新
+- **位置**：`lib/pages/setting/view.dart:231-262`（`_revampAccount`）
+- **问题**：头像用 `Obx` 绑定了 `AccountService.face`，会更新；昵称却是在 build 时读一次 `Pref.userInfoCache`。
+- **依据**：在卡片里点「切换账号」（`LoginPageController.switchAccountDialog`）、或者点「退出登录」（`_removeAccounts` 只改 `_noAccount`）之后，都不会触发整个设置页重新 build。结果是头像已经换成新账号（或者变成占位图），名字还是旧账号的。上游的设置页没有这张卡片，所以这是新代码引入的问题。
+- **修法**：昵称也改成响应式的，比如在 `Obx` 里读 `AccountService` 的 `isLogin`、`face`，再取 `Pref.userInfoCache`；或者在 `switchAccountDialog` 和 `_removeAccounts` 结束后 `setState`。
+
+### 🟠 5. 黑白封面的视频，氛围色会变成谷歌蓝
+- **位置**：`lib/common/widgets/cover_palette.dart:224`
+- **问题**：`Score.score(result.colorToCount, desired: 1).first`
+- **依据**：`material_color_utilities` 里的 `Score.score` 默认 `filter: true`，会去掉色度低于 5 的颜色；一个都不剩时返回 `fallbackColorARGB`，默认值是 `0xff4285F4`（谷歌蓝）。黑白、灰度或者近乎单色的封面（纯色字幕封面、黑白老片），视频页顶部的氛围渐变、状态栏、标题栏和评论面板的玻璃都会染成蓝色，和封面毫无关系。
+- **修法**：传 `fallbackColorARGB` 一个哨兵值；拿到哨兵值时返回 null，`AmbientTintBuilder` 就会回到 `colorScheme.surface`。也可以在 `ambient()` 里把色度很低的 seed 当成中性色处理。
+
+### 🟡 6. 首页只剩一个标签时，信息流顶上有一条空白
+- **位置**：`lib/pages/home/view.dart:49`、`:82`、`:84`、`:109-110`（HEAD）
+- **问题**：标签数 ≤ 1 时 `tabBar` 是 `SizedBox(height: 6)`，但 `_floatingTabs` 仍然给信息流加了 `RevampTopInset(inset: GlassTabBar.extent)`，也就是 58dp。
+- **依据**：只保留「推荐」一个首页标签的用户，信息流顶上会有 58dp 的空白，上面什么都没有。下拉刷新的指示器也会多往下偏 58dp（`refresh_indicator.dart:528`）。
+- **修法**：`inset: _homeController.tabs.length > 1 ? _floatingTabsHeight : 6`。
+
+### 🟡 7. 屏幕较窄或界面缩放较大时，底栏左边会超出屏幕
+- **位置**：`lib/common/widgets/liquid_glass/liquid_glass_navigation_bar.dart:678-680`
+- **问题**：`groupX = (w - (_width + _kDockGap + circle)) / 2`，没有下限。三个标签时整组宽 254 + 10 + 64 = 328dp。
+- **依据**：`main.dart` 会把 `Pref.uiScale` 设给 `ScaledWidgetsFlutterBinding`，界面放大后逻辑宽度会变小（360dp 的屏放大到 1.15 倍后只剩约 313dp）。小屏手机和分屏也是同样情况。`w < 328` 时 `groupX` 变成负数，底栏左端被推到屏幕外，而且没有任何缩放或裁切。
+- **修法**：`_kTabWidth` 按可用宽度收缩，比如 `min(82, (w - 2*edge - gap - circle - 8) / count)`；或者 `groupX` 至少取 `_kDockEdge`，同时缩小标签宽度。
+
+### 🟡 8. 关掉的弹幕开关逻辑复制了三份
+- **位置**：`lib/pages/video/revamp_view.dart:80-84`、`lib/plugin/pl_player/widgets/revamp_danmaku_bar.dart:76-80`、`lib/pages/video/view.dart:1475` 附近（还有上游的 `header_control.dart:1900-1908`）
+- **问题**：这几处都是 `enableShowDanmaku.value = !on` 加上 `if (!tempPlayerConf) setting.put(...)`，内容一样。
+- **依据**：以后上游改这段逻辑（比如加埋点，或者调整临时配置的判断），改版里的两份副本很容易漏改。
+- **修法**：在 `PlPlayerController` 外面加一个扩展方法 `toggleDanmaku()`，放在改版自己的文件里（不改上游控制器），三处都调用它。
+
+### 🟡 9. `CoverPalette` 的缓存会把失败结果也永久缓存下来
+- **位置**：`lib/common/widgets/cover_palette.dart:196`、`:204`
+- **问题**：`_cache[url] ??= _extract(...)`，而 `_extract` 出错时返回 null，所以“失败”也被缓存了；缓存也没有大小上限。
+- **依据**：网络抖一下导致缩略图加载失败，这个视频在这次 App 运行期间就再也取不到氛围色。连续刷很多视频，Map 会一直增长（每条只是一个 Future 和一个 int，量不大，但不会释放）。
+- **修法**：结果为 null 时 `_cache.remove(url)`；缓存改成 LRU，上限大约 200 条。
+
+### 🟡 10. 新代码里又出现了没用共享令牌的分组样式（第一轮第 7 条的延续）
+- `lib/pages/search/revamp_view.dart:23-32`：手写的 `DecoratedSliver(surfaceContainerLow, circular(24))`，和 `RevampGroup` 重复。应该用 `Revamp.groupRadius`，或者抽一个 `RevampSliverGroup`，和 `common_setting.dart` 共用。
+- `lib/pages/whisper/view.dart:302-325`（`_revampSessions`）：自己实现了首行、末行圆角，和 `revampGroupRow()` 重复；而且左右用的是固定的 `horizontal: 12`，没有加上 `padding.left/right`。同一个页面里的 `_revampTopItems`（`:228`）加了这两个值，横屏有刘海的手机上两块会对不齐。
+
+### 🟡 11. 标签的「凸起胶囊」有两套实现
+- **位置**：`lib/common/widgets/liquid_glass/glass_tab_bar.dart:52-64` 与 `lib/common/revamp_theme.dart:96-149`（`PillTabIndicator`）
+- **问题**：首页和动态页的玻璃标签用 `ShapeDecoration`：贴满标签高度，带 `0x14FFFFFF` 描边，阴影是 `shadow@0.08 blur10`。其他页面走主题的 `PillTabIndicator`：上下各内缩 6、左右各内缩 2，没有描边，阴影是 `black@0.12/0.4 blur4`。
+- **依据**：从首页进入「收藏」「投稿」等页面，选中胶囊的高度、阴影和描边都不一样。
+- **修法**：`GlassTabBar` 改用 `PillTabIndicator`，必要时给它加 `insets` 和 `side` 参数，让两处共用一个实现。
+
+### 🟡 12. 开关也有两套外观
+- **位置**：`lib/common/widgets/revamp_switch.dart`（46×28，按住会拉长，弹簧动画）与 `revamp_theme.dart:51-61`（主题里的 Material `Switch`，52×32，框架自带动画）
+- **问题**：设置项（`switch_item.dart`）用 `RevampSwitch`，其他页面散落的 `Switch` 用主题样式。两者颜色一致，但尺寸和手感不同。
+- **修法**：如果目标是全局只用一种开关，可以在 `RevampTheme` 之外，把高频页面的 `Switch` 逐步换成 `RevampSwitch`；或者把 `RevampSwitch` 的尺寸对齐成 52×32。这一条和「设计取舍」第 3 条有关，可以一起决定。
+
+### 🟡 13. `PublishRoute._eased` 没有释放
+- **位置**：`lib/pages/common/publish/publish_route.dart:86-90`
+- **问题**：`late final _eased = CurvedAnimation(parent: animation!)` 在路由里没有被 `dispose`。
+- **依据**：`CurvedAnimation` 会在 parent 上注册状态监听。路由销毁后 parent 也会被销毁，所以实际影响很小，但不符合「listener 都要释放」的原则。
+- **修法**：重写 `dispose()`，在里面调用 `_eased.dispose()`；要注意 `late` 字段在没用到的时候不要去初始化它。
+
+---
+
+## 二、需真机确认
+
+| # | 怀疑的问题 | 依据 | 复现步骤 |
 |---|---|---|---|
-| A | 🔴 退出视频页时视频/音频又响了一下 | `comment_sheet.dart` 的 `dispose` 里，如果面板正盖着播放器，会调用 `onCoverPlayer(false)`，进而执行 `player.play()` | 评论面板上拉盖住视频（视频暂停）→ 直接按返回退出。开了后台播放时更容易听出来 |
-| B | 🟠 盖着播放器时切后台再回来，视频在面板下面自己播放 | `_pausedBySheet` 只管面板，没管 App 生命周期；上游有回前台自动续播的逻辑 | 面板上拉盖住视频 → 切到桌面 → 回来 |
-| C | 🟠 旋转屏幕后评论面板状态丢失 | 横屏宽屏时 `video/view.dart` 不再包 `CommentSheet`，回到竖屏时重建，`initState` 里会把 `_isOpen` 重置为 false | 打开评论 → 进入某条楼中楼 → 转横屏 → 转回竖屏 |
-| D | 🟠 平板/横屏下评论区掉帧 | 非面板版评论区的置顶头（`reply/view.dart` 的 `_revampHeader`）是实时 `BackdropFilter(sigma 20)`，视频在旁边同时播放；这正是理念 6 想避免的情况 | 平板横屏播视频，滑评论区，看帧率（低端 OpenGLES 机型更明显） |
-| E | 🟡 评论面板模糊底图偶尔是旧画面 | `_captureBackdrop` 在打开时和 600ms 后各截一次图，两次异步可能乱序完成，早的结果覆盖晚的 | 网络慢时打开评论，看面板后面透出的是不是图片还没加载完的样子 |
-| F | 🟡 快速双击视频卡片打开两个播放页 | 见确定问题 3 | 快速连点封面两下 |
-| G | 🟡 面板截图在高分屏上耗时 | 按 `devicePixelRatio` 全分辨率截图，再做 sigma 24×dpr 的模糊，2K 屏一张约 1440×3200 | 低端机上点开评论，看第一帧有没有卡顿 |
+| H | 🟠 页面切换时，底栏和玻璃按钮的折射位置错开 | `liquid_glass.dart:201-205` 在 **paint 时** 用 `getTransformTo(null)` 算出镜头在屏幕上的位置，再写进 shader。页面转场的位移（`page_transition.dart:149`）作用在路由的 `RepaintBoundary` 外面，页面内容只是整层平移、不会重绘，所以 shader 里的位置会一直停在转场开始那一帧。`custom_toast` 和 `revamp_fab` 有自己的动画，会跟着重绘，不受影响；静止的底栏、首页标签、搜索页底部的输入框会受影响 | 1. 首页开着底栏，点「我的 → 设置」，看左滑转场时底栏边缘的折射有没有和胶囊错位。2. 在设置页右滑返回，手指停在一半，看露出的首页底栏边缘是否正常。3. 搜索页（底部输入框）右上滑返回，看同样的问题 |
+| I | 🟡 推荐卡片在大字体或带角标时文字溢出 | `rcmd/view.dart` 把卡片文字区的 `mainAxisExtent` 从 90 改成了 `scale(76)`。按默认字号估算：8 + 两行标题 37.8 + 4 + 一行 UP 18 + 4 ≈ 72，只剩约 4dp 余量。如果 `PBadge` 比 18 高、全局字体比 14 大，或者自定义字体的行高更大，就会溢出 | 设置 → 外观，把字体调到最大，或者换一款行高较大的自定义字体。在首页推荐里找带「已关注」或推荐理由角标、标题两行的卡片，看底部有没有黄黑溢出条或被裁掉的文字 |
+| J | 🟡 在视频页里切换到别的视频后返回，飞回卡片的是原来的封面 | `CoverHero` 的标签来自 `args['coverHero']`，在页面里切换相关视频或分 P 后标签不变；`FirstFrameCover` 一直挂在树上（只是透明度为 0）。返回时 Hero 会从播放器位置飞回原卡片，飞行中显示的是 `card.child`，也就是原卡片的封面 | 从首页点开视频 A → 在简介里点相关视频 B（同一页内切换）→ 返回首页，看飞回卡片的是 A 的封面还是 B 的画面 |
+| K | 🟡 视频播放时打开评论，面板升到播放器上方后，玻璃里透出的是旧画面 | `_captureBackdrop` 只在打开时截一次图（600ms 后再截一次），截图包含当时的播放器画面。之后面板被拖到播放器上方才暂停视频，玻璃里透出的是打开那一刻的视频帧，不是暂停时的画面。在 Impeller 上，截图里的视频 Texture 还可能是黑的 | 视频播放中打开评论，等几秒后用把手把面板拖到播放器上方，看玻璃透出的是不是几秒前的画面，或者一片黑 |
+| A、C、D、E、G | 见「〇、第一轮条目的状态」 | | 复现方法同第一轮 |
 
 ---
 
-## 三、未覆盖改版的页面
+## 三、设计取舍待定（不是 bug，需要你定）
 
-全局主题（标签 pill、菜单/弹窗/面板玻璃、开关、FAB）对所有页面生效，但下面这些页面没做专门的改版。按使用频率排序：
-
-**高频，割裂感最明显**
-- `member/` UP 主空间（只改了 `user_info_card`，页面骨架和标签仍是原版）
-- `dynamics_detail/` 动态详情
-- `msg_feed_top/`（回复我的、@我的、收到的赞、系统通知）
-- `whisper_detail/` 私信聊天页（列表页改了，点进去是原版）
-- `history/`、`fav/`、`later/` 的页面外壳（只有列表卡片改了，顶栏、标签、编辑模式是原版）
-- `article/` 专栏
-- `live_room/` 直播间
-
-**中频**
-- `follow/`、`fan/` 列表项（只改了按钮颜色）
-- `pgc_index/`、`popular_series/`、`popular_precious/`、`subscription/`
-- `search_panel/` 中除视频外的 user、live、pgc、article 结果页
-- `login/`
-
-**低频**：其余 60 多个页面（各种 `*_search`、`*_sort`、`member_*` 子页、日志页等）。建议靠全局主题兜底，不逐个改。
+1. **改版下 Toast 不再使用「Toast 不透明度」设置。** `custom_toast.dart:17-45` 在 `Revamp.enabled` 时用固定透明度的 `GlassCapsule`，`CustomToast.toastOpacity`（设置 → 外观里可以调）只对上游样式生效。选项：保留现状并在设置里隐藏这一项；或者把这个值映射成玻璃的 tint alpha。
+2. **视频页（`/videoV`）不支持全屏右滑返回。** `page_transition.dart:20`、`:49-51`：视频页用淡入路由，不经过 `_BackGestureDetector`。原因是右滑会和播放器的进度拖动、简介区的横滑冲突，这很可能是有意的；但其他页面都能整屏右滑，只有视频页只能从系统边缘返回，用户可能感觉不一致。
+3. **开关的统一程度**（和第 12 条相关）：是全局统一成 `RevampSwitch`，还是只在设置页使用。
 
 ---
 
-## 四、工程层面
+## 四、这一轮核对过、没有发现问题的点（避免下一轮重复检查）
 
-- **上游合并风险最大的文件**：`video/view.dart`（+201）、`reply/view.dart`（+155）、`dynamics/view.dart`（+137）、`mine/view.dart`（+140）、`about/view.dart`（407 行改动）。其中 `about/view.dart` 改动量和新文件差不多，可以考虑像 `mine` 一样拆出 `revamp_view.dart`。
-- **开关语义**：`Revamp.enabled` 和 `MainController.dockSearch` 是同一个条件（`floatingNavBar && liquidGlassNavBar`），但 `mine`、`search`、`home` 用 `dockSearch`，其他地方用 `Revamp.enabled`。建议统一用 `Revamp.enabled`；`dockSearch` 再加上 `useBottomNav` 判断，横屏问题（确定问题 1）会自然消失。
+- `SpringFollower`、`PressableScale`、`AppearIn`/`RiseIn`、`SpringSlide`、`OffsetSettler`、`RevampSwitch`、底栏的 7 个 follower：ticker、Timer、controller 都在 `dispose` 里释放了。
+- `CommentSheet.dispose` 里调用 `_history?.remove()` 会触发 `_onBack → _close → _finishClose`：此时子级的 `DraggableScrollableSheet` 已经先一步 detach，`_isOpen` 也已经是 false，所以会直接返回，不会操作已经释放的 controller。`removeLocalHistoryEntry` 在 `persistentCallbacks` 阶段会推迟到下一帧执行，并且有 `isActive` 保护。
+- `_finishClose` 先复制 `_threadHistories` 再清空 threads，所以移除 history 时回调的 `_onThreadBack` 会因为越界检查直接返回，不会重复释放。
+- 全屏右滑返回会通过 `ModalRoute.popGestureEnabled` 判断：有 local history（评论面板打开着）或者 `PopScope(canPop: false)` 时不会开始手势，不会出现页面卡在半路的情况。
+- `RevampTopInset` 覆盖了首页所有标签类型（直播、推荐、热门、排行、番剧、影视）和动态页。
+- `CommentSheet` 横竖屏切换时，`onShowReplies` 和 `_panelOpeners` 会在 `dispose` 里按身份比较后清空，所以横屏时楼中楼和合集会回到上游的 bottom sheet。
+- `PublishRoute.pendingMorph`：`onReply` 是同步 push 的，`Future.microtask` 清空之前路由已经读到了这个值。
+- `tool/patches/` 三个补丁：玻璃只在颜色 alpha < 1 时生效；M3 默认的 dialog 和 sheet 的 `shadowColor` 是透明的，半透明 Material 下面不会透出阴影；菜单的 elevation 主题已设为 0。
+- 应用内所有 `FloatingActionButton` 都已经换成 `RevampFab`。
 
 ---
+
+## 处理进度（2026-11-03）
+
+- **已修**：第 1、2、3、4、5、6、7、9、13 条；第 10 条只修了私信页左右没对齐，搜索页的分组令牌还没收拢；第一轮第 1 条（横屏没有发布入口）由新侧栏的「+」补上了。
+- **未动**：第 8 条（弹幕开关逻辑复制三份）、第 11 条（标签胶囊两套实现）、第 12 条（开关两套外观），以及「设计取舍」三项，等定下来再做。
+- **需真机**：H、I、J、K，以及第一轮的 A、C、D、E、G，仍待确认。
 
 ## 建议的修复顺序
 
-1. 确定问题 1、2，可疑点 A（功能性 / 开关承诺）
-2. 确定问题 3、4、5（改动小，体验提升明显）
-3. 可疑点 B–D 真机确认后修
-4. 未覆盖页面里的「高频」组：UP 主空间、动态详情、消息、私信详情
-5. 令牌收拢、曲线换弹簧、`about` 拆文件
+1. 第 1 条（双击推两页，改几行）、第 3 条（离线全屏弹幕入口）、第 2 条（点赞爆动画误触发）
+2. 第 4、5、6 条（改动小，用户能直接看到）
+3. 真机确认 H、A、I，以及第一轮的 C、D
+4. 第 7–13 条清理项，以及「设计取舍」三项

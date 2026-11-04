@@ -230,8 +230,8 @@ class _SettingPageState extends State<SettingPage> {
   /// signed in, switching account, signing out.
   Widget _revampAccount(TextStyle titleStyle, Widget chevron) {
     final colorScheme = theme.colorScheme;
-    final user = Pref.userInfoCache;
-    final face = Get.find<AccountService>().face;
+    final account = Get.find<AccountService>();
+    final face = account.face;
     return RevampGroup(
       margin: const .fromLTRB(12, 0, 12, 18),
       child: Column(
@@ -256,10 +256,16 @@ class _SettingPageState extends State<SettingPage> {
                       type: .avatar,
                     ),
             ),
-            title: Text(
-              user?.uname ?? '未登录',
-              style: titleStyle.copyWith(fontWeight: FontWeight.w700),
-            ),
+            // read again when the account changes or signs out, like the
+            // avatar
+            title: Obx(() {
+              face.value;
+              final user = account.isLogin.value ? Pref.userInfoCache : null;
+              return Text(
+                user?.uname ?? '未登录',
+                style: titleStyle.copyWith(fontWeight: FontWeight.w700),
+              );
+            }),
             subtitle: Text(
               '切换账号',
               style: theme.textTheme.labelMedium!.copyWith(

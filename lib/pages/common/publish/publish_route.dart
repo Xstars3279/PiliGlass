@@ -83,9 +83,17 @@ class PublishRoute<T> extends PopupRoute<T> {
     );
   }
 
-  late final Animation<double> _eased = CurvedAnimation(
+  CurvedAnimation? _curved;
+
+  Animation<double> get _eased => _curved ??= CurvedAnimation(
     parent: animation!,
     curve: Curves.easeOutQuart,
     reverseCurve: Curves.easeInCubic,
   );
+
+  @override
+  void dispose() {
+    _curved?.dispose();
+    super.dispose();
+  }
 }

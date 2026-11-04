@@ -302,8 +302,13 @@ class _WhisperPageState extends State<WhisperPage> {
   Widget _revampSessions(List<Session> response) {
     final colorScheme = ColorScheme.of(context);
     const corner = Radius.circular(Revamp.groupRadius);
+    // in line with the group of top items above, notch and all
+    final padding = MediaQuery.viewPaddingOf(context);
     return SliverPadding(
-      padding: const .symmetric(horizontal: 12),
+      padding: EdgeInsets.only(
+        left: 12 + padding.left,
+        right: 12 + padding.right,
+      ),
       sliver: SliverList.builder(
         itemCount: response.length,
         itemBuilder: (context, index) {

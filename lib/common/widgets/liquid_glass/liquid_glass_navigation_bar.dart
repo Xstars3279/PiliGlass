@@ -150,7 +150,12 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
   double _downX = 0;
 
   int get _count => widget.destinations.length;
-  double get _width => _count * _kTabWidth + 2 * _kBarPadding;
+
+  /// [_kTabWidth], narrower where the dock would not fit otherwise, e.g. a
+  /// small screen, a large UI scale or split screen; set on layout
+  double _tabWidth = _kTabWidth;
+
+  double get _width => _count * _tabWidth + 2 * _kBarPadding;
 
   @override
   void didUpdateWidget(LiquidGlassNavigationBar oldWidget) {
@@ -211,7 +216,7 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
   }
 
   double _tabAt(double x) =>
-      ((x - _kBarPadding) / _kTabWidth).floorToDouble().clamp(
+      ((x - _kBarPadding) / _tabWidth).floorToDouble().clamp(
         0.0,
         (_count - 1).toDouble(),
       );
@@ -235,7 +240,7 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     if (event.pointer != _pointer) return;
     final dx = event.localDelta.dx;
     if (dx == 0) return;
-    _moveTo(_position.target + dx / _kTabWidth);
+    _moveTo(_position.target + dx / _tabWidth);
     _panel.jumpTo(_panel.value + dx);
   }
 
@@ -269,7 +274,7 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
       children: [
         for (final (i, e) in widget.destinations.indexed)
           SizedBox(
-            width: _kTabWidth,
+            width: _tabWidth,
             child: Semantics(
               selected: i == _currentIndex,
               button: true,
@@ -319,12 +324,12 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     final scaleY = _scaleY.value * (1 - (velocity * 0.15).clamp(0.0, 0.04));
 
     final pillCenter = Offset(
-      _kBarPadding + (_position.value + 0.5) * _kTabWidth + panelOffset,
+      _kBarPadding + (_position.value + 0.5) * _tabWidth + panelOffset,
       _kBarHeight / 2,
     );
     final pillRect = Rect.fromCenter(
       center: pillCenter,
-      width: _kTabWidth * scaleX,
+      width: _tabWidth * scaleX,
       height: _kPillHeight * scaleY,
     );
     final pillRRect = RRect.fromRectAndRadius(
@@ -663,6 +668,14 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
       child: LayoutBuilder(
         builder: (context, constraints) {
           final w = constraints.maxWidth;
+          // room for the tabs beside the search button, edges and gap kept
+          final room = hasSearch
+              ? w - 2 * _kDockEdge - _kDockGap - _kBarHeight
+              : w;
+          _tabWidth = ((room - 2 * _kBarPadding) / _count).clamp(
+            48.0,
+            _kTabWidth,
+          );
           return SizedBox(
             width: hasSearch ? w : _width,
             height: _kBarHeight,

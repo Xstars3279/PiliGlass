@@ -10,7 +10,9 @@ import 'package:material_ui/material_ui.dart';
 /// The most representative color of a video cover, the way Material You
 /// picks a seed color from a wallpaper: quantize, then score.
 abstract final class CoverPalette {
+  /// The most recent covers, oldest first.
   static final _cache = <String, Future<int?>>{};
+  static const _cacheSize = 200;
 
   /// A tiny thumbnail is enough and quick to decode.
   static String _thumb(String url) =>
@@ -18,8 +20,23 @@ abstract final class CoverPalette {
 
   static Future<int?> seed(String url) {
     if (url.isEmpty) return Future.value();
-    return _cache[url] ??= _extract(_thumb(url));
+    var future = _cache.remove(url);
+    if (future == null) {
+      if (_cache.length >= _cacheSize) _cache.remove(_cache.keys.first);
+      final extracting = future = _extract(_thumb(url));
+      // a failure, e.g. the network, is not kept: the next visit tries again
+      extracting.then((seed) {
+        if (seed == null && identical(_cache[url], extracting)) {
+          _cache.remove(url);
+        }
+      });
+    }
+    _cache[url] = future;
+    return future.then((seed) => seed == _noColor ? null : seed);
   }
+
+  /// what [Score.score] gives back when no color is colorful enough
+  static const _noColor = 0;
 
   static Future<int?> _extract(String url) async {
     try {
@@ -38,7 +55,14 @@ abstract final class CoverPalette {
         pixels.add(0xFF000000 | (r << 16) | (g << 8) | b);
       }
       final result = await QuantizerCelebi().quantize(pixels, 64);
-      return Score.score(result.colorToCount, desired: 1).first;
+      // A gray cover has no color to pick. Score would fall back to Google
+      // blue; no seed instead (kept, unlike a failure), and the page keeps
+      // its own surface.
+      return Score.score(
+        result.colorToCount,
+        desired: 1,
+        fallbackColorARGB: _noColor,
+      ).first;
     } catch (_) {
       return null;
     }

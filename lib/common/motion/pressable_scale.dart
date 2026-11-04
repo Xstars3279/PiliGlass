@@ -30,8 +30,22 @@ class PressableScale extends StatefulWidget {
 
   /// Wraps a tap callback that navigates away, so the tap dip can be seen
   /// before the new page covers the card.
-  static VoidCallback delayTap(FutureOr<void> Function() onTap) =>
-      () => Future.delayed(tapDelay, onTap);
+  ///
+  /// Taps in the meantime are dropped: the page underneath still takes
+  /// them until the new one is pushed, and a second tap would push the
+  /// video page twice.
+  static VoidCallback delayTap(FutureOr<void> Function() onTap) => () {
+    if (_tapPending) return;
+    _tapPending = true;
+    Future.delayed(tapDelay, () async {
+      try {
+        await onTap();
+      } finally {
+        _tapPending = false;
+      }
+    });
+  };
+  static bool _tapPending = false;
 
   @override
   State<PressableScale> createState() => _PressableScaleState();
