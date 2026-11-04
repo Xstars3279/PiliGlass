@@ -35,12 +35,13 @@ const _kTabHeight = 60.0;
 const _kOpenWidth = 64.0;
 const _kOpenTabHeight = 70.0;
 // The pill is a capsule standing up, inside its tab at rest. Pressed it
-// grows taller than its tab and a hair wider than the rail, the way the
-// dock's pill rises out of the dock.
+// grows taller than its tab and clearly wider than the rail, standing out
+// past both its sides, the way the dock's pill rises out of the dock.
 const _kPillWidth = 44.0;
 const _kPillInset = 3.0;
-const _kPressedScaleX = (_kOpenWidth + 4) / _kPillWidth;
-const _kPressedScaleY = 86 / (_kOpenTabHeight - 2 * _kPillInset);
+const _kPillReach = 10.0;
+const _kPressedScaleX = (_kOpenWidth + 2 * _kPillReach) / _kPillWidth;
+const _kPressedScaleY = 94 / (_kOpenTabHeight - 2 * _kPillInset);
 const _kCorner = Radius.circular(_kWidth / 2);
 const _kGap = 12.0;
 const _kEdge = 12.0;
