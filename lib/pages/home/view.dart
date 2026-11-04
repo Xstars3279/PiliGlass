@@ -107,7 +107,8 @@ class _HomePageState extends CommonPageState<HomePage>
     children: [
       Positioned.fill(
         child: RevampTopInset(
-          inset: _floatingTabsHeight,
+          // with a single tab no bar floats there
+          inset: _homeController.tabs.length > 1 ? _floatingTabsHeight : 6,
           child: onBuild(
             tabBarView(
               controller: _homeController.tabController,
@@ -145,8 +146,12 @@ class _HomePageState extends CommonPageState<HomePage>
                 },
               ),
             ),
+            // on a wide screen the messages are on the rail's glass block
             Obx(
-              () => _mainController.accountService.isLogin.value
+              () =>
+                  _mainController.accountService.isLogin.value &&
+                      !_mainController.useSideBar &&
+                      MediaQuery.sizeOf(context).isPortrait
                   ? GlassCapsule(
                       refraction: true,
                       padding: EdgeInsets.zero,

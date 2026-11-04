@@ -6,6 +6,7 @@ import 'package:PiliPlus/common/widgets/floating_navigation_bar.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass_navigation_bar.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass_navigation_rail.dart';
 import 'package:PiliPlus/common/widgets/main_layout.dart';
 import 'package:PiliPlus/common/widgets/navigation_bar_style.dart';
 import 'package:PiliPlus/common/widgets/route_aware_mixin.dart';
@@ -158,6 +159,55 @@ class _MainAppState extends PopScopeState<MainApp>
 
   /// the dock shrunk to a circle, see [DockScrollWatcher]
   final _dockMinimized = false.obs;
+
+  /// The dock as a rail on the left, for wide screens: icons at rest, the
+  /// labels when held, search and 发布动态 below. See [LiquidGlassNavigationRail].
+  Widget _glassRail() => Obx(() {
+    final home = Get.isRegistered<HomeController>()
+        ? Get.find<HomeController>()
+        : null;
+    final hint = home != null && home.enableSearchWord
+        ? home.defaultSearch.value
+        : null;
+    final bars = _mainController.navigationBars;
+    return LiquidGlassNavigationRail(
+      onDestinationSelected: _mainController.setIndex,
+      selectedIndex: _mainController.selectedIndex.value,
+      action:
+          bars.length > 1 &&
+              bars[_mainController.selectedIndex.value] ==
+                  NavigationBarType.dynamics
+          ? LiquidGlassDockAction(
+              icon: Icons.add_rounded,
+              label: '发布动态',
+              onTap: () => CreateDynPanel.onCreateDyn(context),
+            )
+          : null,
+      // the avatar, messages and search at the top left, as on the
+      // original side bar
+      header: [
+        userAvatar(colorScheme: _colorScheme, mainController: _mainController),
+        msgBadge(_mainController),
+        IconButton(
+          tooltip: '搜索',
+          icon: const Icon(Icons.search_rounded, semanticLabel: '搜索'),
+          onPressed: () => Get.toNamed(
+            '/search',
+            parameters: hint?.isNotEmpty == true ? {'hintText': hint!} : null,
+          ),
+        ),
+      ],
+      destinations: bars
+          .map(
+            (e) => LiquidGlassNavigationDestination(
+              label: e.label,
+              icon: _buildIcon(type: e),
+              selectedIcon: _buildIcon(type: e, selected: true),
+            ),
+          )
+          .toList(),
+    );
+  });
 
   Widget? get _bottomNav {
     Widget? bottomNav;
@@ -402,8 +452,18 @@ class _MainAppState extends PopScopeState<MainApp>
 
     Widget? sideBar;
     Widget? bottomNav;
+    Widget? rail;
     final EdgeInsets padding;
-    if (_mainController.useBottomNav) {
+    if (!_mainController.useBottomNav && _mainController.dockSearch) {
+      // the rail floats over the page, so it can open over it; the page
+      // keeps clear of it while it is closed
+      rail = _glassRail();
+      padding = .only(
+        top: _padding.top,
+        left: _padding.left + LiquidGlassNavigationRail.extent,
+        right: _padding.right,
+      );
+    } else if (_mainController.useBottomNav) {
       bottomNav = _bottomNav;
       if (bottomNav != null) {
         bottomNav = MediaQuery.removePadding(
@@ -427,13 +487,20 @@ class _MainAppState extends PopScopeState<MainApp>
       padding = .only(top: _padding.top, right: _padding.right);
     }
 
-    child = Material(
-      child: MainLayout(
-        sideBar: sideBar,
-        bottomNav: bottomNav,
-        body: Padding(padding: padding, child: child),
-      ),
+    child = MainLayout(
+      sideBar: sideBar,
+      bottomNav: bottomNav,
+      body: Padding(padding: padding, child: child),
     );
+    if (rail != null) {
+      child = Stack(
+        children: [
+          Positioned.fill(child: child),
+          Positioned(top: 0, bottom: 0, left: 0, child: rail),
+        ],
+      );
+    }
+    child = Material(child: child);
 
     if (PlatformUtils.isMobile) {
       return AnnotatedRegion<SystemUiOverlayStyle>(
