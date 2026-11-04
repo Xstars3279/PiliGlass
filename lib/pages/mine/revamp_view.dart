@@ -261,9 +261,8 @@ class _MineMenu extends StatefulWidget {
 }
 
 class _MineMenuState extends State<_MineMenu> {
-  /// the rows whose list preview is unfolded: at first the cards chosen in
-  /// the settings (我的页卡片), as the original page shows them
-  late final Set<MineTabType> _expanded = {...widget.controller.mineTabs};
+  /// the rows whose list preview is unfolded by their arrow
+  final Set<MineTabType> _expanded = {};
 
   @override
   Widget build(BuildContext context) {
@@ -300,22 +299,27 @@ class _MineMenuState extends State<_MineMenu> {
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
+            // only the arrow unfolds the preview; the rest of the row
+            // opens the whole list
             if (expandable)
-              AnimatedRotation(
-                turns: expanded ? 0.5 : 0,
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeOutBack,
-                child: Icon(Icons.expand_more_rounded, color: outline),
+              IconButton(
+                tooltip: expanded ? '收起' : '展开',
+                visualDensity: VisualDensity.compact,
+                onPressed: () => setState(
+                  () => expanded ? _expanded.remove(tab) : _expanded.add(tab),
+                ),
+                icon: AnimatedRotation(
+                  turns: expanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutBack,
+                  child: Icon(Icons.expand_more_rounded, color: outline),
+                ),
               )
             else
               Icon(Icons.chevron_right_rounded, color: outline),
           ],
         ),
-        onTap: expandable
-            ? () => setState(
-                () => expanded ? _expanded.remove(tab) : _expanded.add(tab),
-              )
-            : onOpen,
+        onTap: onOpen,
       );
       if (!expandable) return tile;
       return Column(
@@ -390,11 +394,8 @@ class _MineMenuState extends State<_MineMenu> {
                   title: '离线缓存',
                   onOpen: shortcut('离线缓存'),
                 ),
-                // the cards chosen in the settings first, in their order,
-                // then the other sections as plain rows
+                // only the cards chosen in the settings, in their order
                 for (final tab in controller.mineTabs) section(tab),
-                for (final tab in MineTabType.values)
-                  if (!controller.mineTabs.contains(tab)) section(tab),
               ],
             ),
           );
