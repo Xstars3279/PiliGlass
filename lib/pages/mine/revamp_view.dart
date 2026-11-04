@@ -261,8 +261,9 @@ class _MineMenu extends StatefulWidget {
 }
 
 class _MineMenuState extends State<_MineMenu> {
-  /// the rows whose list preview is unfolded
-  final Set<MineTabType> _expanded = {};
+  /// the rows whose list preview is unfolded: at first the cards chosen in
+  /// the settings (我的页卡片), as the original page shows them
+  late final Set<MineTabType> _expanded = {...widget.controller.mineTabs};
 
   @override
   Widget build(BuildContext context) {
@@ -343,6 +344,36 @@ class _MineMenuState extends State<_MineMenu> {
       );
     }
 
+    Widget section(MineTabType tab) => switch (tab) {
+      .history => row(
+        icon: Icons.history_rounded,
+        title: '观看记录',
+        tab: .history,
+        onOpen: shortcut('观看记录'),
+      ),
+      .favorite => row(
+        icon: Icons.star_rounded,
+        title: '我的收藏',
+        tab: .favorite,
+        count: controller.favCtr?.count,
+        onOpen: () => Get.toNamed('/fav'),
+      ),
+      .later => row(
+        icon: Icons.watch_later_rounded,
+        title: '稍后再看',
+        tab: .later,
+        count: controller.laterCtr?.count,
+        onOpen: shortcut('稍后再看'),
+      ),
+      .sub => row(
+        icon: Icons.subscriptions_rounded,
+        title: '我的订阅',
+        tab: .sub,
+        count: controller.subCtr?.count,
+        onOpen: shortcut('我的订阅'),
+      ),
+    };
+
     return Column(
       children: [
         // counts arrive with the sections' data
@@ -359,33 +390,11 @@ class _MineMenuState extends State<_MineMenu> {
                   title: '离线缓存',
                   onOpen: shortcut('离线缓存'),
                 ),
-                row(
-                  icon: Icons.history_rounded,
-                  title: '观看记录',
-                  tab: .history,
-                  onOpen: shortcut('观看记录'),
-                ),
-                row(
-                  icon: Icons.star_rounded,
-                  title: '我的收藏',
-                  tab: .favorite,
-                  count: controller.favCtr?.count,
-                  onOpen: () => Get.toNamed('/fav'),
-                ),
-                row(
-                  icon: Icons.watch_later_rounded,
-                  title: '稍后再看',
-                  tab: .later,
-                  count: controller.laterCtr?.count,
-                  onOpen: shortcut('稍后再看'),
-                ),
-                row(
-                  icon: Icons.subscriptions_rounded,
-                  title: '我的订阅',
-                  tab: .sub,
-                  count: controller.subCtr?.count,
-                  onOpen: shortcut('我的订阅'),
-                ),
+                // the cards chosen in the settings first, in their order,
+                // then the other sections as plain rows
+                for (final tab in controller.mineTabs) section(tab),
+                for (final tab in MineTabType.values)
+                  if (!controller.mineTabs.contains(tab)) section(tab),
               ],
             ),
           );

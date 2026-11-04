@@ -46,7 +46,7 @@ class _HomePageState extends CommonPageState<HomePage>
     super.build(context);
     Widget tabBar;
     final dockSearch = _mainController.dockSearch;
-    if (dockSearch && _homeController.tabs.length > 1) {
+    if (dockSearch) {
       tabBar = _glassTabBar();
     } else if (_homeController.tabs.length > 1) {
       tabBar = Padding(
@@ -107,7 +107,8 @@ class _HomePageState extends CommonPageState<HomePage>
     children: [
       Positioned.fill(
         child: RevampTopInset(
-          inset: _floatingTabsHeight,
+          // with a single tab no bar floats there
+          inset: _homeController.tabs.length > 1 ? _floatingTabsHeight : 6,
           child: onBuild(
             tabBarView(
               controller: _homeController.tabController,
@@ -125,6 +126,8 @@ class _HomePageState extends CommonPageState<HomePage>
 
   /// One row of text tabs; the selected one sits on a raised pill.
   /// Used when search lives in the bottom dock, so the top bar is just this.
+  /// With a single tab only the messages button is left, floating over
+  /// the feed at the right.
   Widget _glassTabBar() {
     return Padding(
       // the main page already pads the body below the status bar
@@ -134,17 +137,20 @@ class _HomePageState extends CommonPageState<HomePage>
         child: Row(
           spacing: 8,
           children: [
-            Expanded(
-              child: GlassTabBar(
-                controller: _homeController.tabController,
-                labels: _homeController.tabs.map((e) => e.label).toList(),
-                onTap: (_) {
-                  if (!_homeController.tabController.indexIsChanging) {
-                    _homeController.animateToTop();
-                  }
-                },
-              ),
-            ),
+            if (_homeController.tabs.length > 1)
+              Expanded(
+                child: GlassTabBar(
+                  controller: _homeController.tabController,
+                  labels: _homeController.tabs.map((e) => e.label).toList(),
+                  onTap: (_) {
+                    if (!_homeController.tabController.indexIsChanging) {
+                      _homeController.animateToTop();
+                    }
+                  },
+                ),
+              )
+            else
+              const Spacer(),
             Obx(
               () => _mainController.accountService.isLogin.value
                   ? GlassCapsule(
