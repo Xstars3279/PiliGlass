@@ -16,6 +16,32 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:material_ui/material_ui.dart';
 
 abstract final class Update {
+  /// Whether the release is newer than this build. PiliGlass's releases
+  /// are tagged with the version (v0.1.1), so the versions are compared; a
+  /// release's created_at is when it was tagged, always after the build,
+  /// so by time a build would never be the latest.
+  static bool _isNewer(Map data) {
+    List<int>? parse(String name) {
+      final parts = name.replaceFirst(RegExp('^v'), '').split('-').first;
+      final nums = parts.split('.').map(int.tryParse).toList();
+      return nums.contains(null) ? null : nums.cast<int>();
+    }
+
+    final latest = parse(data['tag_name'] ?? '');
+    final current = parse(BuildConfig.versionName);
+    if (latest != null && current != null) {
+      for (var i = 0; i < latest.length || i < current.length; i++) {
+        final a = i < latest.length ? latest[i] : 0;
+        final b = i < current.length ? current[i] : 0;
+        if (a != b) return a > b;
+      }
+      return false;
+    }
+    final time =
+        DateTime.parse(data['created_at']).millisecondsSinceEpoch ~/ 1000;
+    return BuildConfig.buildTime < time;
+  }
+
   // 检查更新
   static Future<void> checkUpdate([bool isAuto = true]) async {
     if (kDebugMode) return;
@@ -35,9 +61,7 @@ abstract final class Update {
         return;
       }
       final data = res.data[0];
-      final int latest =
-          DateTime.parse(data['created_at']).millisecondsSinceEpoch ~/ 1000;
-      if (BuildConfig.buildTime >= latest) {
+      if (!_isNewer(data)) {
         if (!isAuto) {
           SmartDialog.showToast('已是最新版本');
         }
