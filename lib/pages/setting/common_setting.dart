@@ -49,18 +49,22 @@ class _CommonSettingState extends State<CommonSetting> {
   @override
   Widget build(BuildContext context) {
     final showAppBar = widget.showAppBar;
-    if (Revamp.enabled && showAppBar) {
-      // large title, and all the options in one rounded group
+    if (Revamp.enabled) {
+      // large title, and all the options in one rounded group; beside the
+      // list of settings on a wide screen too, without a back button
       return Scaffold(
         body: CustomScrollView(
           key: ValueKey(widget.settingType),
           slivers: [
-            RevampLargeAppBar(title: widget.settingType.title),
+            RevampLargeAppBar(
+              title: widget.settingType.title,
+              implyLeading: showAppBar,
+            ),
             SliverPadding(
               padding: EdgeInsets.fromLTRB(
-                padding.left + 12,
+                (showAppBar ? padding.left : 0) + 12,
                 4,
-                padding.right + 12,
+                (showAppBar ? padding.right : 0) + 12,
                 padding.bottom + 60,
               ),
               sliver: DecoratedSliver(

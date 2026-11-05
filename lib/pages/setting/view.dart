@@ -113,7 +113,41 @@ class _SettingPageState extends State<SettingPage> {
 
   /// Large title that collapses as the list scrolls, and the entries in
   /// rounded groups: the settings, the account, about.
-  Widget _buildRevamp() {
+  Widget _buildRevamp() => Scaffold(body: _revampList());
+
+  /// The same list on the left of a wide screen, and the chosen settings on
+  /// the right, with a large title of their own and in a group too, the way
+  /// a tablet's system settings look.
+  Widget _buildRevampWide() {
+    final padding = MediaQuery.viewPaddingOf(context);
+    return Scaffold(
+      body: Row(
+        crossAxisAlignment: .start,
+        children: [
+          Expanded(
+            flex: 4,
+            child: Padding(
+              padding: .only(left: padding.left),
+              child: _revampList(),
+            ),
+          ),
+          Expanded(
+            flex: 6,
+            child: Padding(
+              padding: .only(right: padding.right),
+              child: switch (_type) {
+                .webdavSetting => const WebDavSettingPage(showAppBar: false),
+                .about => const AboutPage(showAppBar: false),
+                _ => CommonSetting(settingType: _type, showAppBar: false),
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _revampList() {
     final colorScheme = theme.colorScheme;
     final titleStyle = theme.textTheme.titleMedium!;
     final subTitleStyle = theme.textTheme.labelMedium!.copyWith(
@@ -128,6 +162,10 @@ class _SettingPageState extends State<SettingPage> {
     Widget tile(SettingType type, {bool showSubtitle = true}) {
       final model = item(type);
       return ListTile(
+        // on a wide screen, the one shown on the right
+        tileColor: !_isPortrait && type == _type
+            ? colorScheme.secondaryContainer
+            : null,
         onTap: () => _toPage(type),
         leading: RevampIconTile(icon: model.icon),
         title: Text(type.title, style: titleStyle),
@@ -139,7 +177,7 @@ class _SettingPageState extends State<SettingPage> {
                 maxLines: 1,
                 overflow: .ellipsis,
               ),
-        trailing: chevron,
+        trailing: _isPortrait ? chevron : null,
       );
     }
 
@@ -163,33 +201,31 @@ class _SettingPageState extends State<SettingPage> {
       ),
     );
     final padding = MediaQuery.viewPaddingOf(context);
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          const RevampLargeAppBar(title: '设置'),
-          SliverToBoxAdapter(child: _revampSearch()),
-          SliverToBoxAdapter(child: _revampAccount(titleStyle, chevron)),
-          section('内容', const [
-            .privacySetting,
-            .recommendSetting,
-            .replySetting,
-            .dynSetting,
-          ]),
-          section('播放', const [.videoSetting, .playSetting, .dmSetting]),
-          section('外观与其他', const [
-            .styleSetting,
-            .extraSetting,
-            .webdavSetting,
-          ]),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const .only(top: 6),
-              child: RevampGroup(child: tile(.about, showSubtitle: false)),
-            ),
+    return CustomScrollView(
+      slivers: [
+        const RevampLargeAppBar(title: '设置'),
+        SliverToBoxAdapter(child: _revampSearch()),
+        SliverToBoxAdapter(child: _revampAccount(titleStyle, chevron)),
+        section('内容', const [
+          .privacySetting,
+          .recommendSetting,
+          .replySetting,
+          .dynSetting,
+        ]),
+        section('播放', const [.videoSetting, .playSetting, .dmSetting]),
+        section('外观与其他', const [
+          .styleSetting,
+          .extraSetting,
+          .webdavSetting,
+        ]),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const .only(top: 6),
+            child: RevampGroup(child: tile(.about, showSubtitle: false)),
           ),
-          SliverPadding(padding: EdgeInsets.only(bottom: padding.bottom + 60)),
-        ],
-      ),
+        ),
+        SliverPadding(padding: EdgeInsets.only(bottom: padding.bottom + 60)),
+      ],
     );
   }
 
@@ -298,7 +334,9 @@ class _SettingPageState extends State<SettingPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (Revamp.enabled && _isPortrait) return _buildRevamp();
+    if (Revamp.enabled) {
+      return _isPortrait ? _buildRevamp() : _buildRevampWide();
+    }
     return SimpleScaffold(
       appBar: AppBar(
         title: _isPortrait ? const Text('设置') : Text(_type.title),

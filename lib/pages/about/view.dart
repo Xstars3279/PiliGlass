@@ -308,7 +308,7 @@ Commit Hash: ${BuildConfig.commitHash}''',
           // large title that collapses as the page scrolls
           ? CustomScrollView(
               slivers: [
-                if (showAppBar) const RevampLargeAppBar(title: '关于'),
+                RevampLargeAppBar(title: '关于', implyLeading: showAppBar),
                 SliverPadding(
                   padding: listPadding,
                   sliver: SliverList.list(children: children),

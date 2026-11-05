@@ -38,10 +38,13 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
     super.dispose();
   }
 
-  /// the large title of the redesign, where the page has a bar of its own
-  Widget _withTitle(Widget body) => widget.showAppBar
-      ? RevampLargeTitle(title: 'WebDAV 设置', body: body)
-      : body;
+  /// the large title of the redesign; in the settings' pane, without a back
+  /// button
+  Widget _withTitle(Widget body) => RevampLargeTitle(
+    title: 'WebDAV 设置',
+    implyLeading: widget.showAppBar,
+    body: body,
+  );
 
   @override
   Widget build(BuildContext context) {

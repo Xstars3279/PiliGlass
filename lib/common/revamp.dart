@@ -137,10 +137,19 @@ class RevampGroup extends StatelessWidget {
 /// the expanded large title; it is left out here so the large title gets
 /// its full size (the rest of the AppBar theme is kept).
 class RevampLargeAppBar extends StatelessWidget {
-  const RevampLargeAppBar({super.key, required this.title, this.actions});
+  const RevampLargeAppBar({
+    super.key,
+    required this.title,
+    this.actions,
+    this.implyLeading = true,
+  });
 
   final String title;
   final List<Widget>? actions;
+
+  /// false for a pane beside a list, e.g. the settings on a tablet: the
+  /// back button belongs to the page, not to each pane
+  final bool implyLeading;
 
   @override
   Widget build(BuildContext context) {
@@ -164,6 +173,7 @@ class RevampLargeAppBar extends StatelessWidget {
         ),
       ),
       child: SliverAppBar.large(
+        automaticallyImplyLeading: implyLeading,
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
         actions: actions,
       ),
@@ -180,11 +190,13 @@ class RevampLargeTitle extends StatelessWidget {
     super.key,
     required this.title,
     this.actions,
+    this.implyLeading = true,
     required this.body,
   });
 
   final String title;
   final List<Widget>? actions;
+  final bool implyLeading;
   final Widget body;
 
   @override
@@ -192,7 +204,11 @@ class RevampLargeTitle extends StatelessWidget {
     if (!Revamp.enabled) return body;
     return NestedScrollView(
       headerSliverBuilder: (context, _) => [
-        RevampLargeAppBar(title: title, actions: actions),
+        RevampLargeAppBar(
+          title: title,
+          actions: actions,
+          implyLeading: implyLeading,
+        ),
       ],
       // the bar keeps the status bar's room
       body: MediaQuery.removePadding(
