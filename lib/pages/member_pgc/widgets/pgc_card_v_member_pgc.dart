@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/revamp_poster_card.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -16,6 +18,15 @@ class PgcCardVMemberPgc extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (Revamp.enabled) {
+      return RevampPosterCard(
+        cover: item.cover,
+        title: item.title,
+        titleLines: 2,
+        onTap: () => PageUtils.viewPgc(seasonId: item.param),
+        onLongPress: onLongPress,
+      );
+    }
     return Card(
       shape: const RoundedRectangleBorder(borderRadius: Style.mdRadius),
       child: InkWell(

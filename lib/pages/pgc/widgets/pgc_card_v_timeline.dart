@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/revamp_poster_card.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
@@ -21,6 +23,18 @@ class PgcCardVTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (Revamp.enabled) {
+      return RevampPosterCard(
+        cover: item.cover,
+        title: item.title ?? '',
+        subtitle: item.pubIndex,
+        badge: item.follow == 1 ? '已追番' : null,
+        label: item.pubTime,
+        onTap: () =>
+            PageUtils.viewPgc(seasonId: item.seasonId, epId: item.episodeId),
+        onLongPress: onLongPress,
+      );
+    }
     return Card(
       shape: const RoundedRectangleBorder(borderRadius: Style.mdRadius),
       child: InkWell(
