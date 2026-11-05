@@ -34,18 +34,29 @@ class PressableScale extends StatefulWidget {
   /// Taps in the meantime are dropped: the page underneath still takes
   /// them until the new one is pushed, and a second tap would push the
   /// video page twice.
+  ///
+  /// A tap that waits on the network before it navigates holds the others
+  /// off for a second at most, so a slow request cannot lock every card.
   static VoidCallback delayTap(FutureOr<void> Function() onTap) => () {
     if (_tapPending) return;
     _tapPending = true;
+    final id = ++_tapId;
+    void release() {
+      if (_tapId == id) _tapPending = false;
+    }
+
     Future.delayed(tapDelay, () async {
+      final timer = Timer(const Duration(seconds: 1), release);
       try {
         await onTap();
       } finally {
-        _tapPending = false;
+        timer.cancel();
+        release();
       }
     });
   };
   static bool _tapPending = false;
+  static int _tapId = 0;
 
   @override
   State<PressableScale> createState() => _PressableScaleState();

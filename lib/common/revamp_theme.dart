@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/motion/springs.dart';
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The redesign's look for the standard components, so the pages that are
@@ -65,7 +66,9 @@ abstract final class RevampTheme {
         color: colorScheme.surfaceContainer.withValues(alpha: 0.72),
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(20)),
+          borderRadius: const BorderRadius.all(
+            Radius.circular(Revamp.menuRadius),
+          ),
           side: rim,
         ),
         menuPadding: const EdgeInsets.symmetric(vertical: 8),
@@ -88,7 +91,9 @@ abstract final class RevampTheme {
           alpha: 0.85,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(28)),
+          borderRadius: const BorderRadius.all(
+            Radius.circular(Revamp.sheetRadius),
+          ),
           side: rim,
         ),
       ),
@@ -100,7 +105,9 @@ abstract final class RevampTheme {
           alpha: 0.82,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(Revamp.sheetRadius),
+          ),
           side: rim,
         ),
       ),

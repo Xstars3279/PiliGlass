@@ -398,31 +398,41 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
         child: LayoutBuilder(
           builder: (context, constraints) {
             final height = constraints.maxHeight;
-            final railHeight = _heightFor(_kTabHeight);
+            // a lone page needs no tabs, as the dock hides then too
+            final showTabs = _count > 1;
+            final railHeight = showTabs ? _heightFor(_kTabHeight) + _kGap : 0;
             // the rail as low as it goes, by the thumb of a hand holding a
             // tablet, with the action's room kept below it
-            final railTop = (height - railHeight - _kGap - _kWidth).clamp(
+            final railTop = (height - railHeight - _kWidth).clamp(
               0.0,
               height,
             );
+            // what is left above it for the header; a phone on its side
+            // leaves less than the header's height, so the header then
+            // scrolls in the room it has instead of spilling over the tabs
+            final headerRoom = railTop - _kGap;
             return Stack(
               clipBehavior: .none,
               children: [
-                if (header.isNotEmpty)
+                // too short to show even one of its buttons, it is left out
+                if (header.isNotEmpty && headerRoom >= _kWidth)
                   Positioned(
                     top: 0,
                     left: 0,
                     right: 0,
-                    height: (railTop - _kGap).clamp(0.0, height),
+                    height: headerRoom,
                     child: Align(
                       alignment: const Alignment(0, 2 * _kHeaderAt - 1),
                       child: _GlassBlock(
-                        child: Padding(
-                          padding: const .symmetric(vertical: 10),
-                          child: Column(
-                            mainAxisSize: .min,
-                            spacing: 6,
-                            children: header,
+                        child: ClipRRect(
+                          borderRadius: const .all(_kCorner),
+                          child: SingleChildScrollView(
+                            padding: const .symmetric(vertical: 10),
+                            child: Column(
+                              mainAxisSize: .min,
+                              spacing: 6,
+                              children: header,
+                            ),
                           ),
                         ),
                       ),
@@ -438,29 +448,30 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
                     children: [
                       // laid out at its closed size: swelling, it grows over the
                       // page from its middle instead of pushing the buttons
-                      Listener(
-                        behavior: .opaque,
-                        onPointerDown: _onPointerDown,
-                        onPointerMove: _onPointerMove,
-                        onPointerUp: _onPointerEnd,
-                        onPointerCancel: _onPointerEnd,
-                        child: SizedBox(
-                          width: _kWidth,
-                          height: _heightFor(_kTabHeight),
-                          child: OverflowBox(
-                            alignment: .centerLeft,
-                            minWidth: 0,
-                            minHeight: 0,
-                            maxWidth: double.infinity,
-                            maxHeight: double.infinity,
-                            child: AnimatedBuilder(
-                              animation: _animation,
-                              builder: (context, _) =>
-                                  _rail(colorScheme, isDark),
+                      if (showTabs)
+                        Listener(
+                          behavior: .opaque,
+                          onPointerDown: _onPointerDown,
+                          onPointerMove: _onPointerMove,
+                          onPointerUp: _onPointerEnd,
+                          onPointerCancel: _onPointerEnd,
+                          child: SizedBox(
+                            width: _kWidth,
+                            height: _heightFor(_kTabHeight),
+                            child: OverflowBox(
+                              alignment: .centerLeft,
+                              minWidth: 0,
+                              minHeight: 0,
+                              maxWidth: double.infinity,
+                              maxHeight: double.infinity,
+                              child: AnimatedBuilder(
+                                animation: _animation,
+                                builder: (context, _) =>
+                                    _rail(colorScheme, isDark),
+                              ),
                             ),
                           ),
                         ),
-                      ),
                       AnimatedSwitcher(
                         // long enough for the spring to settle
                         duration: const Duration(milliseconds: 700),

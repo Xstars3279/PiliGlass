@@ -22,6 +22,20 @@ abstract final class Revamp {
   /// corner radius of a group
   static const double groupRadius = 24;
 
+  /// corner radius of what rises over a page: sheets and dialogs
+  static const double sheetRadius = 28;
+
+  /// corner radius of a capsule to type in, e.g. the reply panel
+  static const double fieldRadius = 24;
+
+  /// corner radius of a menu
+  static const double menuRadius = 20;
+
+  /// corner radius of a cover across a card, and of a thumbnail beside a
+  /// card's text
+  static const double coverRadius = 16;
+  static const double thumbRadius = 14;
+
   /// 关注 and 追番 buttons: the primary color while the tap would follow,
   /// the wash once followed. Null where the redesign is off, for upstream's.
   static Color? followBg(ColorScheme colorScheme, bool followed) => !enabled

@@ -141,7 +141,9 @@ class VideoCardV extends StatelessWidget {
     );
   }
 
-  static const _coverRadius = BorderRadius.all(Radius.circular(16));
+  static const _coverRadius = BorderRadius.all(
+    Radius.circular(Revamp.coverRadius),
+  );
 
   /// The cover, with play count, danmaku count and duration on a scrim.
   /// Only the image flies to the player; the labels stay on the card.

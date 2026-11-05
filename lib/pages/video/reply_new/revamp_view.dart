@@ -5,7 +5,7 @@ part of 'view.dart';
 /// input bar, it grows out of the bar. Kept apart from view.dart so that
 /// file stays close to upstream.
 extension _ReplyRevamp on _ReplyPageState {
-  static const _radius = 24.0;
+  static const _radius = Revamp.fieldRadius;
 
   Widget _revampBody() {
     final colorScheme = theme.colorScheme;

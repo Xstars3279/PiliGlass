@@ -692,7 +692,7 @@ class _CommentSheetState extends State<CommentSheet>
   Widget _buildBody(BuildContext context, ScrollController scrollController) {
     final colorScheme = ColorScheme.of(context);
     final isDark = colorScheme.brightness == .dark;
-    const radius = Radius.circular(28);
+    const radius = Radius.circular(Revamp.sheetRadius);
     return Stack(
       clipBehavior: .none,
       fit: .expand,
@@ -1039,7 +1039,7 @@ class _InputBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
     final isDark = colorScheme.brightness == .dark;
-    const radius = Radius.circular(24);
+    const radius = Radius.circular(Revamp.fieldRadius);
     return Semantics(
       button: true,
       label: '发表评论',

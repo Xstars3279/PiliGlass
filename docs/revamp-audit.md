@@ -177,3 +177,100 @@
 2. 第 4、5、6 条（改动小，用户能直接看到）
 3. 真机确认 H、A、I，以及第一轮的 C、D
 4. 第 7–13 条清理项，以及「设计取舍」三项
+
+---
+
+# 第三轮审计（2026-11-04，HEAD `255ea2bdf`）
+
+范围：`64a3d6df1..HEAD` 的改动（31 个文件），重点是新侧栏 `liquid_glass_navigation_rail.dart`、横屏双栏设置 `_buildRevampWide`、`RevampSliverGroup`、统一后的 `PillTabIndicator`、52×32 的 `RevampSwitch`、`toggleDanmaku`、评论面板截图的 `_captureId`/`_route`；另外评估了未改版的高频页面，以及番剧卡和视频卡的差异。
+以下事项不再列出：150ms 点击延迟、纯黑主题、退回上游原版、视频页不支持全屏侧滑返回，以及需真机确认的 H、I、J、C。
+
+## 一、确定问题
+
+### 🟠 3-1. 横屏手机上，侧栏顶部的头像/消息/搜索块会压到导航胶囊上
+- **位置**：`lib/common/widgets/liquid_glass/liquid_glass_navigation_rail.dart:401-430`；接入点在 `lib/pages/main/view.dart:457-460`
+- **问题**：侧栏的位置是从底部往上排的：`railTop = (height - railHeight - _kGap - _kWidth).clamp(0, height)`。剩下给顶部块的高度是 `railTop - 12`，而这个块（`Align` 里的 `_GlassBlock`）并没有按这个高度压缩自己。
+- **依据**：`useBottomNav = isPortrait`（`main/view.dart:84`），所以手机一转横屏就会显示侧栏。按 3 个标签算，导航胶囊 3×60+8 = 188，加上间距 12 和底部圆钮 60，共占 260。顶部块是头像 34 + 消息按钮 48 + 搜索按钮 48 + 间距 12 + 上下内边距 20 ≈ 162。横屏手机的可用高度一般是 360–412dp，减去状态栏和上下边距后大约 320，这时 `railTop ≈ 58`，顶部块只分到约 46dp。`Column(mainAxisSize: min)` 会溢出（debug 下出现黄黑条），由于 `Stack` 设了 `clipBehavior: none`，溢出的部分直接画在导航胶囊上面。标签更多时（4–5 个）平板也可能出现。
+- **最小修法**：空间不够时把顶部块折叠起来。比如判断 `railTop - _kGap < 所需高度` 时，只保留搜索按钮，或者把顶部三个按钮横排成一行放在导航胶囊上方；也可以在这种情况下不再从底部排起，改成从顶部开始依次排列，并允许整列滚动（`SingleChildScrollView`）。
+
+### 🟡 3-2. 面板盖着视频时转屏，`_pausedBySheet` 会一直留着
+- **位置**：`lib/pages/video/widgets/comment_sheet.dart:235`、`lib/pages/video/revamp_view.dart:21-33`
+- **问题**：`dispose` 时只有 `_route?.isCurrent` 为真才调用 `onCoverPlayer(false)`。转屏的那一刻如果视频页上面还盖着一个弹出路由（比如打开了回复框 `PublishRoute`，或者某个对话框），`isCurrent` 为 false，`_pausedBySheet` 就不会被清掉。
+- **依据**：以后只要面板再盖住一次视频（这时视频是暂停的，`_pausedBySheet` 不会被重新设置），面板一离开就会执行 `play()`，把用户自己暂停的视频又放出来。
+- **最小修法**：`dispose` 里始终通知页面，由页面自己决定要不要播放：`onCoverPlayer(false)` 改成两个回调，或者在 `_onCoverPlayer` 里先 `_pausedBySheet = false`，然后只有在 `ModalRoute.of(context)?.isCurrent == true` 时才 `play()`。
+
+### 🟡 3-3. `delayTap` 的全局锁会持续到网络请求结束
+- **位置**：`lib/common/motion/pressable_scale.dart:38-48`；涉及 `video_card_v.dart:52`、`video_card_h.dart:261`
+- **问题**：`_tapPending` 要等 `await onTap()` 完全结束才会释放。卡片没有 `cid` 时，`onTap` 里还要 `await SearchHttp.ab2cWithDimension(...)`。
+- **依据**：网络慢或请求超时时，整个 App 的所有视频卡片都点不动（锁是 static 的），直到这个请求返回。双击推两页的问题，其实在 push 发起的那一刻就已经挡住了，用不着等异步部分结束。
+- **最小修法**：不等待 `onTap` 的结果。延迟到点后先解锁，再调用 `onTap()`；或者把锁的时长限制在 `tapDelay + 一帧`。这样仍然能挡住 150ms 内的连点。
+
+### 🟡 3-4. 只有一个导航页时，仍然显示一个只有一格的侧栏
+- **位置**：`lib/pages/main/view.dart:457-460`
+- **问题**：底栏分支有 `navigationBars.length > 1` 的判断，侧栏分支没有。只有一格的侧栏仍然有胶囊，按住也会撑开。上游这种情况只显示头像和搜索。
+- **最小修法**：`length <= 1` 时只渲染侧栏的顶部块和动作圆钮，或者沿用上游 `_sideBar()` 最后那个分支（`main/view.dart` 中 `Container(width: 80, child: userAndSearchVertical())` 的写法）。
+
+## 二、已改版页面之间仍然割裂的地方
+
+| # | 问题 | 位置 | 最小修法 |
+|---|---|---|---|
+| 3-5 | **圆角仍然没有令牌**（第一轮第 7 条的后半，到现在还没做）：面板圆角 28 写在三处，回复框 24，菜单 20，竖卡封面 16，横卡封面 14，都是字面量 | `revamp_theme.dart:68/91/103`、`comment_sheet.dart:695`、`reply_new/revamp_view.dart:8`、`video_card_v.dart:144`、`video_card_h.dart:41` | 在 `Revamp` 里补 `sheetRadius = 28`、`menuRadius = 20`、`coverRadius = 16`，几处改成引用；横卡封面可以用现有的 `Revamp.tileCorner`（14） |
+| 3-6 | **「选中」的底色有四套**：主题标签胶囊用 `surfaceContainerHighest`；底栏和侧栏用黑/白 10%；宽屏设置左栏的选中行用 `secondaryContainer`（`setting/view.dart:166`）；弹幕开关用 `secondaryContainer`（`video/revamp_view.dart` 弹幕栏） | 同左 | 宽屏设置的选中行改用 `PillTabIndicator` 的颜色 `surfaceContainerHighest`，与标签一致；弹幕开关属于「开关」语义，可以保留 |
+| 3-7 | **UP 主空间的标签栏下面多一条分割线**：页面显式设置了 `dividerColor: outline@0.2`，盖掉了主题里的透明分割线，其他页面的胶囊标签下面都没有这条线 | `lib/pages/member/view.dart:155` | `dividerColor: Revamp.enabled ? Colors.transparent : …`，改 1 行 |
+
+## 三、未改版的高频页面（按「收益 ÷ 改动量」排序）
+
+1. **消息四页**（回复我的、@我的、收到的赞、系统通知：`lib/pages/msg_feed_top/{reply_me,at_me,like_me,sys_msg}/view.dart`）。四页都是 `SliverList.separated` 加 `Divider(indent: 72)`，和私信列表改版前的结构一样。
+   最小改法：照 `whisper/view.dart` 的 `_revampSessions`，在 `Revamp.enabled` 时改用 `SliverList.builder`，每行用 `revampGroupRow(index, count)` 包起来，去掉分割线。每页大约 10 行；也可以抽一个 `revampGroupedList(...)` 让四页共用。从「消息」页的入口点进来，割裂感最明显。
+2. **UP 主空间**（`member/view.dart`）。头部的 `user_info_card` 和投稿列表的卡片（`video_card_h_member_video`）都已经是新样式，只差标签栏那条线（3-7）。改 1 行，收益不错。
+3. **动态详情和专栏**（共用 `lib/pages/common/dyn/common_dyn_page.dart`）。动态正文复用的是 `DynamicPanel`（已改版），FAB 已经是 `RevampFab`。剩下评论区的排序头 `SliverFloatingHeaderWidget` 还是不透明的 `surface` 条。
+   最小改法：照 `video/reply/view.dart` 的 `_revampHeader`，用 94% 不透明的 `surface` 底色（这里没有封面色调），大约 10 行。楼中楼走的是 `scaffoldState.showBottomSheet`，已经有主题补丁带来的玻璃和弹簧，不用改。
+4. **私信详情**（`whisper_detail/view.dart`）。气泡圆角 16，和整体风格基本一致；差别主要在底部输入栏，还是上游的平铺样式。
+   最小改法：输入区在 `Revamp.enabled` 时套上 `GlassBox(radius: 24)`，并留出 12 的边距浮在内容上方，和回复框（`reply_new/revamp_view.dart`）一致。大约 20–30 行。
+5. **历史、收藏、稍后再看**。标签已经跟随主题，列表卡片（`history/widgets/item.dart`、`fav_video_card.dart`、`video_card_h_later.dart`）也已改版，FAB 是 `RevampFab`。剩下顶栏是小号 `AppBar`，以及多选模式下的底栏。
+   最小改法：顶栏换成 `RevampLargeTitle`（参考设置子页）。不过这几页的顶栏里有搜索、多选、清空等操作，换成大标题要重新安排这些按钮，收益一般，建议往后放。
+6. **直播间**（`live_room/view.dart`）。它有自己的深色沉浸式界面和单独的播放器，跟改版的浅色玻璃体系关系不大。只建议把播放器上的按钮套上 `Revamp.overlayRound`，做法和视频页一样，其他维持现状。
+
+## 四、番剧卡与视频卡的具体差异
+
+番剧卡共有四个几乎一样的实现：`pgc/widgets/pgc_card_v.dart`、`pgc/widgets/pgc_card_v_timeline.dart`、`pgc_index/widgets/pgc_card_v_pgc_index.dart`、`member_pgc/widgets/pgc_card_v_member_pgc.dart`。都还是上游的写法：
+
+| 项目 | 视频卡 `VideoCardV` | 番剧卡 `PgcCardV*` |
+|---|---|---|
+| 外框 | 没有卡片底，封面和文字直接放在页面上 | M3 `Card`，有 `surfaceContainerLow` 底色和 elevation 1 |
+| 封面圆角 | 16，统一裁切 | `Style.mdRadius` = 10 |
+| 封面信息 | 底部渐变遮罩，上面显示播放量、弹幕数和时长 | 没有遮罩，角标放在右上和左下 |
+| 标题 | 最多 2 行，`height: 1.35` | 1 行，`letterSpacing: 0.3` |
+| 文字区内边距 | `(2, 8, 2, 4)` | `(4, 5, 0, 3)` |
+| 按压反馈 | `PressableScale` 按下回弹 | InkWell 水波纹 |
+| 列表入场 | `RiseIn` | 没有 |
+| 点击 | `delayTap`（150ms，防连点） | 立即跳转 |
+| 封面飞入 | `CoverHero` | 没有 |
+
+封面比例 3:4 是番剧海报本来的比例，应该保留。
+
+**最小改法**：抽一个 `RevampPosterCard` 外壳（大约 40 行，写在新文件里）：`Revamp.enabled` 时用 `Material(type: transparency)` 替代 `Card`，封面 `ClipRRect(16)`、`NetworkImgLayer(borderRadius: zero)`，文字区内边距改成 `(2, 8, 2, 4)`，外面套 `Revamp.pressable(...)`（也就是 `RiseIn` 加 `PressableScale`）。四个番剧卡各自只需把外层的 `Card + InkWell` 换成这个外壳，每个文件改 3–5 行。点击延迟和 `CoverHero` 只对视频有意义（番剧页没有首帧封面），可以不加。
+
+## 五、这一轮核对过、没有问题的点
+
+- 侧栏的 5 个 `SpringFollower`、`_RoundGlassButton` 的 follower 都已释放；`_tabAt` 在按下的那一刻（open = 0）计算，坐标是对的；拖动时用 `localDelta / _tabHeight` 计算，不受侧栏撑开的影响；`didUpdateWidget` 只在没有手指按着时同步外部传进来的选中项。
+- `useSideBar` 为 true 时，`useBottomNav` 一直是 false，竖屏也显示侧栏；首页的消息胶囊在 `useSideBar` 或横屏时隐藏，这时由侧栏顶部块提供消息入口，没有丢失。
+- 宽屏设置：右栏的 `CommonSetting`、`WebDavSettingPage`、`AboutPage` 在 `showAppBar: false` 时都显示大标题，并且不带返回键（`implyLeading`），三者一致；`_toPage` 在横屏时只 `setState` 切换右栏，不会 push 新页面。
+- `_revampAccount` 的昵称已经改成 `Obx` 读取（第二轮第 4 条确认已修）。
+- 评论面板截图：`_captureId` 能保证只采用最后一次截图；1 倍分辨率时模糊 sigma 改成 24，和原来 `24×dpr` 在物理像素上的效果一样；盖住视频后 200ms 的补截有 `mounted && _covering && _isOpen` 保护。
+- `_route?.isCurrent`：页面被 pop 的时候它的 entry 已经不算 present，所以离开页面时不会再调用 `play()`（第一轮 A 确认已修，只剩 3-2 这个边界情况）。
+- `CoverPalette`：LRU 上限 200，失败的结果不缓存，灰色封面返回哨兵值（不缓存为蓝色）；`_noColor = 0` 不会和真实颜色冲突，因为参与量化的像素都是 alpha = 255。
+- `toggleDanmaku` 写成扩展方法放在改版自己的文件里，没有改上游控制器；改版里的两处都改成调用它了。
+- 离线视频全屏时，顶栏的弹幕按钮已经恢复（`header_control.dart` 的条件里加了 `!isFileSource`）。
+
+## 第三轮建议修复顺序
+
+1. **3-1**：横屏手机上侧栏顶部块压到导航胶囊。横屏手机必定出现，所有登录用户都能看到。
+2. **3-3**：网络慢时全部视频卡片点不动。改动只有两三行。
+3. **消息四页改成分组列表**，以及 **3-7** UP 主空间标签栏的分割线（改 1 行）。这两项最能减少高频页面之间的割裂感。
+
+其后：3-2、3-4，番剧卡外壳，3-5 圆角令牌，3-6 选中色。
+
+## 第三轮处理进度（2026-11-04）
+
+- **已修**：3-1（顶部块放不下时在自己的空间里滚动，连一个按钮都放不下时不显示）、3-2（每次盖住时重新判断，不再沿用旧标记）、3-3（锁最多持续 1 秒）、3-4（只有一页时不显示导航胶囊，只留顶部块和动作钮）、3-5（`Revamp.sheetRadius / fieldRadius / menuRadius / coverRadius / thumbRadius`）、3-6（宽屏设置选中行改用 `surfaceContainerHighest`）、3-7。

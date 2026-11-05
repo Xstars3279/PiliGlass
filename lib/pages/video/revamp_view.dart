@@ -22,10 +22,11 @@ extension _VideoRevamp on _VideoDetailPageVState {
     final player = plPlayerController;
     if (player == null) return;
     if (covering) {
-      if (player.playerStatus.isPlaying) {
-        _pausedBySheet = true;
-        player.pause();
-      }
+      // set afresh each time: a sheet gone while a dialog was over the page
+      // could not hand the player back, and must not play a video the user
+      // paused since
+      _pausedBySheet = player.playerStatus.isPlaying;
+      if (_pausedBySheet) player.pause();
     } else if (_pausedBySheet) {
       _pausedBySheet = false;
       player.play();

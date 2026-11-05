@@ -38,7 +38,9 @@ class VideoCardH extends StatelessWidget {
     cover: videoItem.cover,
   );
 
-  static const _coverRadius = BorderRadius.all(Radius.circular(14));
+  static const _coverRadius = BorderRadius.all(
+    Radius.circular(Revamp.thumbRadius),
+  );
 
   /// rises in when its list loads, see [RiseIn]
   @override

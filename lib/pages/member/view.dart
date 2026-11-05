@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'dart:math' as math;
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/dialog/report_member.dart';
@@ -152,9 +153,10 @@ class _MemberPageState extends State<MemberPage> {
                               controller: _userController.tabController,
                               tabs: _userController.tabs,
                               onTap: _userController.onTapTab,
-                              dividerColor: theme.outline.withValues(
-                                alpha: 0.2,
-                              ),
+                              // the redesign's pill tabs go without a line
+                              dividerColor: Revamp.enabled
+                                  ? Colors.transparent
+                                  : theme.outline.withValues(alpha: 0.2),
                             ),
                           ),
                         Expanded(child: _buildBody),

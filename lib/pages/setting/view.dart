@@ -162,9 +162,9 @@ class _SettingPageState extends State<SettingPage> {
     Widget tile(SettingType type, {bool showSubtitle = true}) {
       final model = item(type);
       return ListTile(
-        // on a wide screen, the one shown on the right
+        // on a wide screen, the one shown on the right, in the tabs' pill
         tileColor: !_isPortrait && type == _type
-            ? colorScheme.secondaryContainer
+            ? colorScheme.surfaceContainerHighest
             : null,
         onTap: () => _toPage(type),
         leading: RevampIconTile(icon: model.icon),
