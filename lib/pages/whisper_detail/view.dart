@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:io' show File;
 
 import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/dialog/report.dart';
 import 'package:PiliPlus/common/widgets/flutter/chat_list_view.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/text_field.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_box.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart'
@@ -30,6 +32,8 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:material_ui/material_ui.dart' hide TextField;
 import 'package:mime/mime.dart';
+
+part 'revamp_view.dart';
 
 const _kMaxExtent = 625.0;
 const _kConstraints = BoxConstraints(maxWidth: _kMaxExtent);
@@ -121,33 +125,40 @@ class _WhisperDetailPageState
           const SizedBox(width: 5),
         ],
       ),
-      body: Padding(
-        padding: EdgeInsets.only(left: padding.left, right: padding.right),
-        child: Column(
-          children: [
-            Expanded(
-              child: Listener(
-                onPointerDown: hidePanel,
-                behavior: .opaque,
-                child: Obx(
-                  () => _buildBody(_whisperDetailController.loadingState.value),
-                ),
+      body: Revamp.enabled
+          ? _revampBody(padding)
+          : Padding(
+              padding: EdgeInsets.only(
+                left: padding.left,
+                right: padding.right,
+              ),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Listener(
+                      onPointerDown: hidePanel,
+                      behavior: .opaque,
+                      child: Obx(
+                        () => _buildBody(
+                          _whisperDetailController.loadingState.value,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (_whisperDetailController.mid != null) ...[
+                    ConstrainedBox(
+                      constraints: _kConstraints,
+                      child: _buildInputView(containerColor),
+                    ),
+                    ConstrainedBox(
+                      constraints: _kConstraints,
+                      child: buildPanelContainer(containerColor),
+                    ),
+                  ] else
+                    SizedBox(height: padding.bottom),
+                ],
               ),
             ),
-            if (_whisperDetailController.mid != null) ...[
-              ConstrainedBox(
-                constraints: _kConstraints,
-                child: _buildInputView(containerColor),
-              ),
-              ConstrainedBox(
-                constraints: _kConstraints,
-                child: buildPanelContainer(containerColor),
-              ),
-            ] else
-              SizedBox(height: padding.bottom),
-          ],
-        ),
-      ),
     );
   }
 
@@ -159,7 +170,15 @@ class _WhisperDetailPageState
             ? ChatListView.separated(
                 maxExtent: _kMaxExtent,
                 itemCount: response.length,
-                padding: const .all(kChatListPadding),
+                // clear of the redesign's floating input
+                padding: Revamp.enabled
+                    ? const .fromLTRB(
+                        kChatListPadding,
+                        kChatListPadding,
+                        kChatListPadding,
+                        kChatListPadding + _WhisperDetailRevamp.barRoom,
+                      )
+                    : const .all(kChatListPadding),
                 physics: platformAlwaysClampingPhysics,
                 controller: _whisperDetailController.scrollController,
                 itemBuilder: (context, int index) {
@@ -294,7 +313,10 @@ class _WhisperDetailPageState
                 decoration: InputDecoration(
                   filled: true,
                   hintText: '发个消息聊聊呗~',
-                  fillColor: theme.colorScheme.surface,
+                  // the redesign's capsule is the field
+                  fillColor: Revamp.enabled
+                      ? Colors.transparent
+                      : theme.colorScheme.surface,
                   border: const OutlineInputBorder(
                     borderSide: BorderSide.none,
                     borderRadius: BorderRadius.all(Radius.circular(6)),
@@ -369,6 +391,13 @@ class _WhisperDetailPageState
                     }
                   }
                 },
+                // a send button in the accent color in the redesign
+                style: Revamp.enabled && enablePublish
+                    ? IconButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                      )
+                    : null,
                 icon: Icon(
                   enablePublish
                       ? Icons.send
