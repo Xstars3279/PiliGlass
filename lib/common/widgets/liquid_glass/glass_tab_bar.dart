@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp_theme.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:material_ui/material_ui.dart';
@@ -49,18 +50,13 @@ class GlassTabBar extends StatelessWidget {
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         indicatorPadding: EdgeInsets.zero,
-        indicator: ShapeDecoration(
-          shape: const StadiumBorder(
-            side: BorderSide(color: Color(0x14FFFFFF)),
-          ),
+        // the theme's pill, filling the capsule's height here
+        indicator: PillTabIndicator(
           color: colorScheme.surfaceContainerHighest,
-          shadows: [
-            BoxShadow(
-              color: colorScheme.shadow.withValues(alpha: 0.08),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          shadow: Colors.black.withValues(
+            alpha: colorScheme.brightness == .dark ? 0.4 : 0.12,
+          ),
+          insets: EdgeInsets.zero,
         ),
         onTap: (index) {
           feedBack();

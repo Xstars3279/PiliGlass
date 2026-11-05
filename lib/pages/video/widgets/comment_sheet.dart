@@ -159,9 +159,17 @@ class _CommentSheetState extends State<CommentSheet>
   final _pageKey = GlobalKey();
   ui.Image? _backdrop;
 
-  /// pixels of the still per logical pixel: the screen's own, so the still
-  /// is as sharp as the page it stands in for
+  /// Pixels of the still per logical pixel. One is enough: the still is
+  /// blurred 24 across, which hides any sharpness more pixels would bring,
+  /// and on a 3x screen it is a ninth of the work.
   double _backdropScale = 1;
+
+  /// the latest still asked for, so an earlier one finishing later does
+  /// not replace it
+  int _captureId = 0;
+
+  /// the page's route, to tell leaving the page from the sheet just going
+  ModalRoute<Object?>? _route;
 
   /// the handle is carrying the sheet, which may then go over the player
   bool _byHandle = false;
@@ -205,6 +213,12 @@ class _CommentSheetState extends State<CommentSheet>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _route = ModalRoute.of(context);
+  }
+
+  @override
   void dispose() {
     _isOpen
       ..removeListener(_onOpenChanged)
@@ -215,7 +229,12 @@ class _CommentSheetState extends State<CommentSheet>
     _shown.dispose();
     _tall.dispose();
     _backdrop?.dispose();
-    if (_covering) widget.onCoverPlayer?.call(false);
+    // The sheet leaves the player, e.g. for the landscape layout: the video
+    // goes on. Not when the page itself is closing, where playing again
+    // would be heard on the way out.
+    if (_covering && (_route?.isCurrent ?? false)) {
+      widget.onCoverPlayer?.call(false);
+    }
     if (_replyCtr.onShowReplies == _openThread) _replyCtr.onShowReplies = null;
     if (_panelOpeners[_replyCtr] == _openPanel) _panelOpeners[_replyCtr] = null;
     for (final controller in _threadIns) {
@@ -247,7 +266,8 @@ class _CommentSheetState extends State<CommentSheet>
     final boundary =
         _pageKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
     if (boundary == null || !boundary.hasSize) return;
-    final scale = MediaQuery.devicePixelRatioOf(context);
+    final id = ++_captureId;
+    const scale = 1.0;
     final page = await boundary.toImage(pixelRatio: scale);
     final recorder = ui.PictureRecorder();
     final bounds =
@@ -275,7 +295,7 @@ class _CommentSheetState extends State<CommentSheet>
     final blurred = await picture.toImage(page.width, page.height);
     picture.dispose();
     page.dispose();
-    if (!mounted || !_isOpen.value) {
+    if (!mounted || !_isOpen.value || id != _captureId) {
       blurred.dispose();
       return;
     }
@@ -320,6 +340,13 @@ class _CommentSheetState extends State<CommentSheet>
     if (covering != _covering) {
       _covering = covering;
       widget.onCoverPlayer?.call(covering);
+      // the still was taken while the video played: take it again once the
+      // player has stopped, so the glass over it shows the frame it shows
+      if (covering) {
+        Future.delayed(const Duration(milliseconds: 200), () {
+          if (mounted && _covering && _isOpen.value) _captureBackdrop();
+        });
+      }
     }
   }
 

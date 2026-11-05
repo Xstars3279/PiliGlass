@@ -10,8 +10,10 @@ class RevampSwitch extends StatefulWidget {
   final bool value;
   final ValueChanged<bool>? onChanged;
 
-  static const width = 46.0;
-  static const height = 28.0;
+  /// the size of the theme's Switch, so the pages that keep it, and the
+  /// rows that use this one, show switches of one size
+  static const width = 52.0;
+  static const height = 32.0;
 
   @override
   State<RevampSwitch> createState() => _RevampSwitchState();
@@ -100,7 +102,8 @@ class _SwitchPainter extends CustomPainter {
   final Color off;
   final bool enabled;
 
-  static const _inset = 3.0;
+  // a 24 thumb, as the theme's Switch has with its icon cleared
+  static const _inset = 4.0;
 
   @override
   void paint(Canvas canvas, Size size) {

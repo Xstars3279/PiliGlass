@@ -9,6 +9,19 @@ import 'package:material_ui/material_ui.dart';
 /// The middle of the full screen controls in the redesign: a field to send
 /// a danmaku, as in the official app, the switch to show them, and their
 /// settings, all on the smoked glass of the other buttons over the video.
+/// Showing or hiding danmaku from the redesign's own buttons, the way the
+/// player's header does it: kept for next time unless the player's settings
+/// are only for this video.
+extension RevampDanmakuToggle on PlPlayerController {
+  void toggleDanmaku() {
+    final on = !enableShowDanmaku.value;
+    enableShowDanmaku.value = on;
+    if (!tempPlayerConf) {
+      GStorage.setting.put(SettingBoxKey.enableShowDanmaku, on);
+    }
+  }
+}
+
 class RevampDanmakuBar extends StatelessWidget {
   const RevampDanmakuBar({
     super.key,
@@ -73,12 +86,7 @@ class RevampDanmakuBar extends StatelessWidget {
             return IconButton(
               tooltip: '${on ? '关闭' : '开启'}弹幕',
               style: Revamp.overlayButtonStyle,
-              onPressed: () {
-                controller.enableShowDanmaku.value = !on;
-                if (!controller.tempPlayerConf) {
-                  GStorage.setting.put(SettingBoxKey.enableShowDanmaku, !on);
-                }
-              },
+              onPressed: controller.toggleDanmaku,
               icon: Icon(
                 on ? CustomIcons.dm_on : CustomIcons.dm_off,
                 size: 19,

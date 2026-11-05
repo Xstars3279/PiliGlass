@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/skeleton/video_reply.dart';
@@ -163,31 +161,30 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
     );
   }
 
-  /// With the redesign, frosted glass in the ambient tint instead of a
-  /// white strip: it blends into the tinted top, and replies scrolling under
-  /// it show through softly.
+  /// With the redesign, the ambient tint instead of a white strip: it
+  /// blends into the tinted top, and replies scrolling under it show
+  /// through faintly. Not blurred: this header sits beside the playing
+  /// video in landscape, and a live blur there costs frames on every frame
+  /// the video draws.
   Widget _revampHeader(Widget child) {
     if (!Revamp.enabled) return child;
     final surface = ColorScheme.of(context).surface;
     final detail = Get.isRegistered<VideoDetailController>(tag: heroTag)
         ? Get.find<VideoDetailController>(tag: heroTag)
         : null;
-    Widget glass(Color? tint, Widget child) => ColoredBox(
-      color: (tint ?? surface).withValues(alpha: 0.82),
+    Widget tinted(Color? tint, Widget child) => ColoredBox(
+      color: Color.lerp(surface, tint ?? surface, 0.6)!.withValues(
+        alpha: 0.94,
+      ),
       child: child,
     );
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: detail == null
-            ? glass(null, child)
-            : AmbientTintBuilder(
-                cover: detail.cover,
-                builder: (context, tint, child) => glass(tint, child!),
-                child: child,
-              ),
-      ),
-    );
+    return detail == null
+        ? tinted(null, child)
+        : AmbientTintBuilder(
+            cover: detail.cover,
+            builder: (context, tint, child) => tinted(tint, child!),
+            child: child,
+          );
   }
 
   Widget _buildBody(LoadingState<List<ReplyInfo>?> loadingState) {

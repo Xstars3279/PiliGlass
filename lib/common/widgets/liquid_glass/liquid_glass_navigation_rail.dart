@@ -462,10 +462,11 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
                         ),
                       ),
                       AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 260),
+                        // long enough for the spring to settle
+                        duration: const Duration(milliseconds: 700),
                         switchInCurve: SpringCurve(
                           Springs.bouncy,
-                          const Duration(milliseconds: 260),
+                          const Duration(milliseconds: 700),
                         ),
                         transitionBuilder: (child, animation) =>
                             ScaleTransition(scale: animation, child: child),

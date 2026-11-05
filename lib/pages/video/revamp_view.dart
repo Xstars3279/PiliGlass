@@ -77,12 +77,7 @@ extension _VideoRevamp on _VideoDetailPageVState {
               final on = ctr.enableShowDanmaku.value;
               return IconButton(
                 tooltip: '${on ? '关闭' : '开启'}弹幕',
-                onPressed: () {
-                  ctr.enableShowDanmaku.value = !on;
-                  if (!ctr.tempPlayerConf) {
-                    GStorage.setting.put(SettingBoxKey.enableShowDanmaku, !on);
-                  }
-                },
+                onPressed: ctr.toggleDanmaku,
                 style: IconButton.styleFrom(
                   backgroundColor: on
                       ? colorScheme.secondaryContainer

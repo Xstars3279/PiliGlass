@@ -310,8 +310,12 @@ class _MineMenuState extends State<_MineMenu> {
                 ),
                 icon: AnimatedRotation(
                   turns: expanded ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeOutBack,
+                  // long enough for the spring to settle
+                  duration: const Duration(milliseconds: 700),
+                  curve: SpringCurve(
+                    Springs.bouncy,
+                    const Duration(milliseconds: 700),
+                  ),
                   child: Icon(Icons.expand_more_rounded, color: outline),
                 ),
               )
@@ -326,8 +330,11 @@ class _MineMenuState extends State<_MineMenu> {
         children: [
           tile,
           AnimatedSize(
-            duration: const Duration(milliseconds: 320),
-            curve: Curves.easeOutCubic,
+            duration: const Duration(milliseconds: 560),
+            curve: SpringCurve(
+              Springs.smooth,
+              const Duration(milliseconds: 560),
+            ),
             alignment: .topCenter,
             child: expanded
                 ? Column(

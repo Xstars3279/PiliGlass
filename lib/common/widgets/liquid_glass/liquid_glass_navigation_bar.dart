@@ -599,8 +599,11 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
                 children: [
                   // the icon pops when the tab swaps the button's action
                   AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 260),
-                    switchInCurve: Curves.easeOutBack,
+                    duration: const Duration(milliseconds: 700),
+                    switchInCurve: SpringCurve(
+                      Springs.bouncy,
+                      const Duration(milliseconds: 700),
+                    ),
                     transitionBuilder: (child, animation) => ScaleTransition(
                       scale: animation,
                       child: FadeTransition(opacity: animation, child: child),

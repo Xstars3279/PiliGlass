@@ -131,6 +131,31 @@ class RevampGroup extends StatelessWidget {
   }
 }
 
+/// [RevampGroup] for slivers: the rows of [sliver], e.g. a long list built
+/// lazily, on one rounded group.
+class RevampSliverGroup extends StatelessWidget {
+  const RevampSliverGroup({super.key, required this.sliver, this.margin});
+
+  final Widget sliver;
+  final EdgeInsetsGeometry? margin;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: margin ?? const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      sliver: DecoratedSliver(
+        decoration: BoxDecoration(
+          color: ColorScheme.of(context).surfaceContainerLow,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(Revamp.groupRadius),
+          ),
+        ),
+        sliver: sliver,
+      ),
+    );
+  }
+}
+
 /// A large title that collapses into the bar as the page scrolls.
 ///
 /// The app's AppBar theme sets a 16sp title style, which would also apply to

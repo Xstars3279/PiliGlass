@@ -20,16 +20,7 @@ extension _SearchRevamp on _SearchPageState {
     final dockBottom =
         (viewInsets.bottom > 0 ? viewInsets.bottom : padding.bottom) + 8;
 
-    Widget section(Widget sliver) => SliverPadding(
-      padding: const .fromLTRB(12, 0, 12, 12),
-      sliver: DecoratedSliver(
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerLow,
-          borderRadius: const .all(.circular(24)),
-        ),
-        sliver: sliver,
-      ),
-    );
+    Widget section(Widget sliver) => RevampSliverGroup(sliver: sliver);
 
     final content = CustomScrollView(
       slivers: [
@@ -62,8 +53,11 @@ extension _SearchRevamp on _SearchPageState {
           Positioned.fill(
             child: TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: 1),
-              duration: const Duration(milliseconds: 520),
-              curve: Curves.easeOutBack,
+              duration: const Duration(milliseconds: 700),
+              curve: SpringCurve(
+                Springs.bouncy,
+                const Duration(milliseconds: 700),
+              ),
               builder: (context, t, child) => Transform.translate(
                 offset: Offset(0, (1 - t) * 48),
                 child: child,

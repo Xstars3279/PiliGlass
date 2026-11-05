@@ -114,7 +114,8 @@ abstract final class RevampTheme {
   }
 }
 
-/// A raised pill behind the selected tab, inset from the tab's edges.
+/// A raised pill behind the selected tab, inset from the tab's edges: the
+/// one pill of every tab bar in the redesign, the glass ones included.
 ///
 /// TabBarThemeData has no indicator padding, and a pill filling the whole
 /// tab height looks heavy, so the inset is part of the decoration.
@@ -154,6 +155,14 @@ class _PillPainter extends BoxPainter {
           ..color = decoration.shadow
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
       )
-      ..drawRRect(rrect, Paint()..color = decoration.color);
+      ..drawRRect(rrect, Paint()..color = decoration.color)
+      // a faint light edge, which shows the pill on a dark page
+      ..drawRRect(
+        rrect.deflate(0.5),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..color = const Color(0x14FFFFFF),
+      );
   }
 }

@@ -67,11 +67,8 @@ class _CommonSettingState extends State<CommonSetting> {
                 (showAppBar ? padding.right : 0) + 12,
                 padding.bottom + 60,
               ),
-              sliver: DecoratedSliver(
-                decoration: BoxDecoration(
-                  color: ColorScheme.of(context).surfaceContainerLow,
-                  borderRadius: const BorderRadius.all(Radius.circular(24)),
-                ),
+              sliver: RevampSliverGroup(
+                margin: EdgeInsets.zero,
                 sliver: SliverPadding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   sliver: SliverList.builder(
