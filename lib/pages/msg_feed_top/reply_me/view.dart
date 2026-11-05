@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/skeleton/msg_feed_top.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
@@ -32,30 +33,34 @@ class _ReplyMePageState extends State<ReplyMePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return SimpleScaffold(
-      appBar: AppBar(
-        title: const Text('回复我的'),
-        actions: [
-          IconButton(
-            onPressed: () => Get.to(
-              const WhisperSettingsPage(
-                imSettingType: IMSettingType.SETTING_TYPE_OLD_REPLY_ME,
-              ),
-            ),
-            icon: Icon(
-              size: 20,
-              Icons.settings,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+    // the redesign has a large title in the scroll view instead
+    final appBar = AppBar(
+      title: const Text('回复我的'),
+      actions: [
+        IconButton(
+          onPressed: () => Get.to(
+            const WhisperSettingsPage(
+              imSettingType: IMSettingType.SETTING_TYPE_OLD_REPLY_ME,
             ),
           ),
-          const SizedBox(width: 10),
-        ],
-      ),
+          icon: Icon(
+            size: 20,
+            Icons.settings,
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+          ),
+        ),
+        const SizedBox(width: 10),
+      ],
+    );
+    return SimpleScaffold(
+      appBar: Revamp.enabled ? null : appBar,
       body: refreshIndicator(
         onRefresh: _replyMeController.onRefresh,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
+            if (Revamp.enabled)
+              RevampLargeAppBar(title: '回复我的', actions: appBar.actions),
             SliverPadding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.viewPaddingOf(context).bottom + 100,
@@ -91,7 +96,7 @@ class _ReplyMePageState extends State<ReplyMePage> {
             height: 6,
             color: Colors.grey.withValues(alpha: 0.1),
           );
-          return SliverList.separated(
+          return revampSliverList(
             itemCount: response.length,
             itemBuilder: (context, int index) {
               if (index == response.length - 1) {
@@ -166,28 +171,37 @@ class _ReplyMePageState extends State<ReplyMePage> {
                       style: theme.textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 4),
-                    if (item.item?.targetReplyContent != null &&
-                        item.item?.targetReplyContent != "")
-                      Text(
-                        "| ${item.item?.targetReplyContent}",
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelMedium!.copyWith(
-                          color: theme.colorScheme.outline,
-                          height: 1.5,
+                    if (Revamp.enabled)
+                      RevampQuote(
+                        lines: [
+                          item.item?.targetReplyContent,
+                          item.item?.rootReplyContent,
+                        ],
+                      )
+                    else ...[
+                      if (item.item?.targetReplyContent != null &&
+                          item.item?.targetReplyContent != "")
+                        Text(
+                          "| ${item.item?.targetReplyContent}",
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelMedium!.copyWith(
+                            color: theme.colorScheme.outline,
+                            height: 1.5,
+                          ),
                         ),
-                      ),
-                    if (item.item?.rootReplyContent != null &&
-                        item.item?.rootReplyContent != "")
-                      Text(
-                        " | ${item.item?.rootReplyContent}",
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelMedium!.copyWith(
-                          color: theme.colorScheme.outline,
-                          height: 1.5,
+                      if (item.item?.rootReplyContent != null &&
+                          item.item?.rootReplyContent != "")
+                        Text(
+                          " | ${item.item?.rootReplyContent}",
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelMedium!.copyWith(
+                            color: theme.colorScheme.outline,
+                            height: 1.5,
+                          ),
                         ),
-                      ),
+                    ],
                     Text(
                       DateFormatUtils.dateFormat(item.replyTime),
                       style: theme.textTheme.bodyMedium!.copyWith(

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/skeleton/msg_feed_top.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
@@ -34,30 +35,34 @@ class _LikeMePageState extends State<LikeMePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return SimpleScaffold(
-      appBar: AppBar(
-        title: const Text('收到的赞'),
-        actions: [
-          IconButton(
-            onPressed: () => Get.to(
-              const WhisperSettingsPage(
-                imSettingType: IMSettingType.SETTING_TYPE_OLD_RECEIVE_LIKE,
-              ),
-            ),
-            icon: Icon(
-              size: 20,
-              Icons.settings,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+    // the redesign has a large title in the scroll view instead
+    final appBar = AppBar(
+      title: const Text('收到的赞'),
+      actions: [
+        IconButton(
+          onPressed: () => Get.to(
+            const WhisperSettingsPage(
+              imSettingType: IMSettingType.SETTING_TYPE_OLD_RECEIVE_LIKE,
             ),
           ),
-          const SizedBox(width: 10),
-        ],
-      ),
+          icon: Icon(
+            size: 20,
+            Icons.settings,
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+          ),
+        ),
+        const SizedBox(width: 10),
+      ],
+    );
+    return SimpleScaffold(
+      appBar: Revamp.enabled ? null : appBar,
       body: refreshIndicator(
         onRefresh: _likeMeController.onRefresh,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
+            if (Revamp.enabled)
+              RevampLargeAppBar(title: '收到的赞', actions: appBar.actions),
             SliverPadding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.viewPaddingOf(context).bottom + 100,
@@ -99,7 +104,7 @@ class _LikeMePageState extends State<LikeMePage> {
                 slivers: [
                   if (latest.isNotEmpty) ...[
                     _buildHeader(theme, '最新'),
-                    SliverList.separated(
+                    revampSliverList(
                       itemBuilder: (context, index) {
                         if (total.isEmpty && index == latest.length - 1) {
                           _likeMeController.onLoadMore();
@@ -114,7 +119,7 @@ class _LikeMePageState extends State<LikeMePage> {
                   ],
                   if (total.isNotEmpty) ...[
                     _buildHeader(theme, '累计'),
-                    SliverList.separated(
+                    revampSliverList(
                       itemBuilder: (context, index) {
                         if (index == total.length - 1) {
                           _likeMeController.onLoadMore();
@@ -147,7 +152,8 @@ class _LikeMePageState extends State<LikeMePage> {
       bottom: false,
       sliver: SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.only(left: 16),
+          // over the rows' text in the redesign's groups
+          padding: EdgeInsets.fromLTRB(Revamp.enabled ? 28 : 16, 0, 0, 0),
           child: Text(
             title,
             style: theme.textTheme.labelLarge!.copyWith(

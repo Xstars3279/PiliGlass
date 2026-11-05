@@ -270,6 +270,72 @@ List<Widget> revampGroupRows(BuildContext context, List<Widget> rows) => [
     ),
 ];
 
+/// What a message answers, quoted on the wash under it; empty lines are
+/// left out, and the whole of it when all are.
+class RevampQuote extends StatelessWidget {
+  const RevampQuote({super.key, required this.lines});
+
+  final List<String?> lines;
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = lines.whereType<String>().where((e) => e.isNotEmpty);
+    if (shown.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Revamp.wash(theme.colorScheme),
+        borderRadius: Revamp.tileRadius,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 2,
+        children: [
+          for (final line in shown)
+            Text(
+              line,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelMedium!.copyWith(
+                color: theme.colorScheme.outline,
+                height: 1.4,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A list of rows drawn as one rounded group, see [revampGroupRow]; where
+/// the redesign is off, upstream's list with a separator between rows.
+/// Takes what [SliverList.separated] takes, so a page swaps the one name.
+Widget revampSliverList({
+  required NullableIndexedWidgetBuilder itemBuilder,
+  required IndexedWidgetBuilder separatorBuilder,
+  required int itemCount,
+}) {
+  if (!Revamp.enabled) {
+    return SliverList.separated(
+      itemBuilder: itemBuilder,
+      separatorBuilder: separatorBuilder,
+      itemCount: itemCount,
+    );
+  }
+  return SliverList.builder(
+    itemCount: itemCount,
+    itemBuilder: (context, index) => revampGroupRow(
+      context: context,
+      index: index,
+      count: itemCount,
+      child: itemBuilder(context, index) ?? const SizedBox.shrink(),
+    ),
+  );
+}
+
 /// A row of a list built row by row, drawn as a part of one rounded group
 /// like [RevampGroup]: the first row rounds the top, the last the bottom.
 /// Just [child] where the redesign is off.

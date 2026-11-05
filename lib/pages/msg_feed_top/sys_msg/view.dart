@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/skeleton/msg_feed_sys_msg_.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
@@ -34,13 +35,17 @@ class _SysMsgPageState extends State<SysMsgPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // the redesign has a large title in the scroll view instead
+    final appBar = AppBar(title: const Text('系统通知'));
     return SimpleScaffold(
-      appBar: AppBar(title: const Text('系统通知')),
+      appBar: Revamp.enabled ? null : appBar,
       body: refreshIndicator(
         onRefresh: _sysMsgController.onRefresh,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
+            if (Revamp.enabled)
+              RevampLargeAppBar(title: '系统通知', actions: appBar.actions),
             SliverPadding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.viewPaddingOf(context).bottom + 100,
@@ -80,7 +85,7 @@ class _SysMsgPageState extends State<SysMsgPage> {
             height: 6,
             color: Colors.grey.withValues(alpha: 0.1),
           );
-          return SliverList.separated(
+          return revampSliverList(
             itemCount: response.length,
             itemBuilder: (context, int index) {
               if (index == response.length - 1) {

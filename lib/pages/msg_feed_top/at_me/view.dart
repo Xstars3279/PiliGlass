@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/skeleton/msg_feed_top.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
@@ -32,30 +33,34 @@ class _AtMePageState extends State<AtMePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return SimpleScaffold(
-      appBar: AppBar(
-        title: const Text('@我的'),
-        actions: [
-          IconButton(
-            onPressed: () => Get.to(
-              const WhisperSettingsPage(
-                imSettingType: IMSettingType.SETTING_TYPE_OLD_AT_ME,
-              ),
-            ),
-            icon: Icon(
-              size: 20,
-              Icons.settings,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+    // the redesign has a large title in the scroll view instead
+    final appBar = AppBar(
+      title: const Text('@我的'),
+      actions: [
+        IconButton(
+          onPressed: () => Get.to(
+            const WhisperSettingsPage(
+              imSettingType: IMSettingType.SETTING_TYPE_OLD_AT_ME,
             ),
           ),
-          const SizedBox(width: 10),
-        ],
-      ),
+          icon: Icon(
+            size: 20,
+            Icons.settings,
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+          ),
+        ),
+        const SizedBox(width: 10),
+      ],
+    );
+    return SimpleScaffold(
+      appBar: Revamp.enabled ? null : appBar,
       body: refreshIndicator(
         onRefresh: _atMeController.onRefresh,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
+            if (Revamp.enabled)
+              RevampLargeAppBar(title: '@我的', actions: appBar.actions),
             SliverPadding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.viewPaddingOf(context).bottom + 100,
@@ -91,7 +96,7 @@ class _AtMePageState extends State<AtMePage> {
             height: 6,
             color: Colors.grey.withValues(alpha: 0.1),
           );
-          return SliverList.separated(
+          return revampSliverList(
             itemCount: response.length,
             itemBuilder: (context, int index) {
               if (index == response.length - 1) {
