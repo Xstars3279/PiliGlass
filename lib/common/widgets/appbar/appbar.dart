@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/appbar/revamp_multi_select_bar.dart';
 import 'package:PiliPlus/pages/common/multi_select/base.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
@@ -20,6 +22,13 @@ class MultiSelectAppBarWidget extends StatelessWidget
   @override
   Widget build(BuildContext context) {
     if (visible ?? ctr.enableMultiSelect.value) {
+      if (Revamp.enabled) {
+        return RevampMultiSelectBar(
+          ctr: ctr,
+          actions: actions,
+          bottom: child.bottom,
+        );
+      }
       final style = TextButton.styleFrom(visualDensity: VisualDensity.compact);
       final colorScheme = ColorScheme.of(context);
       return AppBar(
