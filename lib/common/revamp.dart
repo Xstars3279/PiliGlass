@@ -22,6 +22,12 @@ abstract final class Revamp {
   /// corner radius of a group
   static const double groupRadius = 24;
 
+  /// A bar pinned over a list, e.g. the sort bar over the comments: nearly
+  /// solid, so what scrolls under it shows faintly, as on the video page.
+  static Color barColor(ColorScheme colorScheme) => enabled
+      ? colorScheme.surface.withValues(alpha: 0.94)
+      : colorScheme.surface;
+
   /// corner radius of what rises over a page: sheets and dialogs
   static const double sheetRadius = 28;
 

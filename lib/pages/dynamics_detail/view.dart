@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/dyn_tab_bar.dart';
@@ -663,7 +664,7 @@ class _DynamicDetailPageState extends CommonDynPageMultiState<DynamicDetailPage>
       ),
     );
     return SliverFloatingHeaderWidget(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: Revamp.barColor(theme.colorScheme),
       child: child,
     );
   }

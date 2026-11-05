@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart';
@@ -182,7 +183,8 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage>
   }
 
   Widget _buildContent(double maxWidth) => SliverPadding(
-    padding: const .symmetric(horizontal: 12, vertical: 8),
+    // the redesign gives the text more room at the sides
+    padding: .symmetric(horizontal: Revamp.enabled ? 16 : 12, vertical: 8),
     sliver: Obx(
       () {
         if (controller.isLoaded.value) {
