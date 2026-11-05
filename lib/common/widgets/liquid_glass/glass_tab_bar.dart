@@ -12,11 +12,16 @@ class GlassTabBar extends StatelessWidget {
     required this.controller,
     required this.labels,
     this.onTap,
+    this.refraction = true,
   });
 
   final TabController controller;
   final List<String> labels;
   final ValueChanged<int>? onTap;
+
+  /// whether a feed passes under it; above a page that stays put, the
+  /// bending would only cost
+  final bool refraction;
 
   /// the bar's own height; with [margin], the room it takes over a feed
   static const height = 48.0;
@@ -28,8 +33,8 @@ class GlassTabBar extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     return GlassCapsule(
-      // the feed passes under it: bend it like the dock does
-      refraction: true,
+      // a feed passing under it is bent like the dock bends it
+      refraction: refraction,
       child: TabBar(
         controller: controller,
         tabs: labels.map((e) => Tab(text: e)).toList(),

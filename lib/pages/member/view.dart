@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 import 'dart:math' as math;
 
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/dialog/report_member.dart';
@@ -145,7 +146,25 @@ class _MemberPageState extends State<MemberPage> {
                     padding: .only(left: padding.left, right: padding.right),
                     child: Column(
                       children: [
-                        if ((_userController.tab2?.length ?? 0) > 1)
+                        if ((_userController.tab2?.length ?? 0) > 1 &&
+                            Revamp.enabled)
+                          // the tabs on glass, as on the home page
+                          Padding(
+                            padding: GlassTabBar.margin,
+                            child: SizedBox(
+                              height: GlassTabBar.height,
+                              child: GlassTabBar(
+                                controller: _userController.tabController!,
+                                labels: [
+                                  for (final e in _userController.tab2!)
+                                    e.title ?? '',
+                                ],
+                                onTap: _userController.onTapTab,
+                                refraction: false,
+                              ),
+                            ),
+                          )
+                        else if ((_userController.tab2?.length ?? 0) > 1)
                           SizedBox(
                             height: 45,
                             child: TabBar(
