@@ -3,6 +3,7 @@ import 'dart:convert' show jsonDecode, utf8;
 import 'dart:io' show Platform, File;
 import 'dart:typed_data' show Uint8List;
 
+import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
@@ -1870,7 +1871,10 @@ class HeaderControlState extends State<HeaderControl>
                   ),
                 // the redesign has them at the bottom in full screen, where the
                 // danmaku bar shows: not for a downloaded video
-                if (!(Revamp.enabled && isFullScreen && !isFileSource) &&
+                if (!(Revamp.enabled &&
+                        GlassFeatures.danmakuBar &&
+                        isFullScreen &&
+                        !isFileSource) &&
                     (!isPortrait ||
                         isFullScreen ||
                         PlatformUtils.isDesktop)) ...[
@@ -1924,7 +1928,10 @@ class HeaderControlState extends State<HeaderControl>
                     ),
                   ),
                 ],
-                if (!(Revamp.enabled && isFullScreen && !isFileSource))
+                if (!(Revamp.enabled &&
+                    GlassFeatures.danmakuBar &&
+                    isFullScreen &&
+                    !isFileSource))
                   SizedBox(
                     width: btnWidth,
                     height: btnHeight,

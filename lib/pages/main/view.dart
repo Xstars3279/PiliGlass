@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/motion/spring_slide.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/floating_navigation_bar.dart';
@@ -454,7 +455,9 @@ class _MainAppState extends PopScopeState<MainApp>
     Widget? bottomNav;
     Widget? rail;
     final EdgeInsets padding;
-    if (!_mainController.useBottomNav && _mainController.dockSearch) {
+    if (!_mainController.useBottomNav &&
+        _mainController.dockSearch &&
+        GlassFeatures.rail) {
       // the rail floats over the page, so it can open over it; the page
       // keeps clear of it while it is closed
       rail = _glassRail();

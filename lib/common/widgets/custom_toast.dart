@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
@@ -15,7 +16,7 @@ class CustomToast extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
     // the redesign: a capsule of the dock's glass that pops in on a spring
-    if (Revamp.enabled) {
+    if (Revamp.enabled && GlassFeatures.toast) {
       return Padding(
         padding: .only(bottom: MediaQuery.viewPaddingOf(context).bottom + 30),
         child: TweenAnimationBuilder<double>(

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -136,7 +137,9 @@ mixin _Rise<T extends StatefulWidget>
   }
 
   Widget _buildRise(BuildContext context, Widget child) {
-    if (MediaQuery.disableAnimationsOf(context)) return child;
+    if (!GlassFeatures.riseIn || MediaQuery.disableAnimationsOf(context)) {
+      return child;
+    }
     return AnimatedBuilder(
       animation: _controller,
       // the same wrappers at rest: dropping them when done would remount the

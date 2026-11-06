@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/widgets/custom_arc.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
@@ -166,7 +167,9 @@ class _PopIconState extends State<_PopIcon> with TickerProviderStateMixin {
   @override
   void didUpdateWidget(_PopIcon oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.selected == oldWidget.selected) return;
+    if (widget.selected == oldWidget.selected || !GlassFeatures.actionPop) {
+      return;
+    }
     final touched = touchedAt;
     if (touched == null || DateTime.now().difference(touched) > _touchWindow) {
       return;

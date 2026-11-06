@@ -1,3 +1,4 @@
+import 'package:PiliPlus/pages/setting/models/glass_settings.dart';
 import 'package:PiliPlus/pages/setting/models/dm_settings.dart';
 import 'package:PiliPlus/pages/setting/models/dyn_settings.dart';
 import 'package:PiliPlus/pages/setting/models/extra_settings.dart';
@@ -19,6 +20,7 @@ enum SettingType {
   dynSetting('动态设置'),
   styleSetting('外观设置'),
   extraSetting('其它设置'),
+  glassSetting('PiliGlass 特性'),
   webdavSetting('WebDAV 设置'),
   about('关于'),
   ;
@@ -36,6 +38,7 @@ enum SettingType {
     .replySetting => replySettings,
     .styleSetting => styleSettings,
     .extraSetting => extraSettings,
+    .glassSetting => glassSettings,
     .webdavSetting || .about => throw UnimplementedError(),
   };
 }

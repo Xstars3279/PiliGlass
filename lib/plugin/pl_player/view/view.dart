@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/constants.dart';
@@ -895,6 +896,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       // full screen video
       title:
           Revamp.enabled &&
+              GlassFeatures.danmakuBar &&
               isFullScreen &&
               isNotFileSource &&
               !plPlayerController.isLive

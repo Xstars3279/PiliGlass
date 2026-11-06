@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:flutter/widgets.dart';
@@ -22,11 +23,11 @@ RectTween createEndRectTween(Rect? begin, Rect? end) {
       endWidth,
       endHeight,
     );
-    return Revamp.enabled
+    return Revamp.enabled && GlassFeatures.imageSpring
         ? SpringRectTween(begin: beginRect, end: end)
         : RectTween(begin: beginRect, end: end);
   }
-  return Revamp.enabled
+  return Revamp.enabled && GlassFeatures.imageSpring
       ? SpringRectTween(begin: begin, end: end)
       : RectTween(begin: begin, end: end);
 }

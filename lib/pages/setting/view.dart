@@ -1,3 +1,4 @@
+import 'package:PiliPlus/pages/setting/pages/glass_features.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/services/account_service.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -48,6 +49,11 @@ class _SettingPageState extends State<SettingPage> {
   late ThemeData theme;
 
   static const List<_SettingsModel> _items = [
+    _SettingsModel(
+      type: .glassSetting,
+      subtitle: '液态玻璃、弹簧动效等 PiliGlass 新功能的开关',
+      icon: Icon(Icons.water_drop_outlined),
+    ),
     _SettingsModel(
       type: .privacySetting,
       subtitle: '账号、黑名单',
@@ -138,6 +144,7 @@ class _SettingPageState extends State<SettingPage> {
               child: switch (_type) {
                 .webdavSetting => const WebDavSettingPage(showAppBar: false),
                 .about => const AboutPage(showAppBar: false),
+                .glassSetting => const GlassFeaturesPage(showAppBar: false),
                 _ => CommonSetting(settingType: _type, showAppBar: false),
               },
             ),
@@ -206,6 +213,13 @@ class _SettingPageState extends State<SettingPage> {
         const RevampLargeAppBar(title: '设置'),
         SliverToBoxAdapter(child: _revampSearch()),
         SliverToBoxAdapter(child: _revampAccount(titleStyle, chevron)),
+        // what PiliGlass adds, on its own above upstream's settings
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const .only(bottom: 6),
+            child: RevampGroup(child: tile(.glassSetting)),
+          ),
+        ),
         section('内容', const [
           .privacySetting,
           .recommendSetting,
@@ -362,6 +376,9 @@ class _SettingPageState extends State<SettingPage> {
                         showAppBar: false,
                       ),
                       .about => const AboutPage(showAppBar: false),
+                      .glassSetting => const GlassFeaturesPage(
+                        showAppBar: false,
+                      ),
                       _ => CommonSetting(settingType: _type, showAppBar: false),
                     },
                   ),
@@ -383,6 +400,7 @@ class _SettingPageState extends State<SettingPage> {
         () => switch (type) {
           .webdavSetting => const WebDavSettingPage(),
           .about => const AboutPage(),
+          .glassSetting => const GlassFeaturesPage(),
           _ => CommonSetting(settingType: type),
         },
       );

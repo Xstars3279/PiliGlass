@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/widgets/cover_palette.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
@@ -33,6 +34,7 @@ class _AmbientTintBuilderState extends State<AmbientTintBuilder> {
   }
 
   Future<void> _load(String url) async {
+    if (!GlassFeatures.ambient) return;
     final seed = await CoverPalette.seed(url);
     if (mounted && seed != null && seed != _seed) {
       setState(() => _seed = seed);
@@ -80,6 +82,7 @@ class AmbientBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!GlassFeatures.ambient) return child;
     return Stack(
       children: [
         Positioned(

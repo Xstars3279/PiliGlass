@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:PiliPlus/common/glass_features.dart';
 
 /// Loads `shaders/liquid_glass_lens.frag` once.
 abstract final class LiquidGlassShader {
@@ -12,7 +13,9 @@ abstract final class LiquidGlassShader {
   static ui.FragmentProgram? get program => _program;
 
   /// [ui.ImageFilter.shader] only works on Impeller.
-  static bool get isSupported => ui.ImageFilter.isShaderFilterSupported;
+  /// Off with its switch too, leaving the blur (PiliGlass 特性 › 液态玻璃折射).
+  static bool get isSupported =>
+      GlassFeatures.refraction && ui.ImageFilter.isShaderFilterSupported;
 
   static Future<void> ensureLoaded() =>
       _loading ??= ui.FragmentProgram.fromAsset(

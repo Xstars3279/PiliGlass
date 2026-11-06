@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
+import 'package:PiliPlus/common/glass_features.dart';
 
 /// Tag for the cover of one list item. The same video can be in several
 /// lists at once (recommended, hot...), each with its own item object, so
@@ -76,7 +77,7 @@ class CoverHero extends StatelessWidget {
     final clipped = borderRadius == BorderRadius.zero
         ? child
         : ClipRRect(borderRadius: borderRadius, child: child);
-    if (tag == null) return clipped;
+    if (tag == null || !GlassFeatures.coverHero) return clipped;
     return Hero(
       tag: tag!,
       curve: const _SpringCurve(),

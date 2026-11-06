@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:material_ui/material_ui.dart';
@@ -13,12 +14,17 @@ abstract final class RevampTheme {
     final shadow = Colors.black.withValues(alpha: isDark ? 0.4 : 0.12);
     // modal sheets come up on the comment sheet's spring
     // (tool/patches/material-ui_glass_sheet.patch)
-    PiliSheetMotion.enterDuration = const Duration(milliseconds: 520);
-    PiliSheetMotion.curve = SpringCurve(
-      Springs.sheet,
-      PiliSheetMotion.enterDuration!,
-    );
-    PiliSheetMotion.reverseCurve = Curves.easeInCubic;
+    if (GlassFeatures.sheetSpring) {
+      PiliSheetMotion.enterDuration = const Duration(milliseconds: 520);
+      PiliSheetMotion.curve = SpringCurve(
+        Springs.sheet,
+        PiliSheetMotion.enterDuration!,
+      );
+      PiliSheetMotion.reverseCurve = Curves.easeInCubic;
+    }
+    // translucent, so the patches blur what is behind; opaque with the
+    // glass surfaces off
+    double glass(double alpha) => GlassFeatures.glassSurfaces ? alpha : 1;
     // the light catching the edge of the glass surfaces
     final rim = BorderSide(
       color: Colors.white.withValues(alpha: isDark ? 0.12 : 0.6),
@@ -63,7 +69,7 @@ abstract final class RevampTheme {
         trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
       ),
       popupMenuTheme: theme.popupMenuTheme.copyWith(
-        color: colorScheme.surfaceContainer.withValues(alpha: 0.72),
+        color: colorScheme.surfaceContainer.withValues(alpha: glass(0.72)),
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: const BorderRadius.all(
@@ -88,7 +94,7 @@ abstract final class RevampTheme {
       // (tool/patches/material-ui_glass_sheet.patch)
       dialogTheme: theme.dialogTheme.copyWith(
         backgroundColor: colorScheme.surfaceContainerHigh.withValues(
-          alpha: 0.85,
+          alpha: glass(0.85),
         ),
         shape: RoundedRectangleBorder(
           borderRadius: const BorderRadius.all(
@@ -99,10 +105,10 @@ abstract final class RevampTheme {
       ),
       bottomSheetTheme: theme.bottomSheetTheme.copyWith(
         backgroundColor: colorScheme.surfaceContainerLow.withValues(
-          alpha: 0.82,
+          alpha: glass(0.82),
         ),
         modalBackgroundColor: colorScheme.surfaceContainerLow.withValues(
-          alpha: 0.82,
+          alpha: glass(0.82),
         ),
         shape: RoundedRectangleBorder(
           borderRadius: const BorderRadius.vertical(

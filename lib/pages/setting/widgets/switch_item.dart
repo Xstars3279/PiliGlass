@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/widgets/revamp_switch.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
@@ -93,7 +94,7 @@ class _SetSwitchItemState extends State<SetSwitchItem> {
       color: theme.colorScheme.outline,
     );
 
-    final Widget switchBtn = Revamp.enabled
+    final Widget switchBtn = Revamp.enabled && GlassFeatures.jellySwitch
         ? RevampSwitch(value: val, onChanged: switchChange)
         : Transform.scale(
             scale: 0.8,

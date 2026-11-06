@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:flutter/gestures.dart' show kTouchSlop;
 import 'package:flutter/physics.dart' show SpringSimulation;
@@ -45,7 +46,8 @@ class PressableScale extends StatefulWidget {
       if (_tapId == id) _tapPending = false;
     }
 
-    Future.delayed(tapDelay, () async {
+    // no dip to wait for with the effect off
+    Future.delayed(GlassFeatures.press ? tapDelay : Duration.zero, () async {
       final timer = Timer(const Duration(seconds: 1), release);
       try {
         await onTap();
@@ -130,7 +132,7 @@ class _PressableScaleState extends State<PressableScale>
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.disableAnimationsOf(context)) {
+    if (!GlassFeatures.press || MediaQuery.disableAnimationsOf(context)) {
       return widget.child;
     }
     return Listener(

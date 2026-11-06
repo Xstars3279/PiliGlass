@@ -1,3 +1,4 @@
+import 'package:PiliPlus/pages/setting/models/glass_settings.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/view_insets_safe_area.dart';
@@ -28,6 +29,7 @@ class _SettingsSearchPageState
   final _textEditingController = TextEditingController();
   final RxList<SettingsModel> _list = <SettingsModel>[].obs;
   late final _settings = [
+    ...glassSettings,
     ...extraSettings,
     ...privacySettings,
     ...recommendSettings,

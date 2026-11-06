@@ -6,7 +6,12 @@ enum MineTabType implements EnumWithLabel {
   later('稍后再看'),
   sub('我的订阅');
 
-  static const Set<MineTabType> kDefault = {.favorite};
+  static const Set<MineTabType> kDefault = {
+    .favorite,
+    .history,
+    .later,
+    .sub,
+  };
 
   @override
   final String label;
