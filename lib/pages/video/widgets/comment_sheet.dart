@@ -120,6 +120,14 @@ class _CommentSheetState extends State<CommentSheet>
 
   LocalHistoryEntry? _history;
 
+  /// [_close] is taking the sheet down. Its first frames leave the sheet a
+  /// hair under its top, where [_settleOnTop] would put it back up and end
+  /// the closing: the 返回 that started it spent, the sheet still open.
+  bool _closing = false;
+
+  /// the sheet's own list, to tell whether it is scrolled
+  ScrollController? _listCtr;
+
   /// a panel shown in place of the comments, see [CommentSheet.showPanel]
   Widget? _panel;
 
@@ -149,7 +157,10 @@ class _CommentSheetState extends State<CommentSheet>
   /// the sheet is over the player
   bool _covering = false;
 
-  /// the video was paused when the finger came down
+  /// the video was paused when the finger came down, on the list at its
+  /// top: the drag may take the sheet over the player. Not with the list
+  /// scrolled: there a fling is for the list, and a sheet below its top
+  /// would take it to rise, the list stopping dead.
   bool _playerPaused = false;
 
   /// The page below, blurred when the sheet opens. A live backdrop filter
@@ -256,10 +267,15 @@ class _CommentSheetState extends State<CommentSheet>
       Future.delayed(const Duration(milliseconds: 600), () {
         if (mounted && _isOpen.value) _captureBackdrop();
       });
-      _history = LocalHistoryEntry(onRemove: _onBack);
-      ModalRoute.of(context)?.addLocalHistoryEntry(_history!);
+      _closing = false;
+      _addHistory();
     }
     setState(() {});
+  }
+
+  void _addHistory() {
+    _history = LocalHistoryEntry(onRemove: _onBack);
+    ModalRoute.of(context)?.addLocalHistoryEntry(_history!);
   }
 
   Future<void> _captureBackdrop() async {
@@ -364,6 +380,7 @@ class _CommentSheetState extends State<CommentSheet>
   /// sheet would take a fling of the list for itself, snapping instead of
   /// letting the list scroll on: it has to sit exactly on its top.
   bool _justUnderTop(double size) {
+    if (_closing) return false;
     final top = _maxStop;
     return size < top && top - size < 0.003;
   }
@@ -377,6 +394,18 @@ class _CommentSheetState extends State<CommentSheet>
   void _onPointerUp(PointerEvent e) {
     _pressed = false;
     if (_sheetCtr.isAttached) _shown.animateTo(_sheetCtr.size);
+    // a finger that took the sheet from its closing keeps it open: the back
+    // button has to close it again
+    if (_isOpen.value && !_closing && _history == null) _addHistory();
+    // closed while the finger was down, which held the end off
+    _onShown();
+  }
+
+  bool get _listAtTop {
+    final controller = _listCtr;
+    return controller == null ||
+        !controller.hasClients ||
+        controller.positions.every((p) => p.pixels <= 0);
   }
 
   /// Closed once the sheet as drawn is gone too: it trails the sheet's own
@@ -399,6 +428,7 @@ class _CommentSheetState extends State<CommentSheet>
 
   void _close() {
     if (_sheetCtr.isAttached && _sheetCtr.size > 0.001) {
+      _closing = true;
       _sheetCtr.animateTo(
         0,
         duration: const Duration(milliseconds: 260),
@@ -410,6 +440,7 @@ class _CommentSheetState extends State<CommentSheet>
   }
 
   void _finishClose() {
+    _closing = false;
     if (!_isOpen.value) return;
     _panel = null;
     final threadHistories = [..._threadHistories];
@@ -626,7 +657,11 @@ class _CommentSheetState extends State<CommentSheet>
         Positioned.fill(
           child: Listener(
             onPointerDown: (_) {
-              final paused = widget.playerPaused?.call() ?? false;
+              // a finger on the sheet takes it from its closing: if it drags,
+              // the sheet goes where the finger leaves it
+              _closing = false;
+              final paused =
+                  (widget.playerPaused?.call() ?? false) && _listAtTop;
               if (paused != _playerPaused) {
                 setState(() => _playerPaused = paused);
               }
@@ -690,6 +725,7 @@ class _CommentSheetState extends State<CommentSheet>
   }
 
   Widget _buildBody(BuildContext context, ScrollController scrollController) {
+    _listCtr = scrollController;
     final colorScheme = ColorScheme.of(context);
     final isDark = colorScheme.brightness == .dark;
     const radius = Radius.circular(Revamp.sheetRadius);
