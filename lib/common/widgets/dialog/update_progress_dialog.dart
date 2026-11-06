@@ -60,6 +60,11 @@ class _UpdateProgressDialogState extends State<UpdateProgressDialog> {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       final now = _download.received.value;
+      // what an earlier try left is not this second's speed
+      if (_lastReceived == 0) {
+        setState(() => _lastReceived = now);
+        return;
+      }
       final last = (now - _lastReceived).toDouble();
       _lastReceived = now;
       setState(() => _speed = _speed == 0 ? last : _speed * 0.6 + last * 0.4);
@@ -183,7 +188,11 @@ class _UpdateProgressDialogState extends State<UpdateProgressDialog> {
                 ),
                 const Spacer(),
                 Text(
-                  received == 0 ? '连接中…' : '${_mb(_speed)} MB/s',
+                  received == 0
+                      ? _download.stage.value
+                      : _speed < (1 << 20)
+                      ? '${(_speed / 1024).round()} KB/s'
+                      : '${_mb(_speed)} MB/s',
                   style: outline.copyWith(
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
@@ -191,7 +200,7 @@ class _UpdateProgressDialogState extends State<UpdateProgressDialog> {
               ],
             ),
             Text(
-              _download.viaDoh ? '多线程下载 · 安全 DNS' : '多线程下载',
+              _download.viaDoh ? '8 线程下载 · 安全 DNS' : '8 线程下载',
               style: theme.textTheme.labelMedium!.copyWith(
                 color: colorScheme.outline,
               ),

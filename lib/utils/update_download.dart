@@ -46,7 +46,18 @@ class UpdateDownload {
   /// whether the hosts were looked up over DoH; for the dialog to say
   bool viaDoh = false;
 
-  static const _parts = 4;
+  /// what it is doing before the first bytes, for the dialog
+  final stage = ValueNotifier<String>('解析地址…');
+
+  /// GitHub's servers here hold each connection to a few dozen KB/s, and
+  /// the connections add up: 1 → 38 KB/s, 4 → 135 KB/s, 8 → ~240 KB/s on a
+  /// 5G phone
+  static const _connections = 8;
+
+  /// The file goes in chunks of this size, each connection taking the next
+  /// one when it is done, so all of them keep going to the end; with one
+  /// fixed range each, the last few came in on one or two.
+  static const _chunk = 1 << 20;
   static const _attempts = 5;
 
   HttpClient? _client;
@@ -60,19 +71,38 @@ class UpdateDownload {
   /// Downloads and checks the file; throws with a message to show if it
   /// cannot.
   Future<File> start() async {
-    final dir = Directory('${(await getTemporaryDirectory()).path}/update');
-    if (dir.existsSync()) dir.deleteSync(recursive: true);
+    // what an earlier try left of this same file is taken up where it
+    // stopped, across closing the dialog or the app; other versions' go
+    final root = Directory('${(await getTemporaryDirectory()).path}/update');
+    final key = digest?.replaceFirst('sha256:', '').substring(0, 16) ?? '$size';
+    final dir = Directory('${root.path}/${key}_${_chunk >> 10}k');
+    if (root.existsSync()) {
+      for (final e in root.listSync()) {
+        if (e.path != dir.path) e.deleteSync(recursive: true);
+      }
+    }
     dir.createSync(recursive: true);
+    final done0 = File('${dir.path}/$name');
+    if (done0.existsSync() && done0.lengthSync() == size) {
+      try {
+        await _verify(done0);
+        received.value = size;
+        return done0;
+      } on UpdateError {
+        // a bad one was deleted; download again
+      }
+    }
     final client = _client = _createClient();
     try {
+      stage.value = '连接 GitHub…';
       var location = await _locate(client);
+      stage.value = '开始下载…';
       // the signed link expires after a while; ask again for a new one
       Future<String>? relocating;
       Future<String> relocate() =>
           relocating ??= _locate(client).whenComplete(() => relocating = null);
 
-      final parts = size < (4 << 20) ? 1 : _parts;
-      final step = (size / parts).ceil();
+      final parts = (size / _chunk).ceil();
       final files = [
         for (var i = 0; i < parts; i++) File('${dir.path}/$name.part$i'),
       ];
@@ -80,16 +110,19 @@ class UpdateDownload {
       void report() => received.value = done.reduce((a, b) => a + b);
 
       Future<void> part(int i) async {
-        final from = i * step;
-        final to = i == parts - 1 ? size - 1 : (i + 1) * step - 1;
+        final from = i * _chunk;
+        final to = (from + _chunk < size ? from + _chunk : size) - 1;
         final file = files[i];
         for (var attempt = 0; ; attempt++) {
           if (_cancelled) throw const _Cancelled();
           final have = file.existsSync() ? file.lengthSync() : 0;
           done[i] = have;
+          report();
           if (from + have > to) return;
           try {
-            final request = await client.getUrl(Uri.parse(location));
+            final request = await client
+                .getUrl(Uri.parse(location))
+                .timeout(const Duration(seconds: 20));
             request.headers.set(
               HttpHeaders.rangeHeader,
               'bytes=${from + have}-$to',
@@ -109,7 +142,11 @@ class UpdateDownload {
             }
             final sink = file.openWrite(mode: FileMode.append);
             try {
-              await for (final chunk in response) {
+              // a connection that stops sending is dropped, and the range
+              // taken up again where it was
+              await for (final chunk in response.timeout(
+                const Duration(seconds: 15),
+              )) {
                 if (_cancelled) throw const _Cancelled();
                 sink.add(chunk);
                 done[i] += chunk.length;
@@ -123,13 +160,23 @@ class UpdateDownload {
           } catch (e) {
             if (_cancelled) throw const _Cancelled();
             if (attempt + 1 >= _attempts) rethrow;
-            debugPrint('update part $i: $e, again');
+            debugPrint('update chunk $i: $e, again');
             await Future<void>.delayed(Duration(seconds: attempt + 1));
           }
         }
       }
 
-      await Future.wait([for (var i = 0; i < parts; i++) part(i)]);
+      // each connection takes the next chunk not yet taken
+      var next = 0;
+      Future<void> worker() async {
+        while (next < parts) {
+          await part(next++);
+        }
+      }
+
+      await Future.wait([
+        for (var i = 0; i < _connections && i < parts; i++) worker(),
+      ]);
 
       final apk = File('${dir.path}/$name');
       final sink = apk.openWrite();
@@ -194,19 +241,27 @@ class UpdateDownload {
     if (proxied) {
       client.findProxy = (_) => 'PROXY $proxyHost:$proxyPort';
     } else if (GlassFeatures.updateDoh) {
+      var turn = 0;
       client.connectionFactory = (uri, proxyHost, proxyPort) async {
-        final address = await _Doh.address(uri.host);
-        if (address == null) {
+        final addresses = await _Doh.addresses(uri.host);
+        if (addresses.isEmpty) {
           return SecureSocket.startConnect(uri.host, uri.port);
         }
         viaDoh = true;
-        // to the address found, with GitHub's name for the certificate
+        // the addresses in turn, so the ranges spread over GitHub's
+        // servers; the system's DNS if one does not connect. The
+        // certificate is checked against GitHub's name either way.
+        final address = addresses[turn++ % addresses.length];
         return ConnectionTask.fromSocket(
-          Socket.connect(
-            address,
-            uri.port,
-            timeout: const Duration(seconds: 10),
-          ).then((socket) => SecureSocket.secure(socket, host: uri.host)),
+          Socket.connect(address, uri.port, timeout: const Duration(seconds: 6))
+              .catchError(
+                (_) => Socket.connect(
+                  uri.host,
+                  uri.port,
+                  timeout: const Duration(seconds: 10),
+                ),
+              )
+              .then((socket) => SecureSocket.secure(socket, host: uri.host)),
           () {},
         );
       };
@@ -252,43 +307,36 @@ abstract final class _Doh {
     'https://8.8.8.8/dns-query', // Google
   ];
 
-  static final _best = <String, Future<InternetAddress?>>{};
+  static final _found = <String, Future<List<InternetAddress>>>{};
 
-  static Future<InternetAddress?> address(String host) =>
-      _best[host] ??= _pick(host).then((address) {
+  /// GitHub's addresses for [host]; empty if no resolver answered
+  static Future<List<InternetAddress>> addresses(String host) =>
+      _found[host] ??= _lookup(host).then((found) {
         // look again next time if nothing was found
-        if (address == null) _best.remove(host);
-        return address;
+        if (found.isEmpty) _found.remove(host);
+        return found;
       });
 
-  static Future<InternetAddress?> _pick(String host) async {
+  /// the first resolver to answer: from here some never do (Cloudflare's
+  /// and Google's time out), and waiting for them would cost seconds
+  static Future<List<InternetAddress>> _lookup(String host) async {
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
-    final Set<String> ips;
+    final first = Completer<List<String>>();
+    var pending = _resolvers.length;
+    for (final resolver in _resolvers) {
+      _query(client, resolver, host)
+          .then((ips) {
+            if (ips.isNotEmpty && !first.isCompleted) first.complete(ips);
+          }, onError: (_) {})
+          .whenComplete(() {
+            if (--pending == 0 && !first.isCompleted) first.complete([]);
+          });
+    }
     try {
-      final answers = await Future.wait([
-        for (final resolver in _resolvers)
-          _query(client, resolver, host).catchError((_) => <String>[]),
-      ]);
-      ips = answers.expand((e) => e).toSet();
+      return (await first.future).map(InternetAddress.new).toList();
     } finally {
       client.close(force: true);
     }
-    if (ips.isEmpty) return null;
-    // the one that connects first
-    final winner = Completer<InternetAddress?>();
-    var pending = ips.length;
-    for (final ip in ips) {
-      Socket.connect(ip, 443, timeout: const Duration(seconds: 4)).then(
-        (socket) {
-          socket.destroy();
-          if (!winner.isCompleted) winner.complete(InternetAddress(ip));
-        },
-        onError: (_) {
-          if (--pending == 0 && !winner.isCompleted) winner.complete(null);
-        },
-      );
-    }
-    return winner.future;
   }
 
   /// the A records for [host], asked in DNS's wire format (RFC 8484)

@@ -129,7 +129,7 @@ abstract final class Update {
                   downloadBtn('deb', ext: 'deb'),
                   downloadBtn('targz', ext: 'tar.gz'),
                 ] else if (Platform.isAndroid) ...[
-                  downloadBtn('浏览器下载'),
+                  downloadBtn('Github'),
                   TextButton(
                     onPressed: () => _updateInApp(data),
                     child: const Text('立即更新'),
