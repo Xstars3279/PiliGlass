@@ -4,9 +4,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:PiliPlus/common/glass_features.dart';
+import 'package:PiliPlus/utils/permission_handler.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:crypto/crypto.dart' show sha256;
 import 'package:flutter/foundation.dart' show ValueNotifier, debugPrint;
+import 'package:flutter/widgets.dart' show AppLifecycleState, WidgetsBinding;
 import 'package:flutter/services.dart' show MethodChannel;
 import 'package:path_provider/path_provider.dart';
 
@@ -16,20 +18,37 @@ import 'package:path_provider/path_provider.dart';
 ///   (PiliGlass 特性 › 更新下载使用安全 DNS), around poisoned answers; the
 ///   connection still checks GitHub's own certificate. If no address comes
 ///   back or none connects, the system's DNS is used as before.
-/// - The file comes in a few ranges at once: one connection to GitHub is
-///   slow from here, several together much less so. github.com is asked
-///   once, for where the file is, so the download counts once.
+/// - The file comes in small chunks over many connections at once: one
+///   connection to GitHub is slow from here, many together are not, see
+///   [_connections]. GitHub is asked once for where the file is, so the
+///   download counts once.
 /// - It is checked against the SHA-256 GitHub publishes for it.
+/// - It goes on in the background: a foreground service holds a
+///   notification with its progress (UpdateService.kt), which offers to
+///   install it if it finishes while the app is away.
 class UpdateDownload {
   UpdateDownload({
+    required this.tag,
     required this.url,
     required this.size,
     required this.name,
+    this.apiUrl,
     this.digest,
   });
 
+  /// the update downloading now, or downloaded; it outlives its dialog,
+  /// which can be closed while it goes on
+  static UpdateDownload? current;
+
+  /// the release, e.g. v0.1.2
+  final String tag;
+
   /// the asset's browser_download_url
   final String url;
+
+  /// the asset in GitHub's API: the same file through api.github.com,
+  /// when github.com does not answer
+  final String? apiUrl;
 
   /// its size in bytes, as GitHub lists it
   final int size;
@@ -43,21 +62,37 @@ class UpdateDownload {
   /// bytes downloaded so far
   final received = ValueNotifier<int>(0);
 
+  /// bytes a second, smoothed
+  final speed = ValueNotifier<double>(0);
+
+  /// whether a dialog shows it; with none, the notification says when it
+  /// is done
+  bool shown = true;
+
+  /// the download, started the first time it is asked for
+  late final Future<File> result = _run();
+
   /// whether the hosts were looked up over DoH; for the dialog to say
   bool viaDoh = false;
 
   /// what it is doing before the first bytes, for the dialog
   final stage = ValueNotifier<String>('解析地址…');
 
-  /// GitHub's servers here hold each connection to a few dozen KB/s, and
-  /// the connections add up: 1 → 38 KB/s, 4 → 135 KB/s, 8 → ~240 KB/s on a
-  /// 5G phone
-  static const _connections = 8;
+  /// GitHub's download servers, from here, hold each connection to a few
+  /// dozen KB/s after its first seconds, and connections add up. Measured
+  /// on a 5G phone, a new connection for each 256K: 16 → ~830 KB/s,
+  /// 24 → ~1.3 MB/s, 32 → ~1.6 MB/s, 48 → ~2.4 MB/s. 32 keeps clear of
+  /// looking like abuse to GitHub or the carrier.
+  static const _connections = 32;
 
   /// The file goes in chunks of this size, each connection taking the next
-  /// one when it is done, so all of them keep going to the end; with one
-  /// fixed range each, the last few came in on one or two.
-  static const _chunk = 1 << 20;
+  /// one when it is done, so all of them keep going to the end. Each chunk
+  /// on a connection of its own: a new one starts fast before it is held
+  /// back (16 kept: ~690 KB/s, 16 new each 256K: ~830 KB/s).
+  static const _chunk = 256 << 10;
+
+  /// for the dialog
+  static const label = '$_connections 线程下载';
   static const _attempts = 5;
 
   HttpClient? _client;
@@ -68,9 +103,71 @@ class UpdateDownload {
     _client?.close(force: true);
   }
 
+  static String mb(num bytes) => (bytes / (1 << 20)).toStringAsFixed(1);
+
+  static String rate(double bytes) => bytes < (1 << 20)
+      ? '${(bytes / 1024).round()} KB/s'
+      : '${mb(bytes)} MB/s';
+
+  /// the download with its notification, and the speed
+  Future<File> _run() async {
+    final title = '正在下载 PiliGlass $tag';
+    // for the notification with the progress, since Android 13
+    if (Platform.isAndroid) {
+      Permission.notification.request().catchError(
+        (_) => PermissionStatus.denied,
+      );
+    }
+    _service('serviceStart', {'title': title});
+    var last = -1;
+    final timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      final now = received.value;
+      // what an earlier try left is not this second's speed
+      if (last >= 0) {
+        final second = (now - last).toDouble();
+        speed.value = speed.value == 0
+            ? second
+            : speed.value * 0.6 + second * 0.4;
+      }
+      last = now;
+      _service('serviceProgress', {
+        'title': title,
+        'percent': now * 100 ~/ size,
+        'text': now == 0
+            ? stage.value
+            : '${mb(now)} / ${mb(size)} MB · ${rate(speed.value)}',
+      });
+    });
+    try {
+      final apk = await _download();
+      // the dialog in front installs it; otherwise the notification
+      final inFront =
+          shown &&
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+      _service('serviceFinish', {
+        'title': 'PiliGlass $tag 下载完成',
+        'text': inFront ? '' : '点此安装',
+        if (!inFront) 'path': apk.path,
+      });
+      return apk;
+    } catch (e) {
+      if (identical(current, this)) current = null;
+      _service('serviceFinish', {
+        'title': 'PiliGlass 更新下载失败',
+        'text': _cancelled ? '' : e.toString(),
+      });
+      rethrow;
+    } finally {
+      timer.cancel();
+    }
+  }
+
+  static void _service(String method, Map<String, Object?> args) =>
+      _channel.invokeMethod(method, args).catchError((_) => null);
+
   /// Downloads and checks the file; throws with a message to show if it
   /// cannot.
-  Future<File> start() async {
+  Future<File> _download() async {
     // what an earlier try left of this same file is taken up where it
     // stopped, across closing the dialog or the app; other versions' go
     final root = Directory('${(await getTemporaryDirectory()).path}/update');
@@ -123,6 +220,8 @@ class UpdateDownload {
             final request = await client
                 .getUrl(Uri.parse(location))
                 .timeout(const Duration(seconds: 20));
+            // a new connection for each chunk, see [_chunk]
+            request.persistentConnection = false;
             request.headers.set(
               HttpHeaders.rangeHeader,
               'bytes=${from + have}-$to',
@@ -203,18 +302,73 @@ class UpdateDownload {
     }
   }
 
-  /// where github.com sends the download: asked once and not followed, so
-  /// GitHub counts it once however many ranges follow
+  /// where GitHub sends the download: asked once and not followed, so it
+  /// counts once however many ranges follow. github.com is sometimes out
+  /// of reach from here for a while; if it has not answered in a moment,
+  /// api.github.com, another address, is asked for the same file too, and
+  /// the first answer goes.
   Future<String> _locate(HttpClient client) async {
-    final request = await client.getUrl(Uri.parse(url))
-      ..followRedirects = false;
-    final response = await request.close();
-    await response.drain<void>();
-    if (response.isRedirect) {
-      final location = response.headers.value(HttpHeaders.locationHeader);
-      if (location != null) return Uri.parse(url).resolve(location).toString();
+    Object? error;
+    for (var round = 0; round < 3; round++) {
+      if (_cancelled) throw const _Cancelled();
+      final found = Completer<String>();
+      var pending = 0;
+      var askedApi = false;
+      late void Function() askApi;
+      void ask(String from, bool api) {
+        pending++;
+        _ask(client, from, api).then(
+          (location) {
+            if (!found.isCompleted) found.complete(location);
+          },
+          onError: (Object e) {
+            error = e;
+            if (!askedApi) return askApi();
+            if (--pending == 0 && !found.isCompleted) found.completeError(e);
+          },
+        );
+      }
+
+      askApi = () {
+        if (askedApi || found.isCompleted) return;
+        askedApi = true;
+        final api = apiUrl;
+        if (api != null) {
+          ask(api, true);
+        } else if (--pending == 0) {
+          found.completeError(error ?? const HttpException('no location'));
+        }
+      };
+      ask(url, false);
+      final later = Timer(const Duration(milliseconds: 2500), askApi);
+      try {
+        return await found.future;
+      } catch (e) {
+        debugPrint('update locate: $e');
+      } finally {
+        later.cancel();
+      }
     }
-    if (response.statusCode == 200) return url;
+    throw error ?? const HttpException('no location');
+  }
+
+  static Future<String> _ask(HttpClient client, String from, bool api) async {
+    final request = await client
+        .getUrl(Uri.parse(from))
+        .timeout(const Duration(seconds: 15));
+    request.followRedirects = false;
+    if (api) {
+      request.headers.set(HttpHeaders.acceptHeader, 'application/octet-stream');
+    }
+    final response = await request.close().timeout(
+      const Duration(seconds: 15),
+    );
+    await response.drain<void>();
+    final location = response.headers.value(HttpHeaders.locationHeader);
+    if (response.isRedirect && location != null) {
+      return Uri.parse(from).resolve(location).toString();
+    }
+    if (response.statusCode == 200 && !api) return from;
     throw HttpException('HTTP ${response.statusCode}');
   }
 

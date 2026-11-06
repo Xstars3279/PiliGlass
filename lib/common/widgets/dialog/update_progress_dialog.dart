@@ -1,12 +1,14 @@
-import 'dart:async';
 import 'dart:io';
 
+import 'package:PiliPlus/utils/permission_handler.dart';
 import 'package:PiliPlus/utils/update_download.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// PiliGlass: downloading an update inside the app, with its progress and
-/// speed, then handing it to the installer. See [UpdateDownload].
+/// PiliGlass: an update downloading inside the app, its progress and speed,
+/// then the installer. Closing it with 后台下载 leaves the download going,
+/// with its notification; opening it again shows the same one.
+/// See [UpdateDownload].
 class UpdateProgressDialog extends StatefulWidget {
   const UpdateProgressDialog({
     super.key,
@@ -33,52 +35,62 @@ class _UpdateProgressDialogState extends State<UpdateProgressDialog> {
   File? _apk;
   String? _error;
 
-  /// bytes a second, smoothed
-  double _speed = 0;
-  int _lastReceived = 0;
-  Timer? _timer;
+  /// without notifications the system may stop the download once the app
+  /// is left; asked for here, see [_askNotification]
+  bool _notify = true;
 
   int get _size => widget.asset['size'] as int;
 
   @override
   void initState() {
     super.initState();
-    _start();
+    _attach();
+    _checkNotification();
   }
 
-  void _start() {
-    _download = UpdateDownload(
-      url: widget.asset['browser_download_url'],
-      size: _size,
-      name: widget.asset['name'],
-      digest: widget.asset['digest'],
-    );
+  Future<void> _checkNotification() async {
+    final granted = await Permission.notification.isGranted;
+    if (mounted && granted != _notify) setState(() => _notify = granted);
+  }
+
+  /// asked once by the system; after a no, only its settings can turn it on
+  Future<void> _askNotification() async {
+    if (await Permission.notification.isPermanentlyDenied) {
+      await openAppSettings();
+    } else {
+      await Permission.notification.request();
+    }
+    await _checkNotification();
+  }
+
+  /// to the download going on for this file, or a new one
+  void _attach() {
+    final url = widget.asset['browser_download_url'] as String;
+    var download = UpdateDownload.current;
+    if (download == null || download.url != url) {
+      download?.cancel();
+      download = UpdateDownload.current = UpdateDownload(
+        tag: widget.tag,
+        url: url,
+        apiUrl: widget.asset['url'],
+        size: _size,
+        name: widget.asset['name'],
+        digest: widget.asset['digest'],
+      );
+    }
+    _download = download..shown = true;
     _apk = null;
     _error = null;
-    _speed = 0;
-    _lastReceived = 0;
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final now = _download.received.value;
-      // what an earlier try left is not this second's speed
-      if (_lastReceived == 0) {
-        setState(() => _lastReceived = now);
-        return;
-      }
-      final last = (now - _lastReceived).toDouble();
-      _lastReceived = now;
-      setState(() => _speed = _speed == 0 ? last : _speed * 0.6 + last * 0.4);
-    });
-    _download.start().then(
+    download.result.then(
       (apk) {
-        _timer?.cancel();
-        if (!mounted) return;
+        if (!mounted || !identical(download, _download)) return;
         setState(() => _apk = apk);
         _install();
       },
       onError: (Object e) {
-        _timer?.cancel();
-        if (mounted) setState(() => _error = e.toString());
+        if (mounted && identical(download, _download)) {
+          setState(() => _error = e.toString());
+        }
       },
     );
   }
@@ -99,12 +111,10 @@ class _UpdateProgressDialogState extends State<UpdateProgressDialog> {
 
   @override
   void dispose() {
-    _timer?.cancel();
-    _download.cancel();
+    // the download goes on; the notification tells when it is done
+    _download.shown = false;
     super.dispose();
   }
-
-  static String _mb(num bytes) => (bytes / (1 << 20)).toStringAsFixed(1);
 
   @override
   Widget build(BuildContext context) {
@@ -146,10 +156,10 @@ class _UpdateProgressDialogState extends State<UpdateProgressDialog> {
             SmartDialog.dismiss();
             widget.onBrowser();
           },
-          child: const Text('浏览器下载'),
+          child: const Text('Github'),
         ),
         TextButton(
-          onPressed: () => setState(_start),
+          onPressed: () => setState(_attach),
           child: const Text('重试'),
         ),
       ];
@@ -163,55 +173,79 @@ class _UpdateProgressDialogState extends State<UpdateProgressDialog> {
         TextButton(onPressed: _install, child: const Text('安装')),
       ];
     } else {
-      content = ValueListenableBuilder<int>(
-        valueListenable: _download.received,
-        builder: (context, received, _) => Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 12,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(4)),
-              child: LinearProgressIndicator(
-                minHeight: 8,
-                value: received == 0 ? null : received / _size,
-                stopIndicatorColor: Colors.transparent,
+      const tabular = [FontFeature.tabularFigures()];
+      content = ListenableBuilder(
+        listenable: Listenable.merge([
+          _download.received,
+          _download.speed,
+          _download.stage,
+        ]),
+        builder: (context, _) {
+          final received = _download.received.value;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 12,
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.all(Radius.circular(4)),
+                child: LinearProgressIndicator(
+                  minHeight: 8,
+                  value: received == 0 ? null : received / _size,
+                  stopIndicatorColor: Colors.transparent,
+                ),
               ),
-            ),
-            Row(
-              children: [
-                Text(
-                  '${_mb(received)} / ${_mb(_size)} MB',
-                  style: const TextStyle(
-                    fontFeatures: [FontFeature.tabularFigures()],
+              Row(
+                children: [
+                  Text(
+                    '${UpdateDownload.mb(received)} / '
+                    '${UpdateDownload.mb(_size)} MB',
+                    style: const TextStyle(fontFeatures: tabular),
+                  ),
+                  const Spacer(),
+                  Text(
+                    received == 0
+                        ? _download.stage.value
+                        : UpdateDownload.rate(_download.speed.value),
+                    style: outline.copyWith(fontFeatures: tabular),
+                  ),
+                ],
+              ),
+              Text(
+                '${UpdateDownload.label}'
+                '${_download.viaDoh ? ' · 安全 DNS' : ''}',
+                style: theme.textTheme.labelMedium!.copyWith(
+                  color: colorScheme.outline,
+                ),
+              ),
+              if (!_notify)
+                GestureDetector(
+                  onTap: _askNotification,
+                  child: Text(
+                    '开启通知后可在后台继续下载，点此开启 ›',
+                    style: theme.textTheme.labelMedium!.copyWith(
+                      color: colorScheme.primary,
+                    ),
                   ),
                 ),
-                const Spacer(),
-                Text(
-                  received == 0
-                      ? _download.stage.value
-                      : _speed < (1 << 20)
-                      ? '${(_speed / 1024).round()} KB/s'
-                      : '${_mb(_speed)} MB/s',
-                  style: outline.copyWith(
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ],
-            ),
-            Text(
-              _download.viaDoh ? '8 线程下载 · 安全 DNS' : '8 线程下载',
-              style: theme.textTheme.labelMedium!.copyWith(
-                color: colorScheme.outline,
-              ),
-            ),
-          ],
-        ),
+            ],
+          );
+        },
       );
       actions = [
         TextButton(
-          onPressed: SmartDialog.dismiss,
+          onPressed: () {
+            _download.cancel();
+            SmartDialog.dismiss();
+          },
           child: Text('取消', style: outline),
+        ),
+        TextButton(
+          onPressed: () async {
+            if (!_notify) await _askNotification();
+            SmartDialog.dismiss();
+          },
+          child: const Text('后台下载'),
         ),
       ];
     }

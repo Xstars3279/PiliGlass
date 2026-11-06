@@ -1,6 +1,8 @@
 package com.example.piliplus
 
 import android.app.Activity
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -47,30 +49,58 @@ object UpdateInstaller {
                             return@setMethodCallHandler
                         }
                         try {
-                            val uri = FileProvider.getUriForFile(
-                                activity,
-                                "${activity.packageName}.update",
-                                File(path)
-                            )
-                            activity.startActivity(
-                                Intent(Intent.ACTION_VIEW)
-                                    .setDataAndType(
-                                        uri,
-                                        "application/vnd.android.package-archive"
-                                    )
-                                    .addFlags(
-                                        Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                                            Intent.FLAG_ACTIVITY_NEW_TASK
-                                    )
-                            )
+                            activity.startActivity(installIntent(activity, path))
                             result.success(null)
                         } catch (e: Exception) {
                             result.error("install", e.message, null)
                         }
                     }
 
+                    // the download going on in the background, see
+                    // [UpdateService]
+                    "serviceStart" -> {
+                        UpdateService.start(activity, call.argument<String>("title") ?: "")
+                        result.success(null)
+                    }
+
+                    "serviceProgress" -> {
+                        UpdateService.update(
+                            activity,
+                            call.argument<String>("title") ?: "",
+                            call.argument<Int>("percent") ?: 0,
+                            call.argument<String>("text") ?: ""
+                        )
+                        result.success(null)
+                    }
+
+                    // with a path, tapping the notification installs it
+                    "serviceFinish" -> {
+                        val path = call.argument<String>("path")
+                        UpdateService.finish(
+                            activity,
+                            call.argument<String>("title") ?: "",
+                            call.argument<String>("text") ?: "",
+                            path?.let {
+                                PendingIntent.getActivity(
+                                    activity, 1, installIntent(activity, it),
+                                    PendingIntent.FLAG_IMMUTABLE or
+                                        PendingIntent.FLAG_UPDATE_CURRENT
+                                )
+                            }
+                        )
+                        result.success(null)
+                    }
+
                     else -> result.notImplemented()
                 }
             }
     }
+
+    private fun installIntent(context: Context, path: String): Intent =
+        Intent(Intent.ACTION_VIEW)
+            .setDataAndType(
+                FileProvider.getUriForFile(context, "${context.packageName}.update", File(path)),
+                "application/vnd.android.package-archive"
+            )
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
 }

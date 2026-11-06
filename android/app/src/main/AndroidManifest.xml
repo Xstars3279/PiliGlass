@@ -218,6 +218,11 @@
                 <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
             </intent-filter>
         </provider>
+        <!-- PiliGlass: keeps an update downloading in the background -->
+        <service
+            android:name=".UpdateService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
         <!-- PiliGlass: hands the downloaded update to the installer -->
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -260,6 +265,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- PiliGlass: installing an update downloaded in the app -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />

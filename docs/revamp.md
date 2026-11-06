@@ -76,4 +76,4 @@
 - [x] 楼中楼、图片占位改用统一的淡色叠加 Revamp.wash，不再是突兀的灰白块
 - [x] 设置新增「PiliGlass 特性」独立入口：界面、玻璃效果、动效、更新四组，每个新功能一个开关（`lib/common/glass_features.dart`，重启生效、默认全开）；「液态玻璃底栏」「流畅页面转场」从外观设置移到这里
 - [x] 「我的页卡片」默认四项全选：我的收藏、观看记录、稍后再看、我的订阅
-- [x] 应用内更新：更新弹窗「立即更新」在 App 里多线程分段下载，GitHub 地址经 DoH 解析（阿里、腾讯、Cloudflare、Google，失败回落系统 DNS），SHA-256 校验后调起系统安装（`lib/utils/update_download.dart`、`UpdateInstaller.kt`）
+- [x] 应用内更新：更新弹窗「立即更新」在 App 里下载：32 个连接各取 256K 小块、每块新开连接（实测 5G 约 1.5 MB/s，单连接仅 24 KB/s）；github.com 2.5 秒无响应则同时问 api.github.com；GitHub 地址经 DoH 解析（取最先应答的，失败回落系统 DNS）；断点续传（关弹窗、退出 App 后接着下）；前台服务 + 通知栏进度，可后台、息屏下载，后台下完通知「点此安装」；SHA-256 校验后调起系统安装（`lib/utils/update_download.dart`、`UpdateInstaller.kt`、`UpdateService.kt`）
