@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PiliGlass: the downloaded update, handed to the installer -->
+<paths>
+    <cache-path
+        name="update"
+        path="update/" />
+</paths>

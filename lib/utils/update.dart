@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:PiliPlus/build_config.dart';
 import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/common/widgets/dialog/update_progress_dialog.dart';
 import 'package:PiliPlus/http/api.dart';
 import 'package:PiliPlus/http/browser_ua.dart';
 import 'package:PiliPlus/http/init.dart';
@@ -127,6 +128,12 @@ abstract final class Update {
                   downloadBtn('rpm', ext: 'rpm'),
                   downloadBtn('deb', ext: 'deb'),
                   downloadBtn('targz', ext: 'tar.gz'),
+                ] else if (Platform.isAndroid) ...[
+                  downloadBtn('浏览器下载'),
+                  TextButton(
+                    onPressed: () => _updateInApp(data),
+                    child: const Text('立即更新'),
+                  ),
                 ] else
                   downloadBtn('Github'),
               ],
@@ -137,6 +144,34 @@ abstract final class Update {
     } catch (e) {
       if (kDebugMode) debugPrint('failed to check update: $e');
     }
+  }
+
+  /// PiliGlass: the package for this phone, downloaded and installed in
+  /// the app; the browser if there is none for it.
+  static Future<void> _updateInApp(Map data) async {
+    SmartDialog.dismiss();
+    final abi = (await DeviceInfoPlugin().androidInfo).supportedAbis.first;
+    Map? asset;
+    for (final Map i in data['assets'] ?? const []) {
+      if ((i['name'] as String).contains(abi)) {
+        asset = i;
+        break;
+      }
+    }
+    if (asset == null) {
+      onDownload(data);
+      return;
+    }
+    SmartDialog.show(
+      animationType: SmartAnimationType.centerFade_otherSlide,
+      clickMaskDismiss: false,
+      backType: SmartBackType.block,
+      builder: (_) => UpdateProgressDialog(
+        tag: '${data['tag_name']}',
+        asset: asset!,
+        onBrowser: () => onDownload(data),
+      ),
+    );
   }
 
   // 下载适用于当前系统的安装包
