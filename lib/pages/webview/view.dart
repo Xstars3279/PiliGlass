@@ -14,7 +14,9 @@ import 'package:PiliPlus/utils/linux_cookie_manager.dart';
 import 'package:PiliPlus/utils/login_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show Factory, kDebugMode;
+import 'package:flutter/gestures.dart'
+    show EagerGestureRecognizer, OneSequenceGestureRecognizer;
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
@@ -401,6 +403,16 @@ document.addEventListener('click', function(e) {
           ? null
           : SafeArea(
               child: InAppWebView(
+                // PiliGlass: the page's own scrolling, zooming and swiping,
+                // all of it. Otherwise the full-screen swipe back holds each
+                // touch until it is clearly not a swipe back, which, the page
+                // getting nothing meanwhile, is never: it could not scroll.
+                // Back is then the system's gesture, or the bar's button.
+                gestureRecognizers: const {
+                  Factory<OneSequenceGestureRecognizer>(
+                    EagerGestureRecognizer.new,
+                  ),
+                },
                 webViewEnvironment: webViewEnvironment,
                 initialSettings: InAppWebViewSettings(
                   clearCache: true,

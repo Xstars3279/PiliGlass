@@ -559,6 +559,10 @@ class _CommentSheetState extends State<CommentSheet>
         (a, b) => (a - size).abs() < (b - size).abs() ? a : b,
       );
     }
+    if (target == 0) {
+      _close();
+      return;
+    }
     _withHandle(
       () => _sheetCtr.animateTo(
         target,
@@ -567,6 +571,34 @@ class _CommentSheetState extends State<CommentSheet>
       ),
     );
   }
+
+  /// a panel's list, pulled down past its top, is taking the sheet down
+  bool _pulling = false;
+
+  /// A panel's lists, e.g. 合集's, scroll on their own, not with the sheet
+  /// as the comments do. Pulled down past their top, the sheet follows the
+  /// finger instead, and let go it closes or goes back as from its handle.
+  Widget _pullToClose(Widget panel) => NotificationListener<ScrollNotification>(
+    onNotification: (notification) {
+      if (notification.metrics.axis != .vertical || !_sheetCtr.isAttached) {
+        return false;
+      }
+      switch (notification) {
+        case OverscrollNotification(:final overscroll, dragDetails: _?)
+            when overscroll < 0 || _pulling:
+          _pulling = true;
+          _sheetCtr.jumpTo(
+            (_sheetCtr.size + overscroll / _height).clamp(0.0, _maxStop),
+          );
+        case ScrollEndNotification(:final dragDetails) when _pulling:
+          _pulling = false;
+          _settle(dragDetails?.velocity.pixelsPerSecond.dy ?? 0);
+        default:
+      }
+      return false;
+    },
+    child: panel,
+  );
 
   /// the part of the way from closed to the player's edge, 0..1
   double get _progress => (_shown.value / _videoStop).clamp(0.0, 1.0);
@@ -802,7 +834,7 @@ class _CommentSheetState extends State<CommentSheet>
   /// The list, and the thread sliding in over it from the right: the list
   /// drifts left and fades, like a page pushed in a navigation stack.
   Widget _buildContent(ScrollController scrollController) {
-    if (_panel case final panel?) return panel;
+    if (_panel case final panel?) return _pullToClose(panel);
     // made once per build, so the animation below does not rebuild them
     final list = PrimaryScrollController(
       controller: scrollController,
