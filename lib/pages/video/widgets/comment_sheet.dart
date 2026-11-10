@@ -834,7 +834,24 @@ class _CommentSheetState extends State<CommentSheet>
   /// The list, and the thread sliding in over it from the right: the list
   /// drifts left and fades, like a page pushed in a navigation stack.
   Widget _buildContent(ScrollController scrollController) {
-    if (_panel case final panel?) return _pullToClose(panel);
+    if (_panel case final panel?) {
+      return Stack(
+        children: [
+          // The sheet moves only while its own scroll controller has a list
+          // on it (DraggableScrollableController.isAttached), and a panel's
+          // lists have theirs: an empty one keeps it on, out of sight, or
+          // neither the handle, the pull below nor closing would move it.
+          Offstage(
+            child: SingleChildScrollView(
+              controller: scrollController,
+              physics: const NeverScrollableScrollPhysics(),
+              child: const SizedBox.shrink(),
+            ),
+          ),
+          Positioned.fill(child: _pullToClose(panel)),
+        ],
+      );
+    }
     // made once per build, so the animation below does not rebuild them
     final list = PrimaryScrollController(
       controller: scrollController,
