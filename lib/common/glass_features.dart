@@ -23,7 +23,8 @@ abstract final class GlassFeatures {
       imageSpringKey = 'glassImageSpring',
       coverHeroKey = 'glassCoverHero',
       actionPopKey = 'glassActionPop',
-      updateDohKey = 'glassUpdateDoh';
+      updateDohKey = 'glassUpdateDoh',
+      railWidthKey = 'glassRailWidth';
 
   static bool _get(String key) =>
       GStorage.setting.get(key, defaultValue: true) as bool;
@@ -76,4 +77,10 @@ abstract final class GlassFeatures {
   /// the update's download resolving GitHub over DNS over HTTPS, around
   /// poisoned answers; read when an update is downloaded
   static bool get updateDoh => _get(updateDohKey);
+
+  /// The window width from which the side bar shows instead of the bottom
+  /// one, in dp; 0 for the default, the side bar on a window lying on its
+  /// side. See MainController.bottomNavFor.
+  static final double railWidth =
+      (GStorage.setting.get(railWidthKey, defaultValue: 0) as num).toDouble();
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:PiliPlus/grpc/dyn.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -15,6 +16,7 @@ import 'package:PiliPlus/pages/mine/view.dart';
 import 'package:PiliPlus/services/account_service.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
+import 'package:PiliPlus/utils/extension/size_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
@@ -64,6 +66,20 @@ class MainController extends GetxController
   /// search lives in the liquid glass dock instead of the home top bar
   late final dockSearch = floatingNavBar && liquidGlassNavBar;
   final useSideBar = Pref.useSideBar;
+
+  /// PiliGlass: the bottom bar or the side one for a window of [size]. By
+  /// default the side one when the window lies on its side; with a width
+  /// set in 设置 › PiliGlass 特性, whenever it is at least that wide, e.g.
+  /// the inner screen of a foldable held upright.
+  bool bottomNavFor(Size size) {
+    if (useSideBar) return false;
+    final width = GlassFeatures.railWidth;
+    return width > 0 ? size.width < width : size.isPortrait;
+  }
+
+  /// PiliGlass: the glass rail has room for the messages; when it has not,
+  /// the home page shows them on its tabs
+  final railMessages = true.obs;
   final hideSideBarLabel = Pref.hideSideBarLabel;
   final mainTabBarView = Pref.mainTabBarView;
   late final optTabletNav = Pref.optTabletNav;

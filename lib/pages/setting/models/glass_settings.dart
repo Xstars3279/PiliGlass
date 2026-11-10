@@ -1,6 +1,10 @@
 import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
+import 'package:PiliPlus/pages/setting/widgets/slider_dialog.dart';
+import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
+import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -25,6 +29,12 @@ const List<(String, List<SettingsModel>)> glassSettingGroups = [
         setKey: GlassFeatures.railKey,
         defaultVal: true,
         needReboot: true,
+      ),
+      NormalModel(
+        title: '侧栏切换宽度',
+        leading: Icon(Icons.width_normal_outlined),
+        getSubtitle: _railWidthSubtitle,
+        onTap: _showRailWidthDialog,
       ),
       SwitchModel(
         title: '评论玻璃面板',
@@ -175,3 +185,41 @@ const List<(String, List<SettingsModel>)> glassSettingGroups = [
 final List<SettingsModel> glassSettings = [
   for (final (_, models) in glassSettingGroups) ...models,
 ];
+
+/// as set, while [GlassFeatures.railWidth] keeps what the app started with
+double _railWidthNow() =>
+    (GStorage.setting.get(GlassFeatures.railWidthKey, defaultValue: 0) as num)
+        .toDouble();
+
+String _railWidthSubtitle() {
+  final width = _railWidthNow();
+  final window = Get.context == null
+      ? ''
+      : '，当前窗口宽 ${MediaQuery.widthOf(Get.context!).round()}dp';
+  return width > 0
+      ? '窗口宽度 ≥ ${width.round()}dp 时用侧栏，更窄时用底栏$window'
+      : '自动：横屏用侧栏，竖屏用底栏。可设一个宽度，如折叠屏内屏竖着也用侧栏$window';
+}
+
+Future<void> _showRailWidthDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('侧栏切换宽度（0 为自动）'),
+      value: _railWidthNow(),
+      min: 0,
+      max: 1200,
+      divisions: 60,
+      precise: 0,
+      suffix: 'dp',
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(GlassFeatures.railWidthKey, res);
+    SmartDialog.showToast('重启生效');
+    setState();
+  }
+}

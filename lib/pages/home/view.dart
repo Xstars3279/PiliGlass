@@ -10,7 +10,6 @@ import 'package:PiliPlus/pages/home/controller.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
 import 'package:PiliPlus/pages/mine/controller.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
-import 'package:PiliPlus/utils/extension/size_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -84,8 +83,7 @@ class _HomePageState extends CommonPageState<HomePage>
     if (dockSearch) return _floatingTabs(tabBar);
     return Column(
       children: [
-        if (!_mainController.useSideBar &&
-            MediaQuery.sizeOf(context).isPortrait &&
+        if (_mainController.bottomNavFor(MediaQuery.sizeOf(context)) &&
             !dockSearch)
           customAppBar(),
         tabBar,
@@ -151,12 +149,15 @@ class _HomePageState extends CommonPageState<HomePage>
               )
             else
               const Spacer(),
-            // on a wide screen the messages are on the rail's glass block
+            // on a wide screen the messages are on the rail's glass block,
+            // unless the window is too short for them there
             Obx(
               () =>
                   _mainController.accountService.isLogin.value &&
-                      !_mainController.useSideBar &&
-                      MediaQuery.sizeOf(context).isPortrait
+                      (_mainController.bottomNavFor(
+                            MediaQuery.sizeOf(context),
+                          ) ||
+                          !_mainController.railMessages.value)
                   ? GlassCapsule(
                       refraction: true,
                       padding: EdgeInsets.zero,

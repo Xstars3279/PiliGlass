@@ -50,6 +50,17 @@ const _kEdge = 12.0;
 /// the room it leaves free: the golden section again, from the top
 const _kHeaderAt = 0.382;
 
+// the top block: the avatar, then buttons, with its padding
+const _kAvatar = 34.0;
+const _kButton = 48.0;
+const _kHeaderSpacing = 6.0;
+const _kHeaderPadding = 10.0;
+const _kHeaderTwo = 2 * _kHeaderPadding + _kAvatar + _kHeaderSpacing + _kButton;
+const _kHeaderFull = _kHeaderTwo + _kHeaderSpacing + _kButton;
+
+/// the avatar alone, on a round glass of its own, at its smallest
+const _kAvatarAlone = 42.0;
+
 /// The dock of the redesign as a rail on the left, for wide screens: a
 /// capsule with the tabs' icons, a round button below it for the tab's own
 /// action, e.g. posting on 动态, and [header], e.g. the avatar and search,
@@ -69,17 +80,31 @@ class LiquidGlassNavigationRail extends StatefulWidget {
     required this.destinations,
     required this.selectedIndex,
     this.onDestinationSelected,
-    this.header = const [],
+    this.avatar,
+    this.messages,
+    this.onSearch,
     this.action,
+    this.onMessagesShown,
   });
 
   final List<LiquidGlassNavigationDestination> destinations;
   final int selectedIndex;
   final ValueChanged<int>? onDestinationSelected;
 
-  /// on the glass block at the top left, one under another
-  final List<Widget> header;
+  /// On the glass block at the top left, one under another: the avatar,
+  /// the messages and search. A short window keeps what fits, see
+  /// [_LiquidGlassNavigationRailState._header].
+  final Widget? avatar;
+  final Widget? messages;
+  final VoidCallback? onSearch;
+
+  /// the page's own action under the tabs; where it has none and search
+  /// has no room above, search takes its place
   final LiquidGlassDockAction? action;
+
+  /// whether the messages have room on the rail, so the page can show
+  /// them where they are left out
+  final ValueChanged<bool>? onMessagesShown;
 
   /// the room the rail takes at the left of the page while closed
   static const double extent = _kWidth + 2 * _kEdge;
@@ -378,13 +403,90 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
     );
   }
 
+  /// the messages were on the rail when last laid out
+  bool? _messagesShown;
+
+  void _reportMessages(bool shown) {
+    if (shown == _messagesShown) return;
+    _messagesShown = shown;
+    // found while laying out: the page hears of it once the frame is done
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _messagesShown == shown) {
+        widget.onMessagesShown?.call(shown);
+      }
+    });
+  }
+
+  /// The top block for the [room] above the rail, and whether search goes
+  /// below the tabs instead. A tablet has room for all of it. A phone on
+  /// its side, or a window made short, keeps what fits: search moves to
+  /// the round button under the tabs, where a page has no action of its
+  /// own; then the messages go, the page showing them instead (see
+  /// [LiquidGlassNavigationRail.onMessagesShown]); the avatar stays as
+  /// long as a small round glass of it fits.
+  (Widget?, bool) _header(double room) {
+    final avatar = widget.avatar;
+    final messages = widget.messages;
+    final canSearch = widget.onSearch != null;
+    Widget button(Widget child) => SizedBox(
+      height: _kButton,
+      child: Center(child: child),
+    );
+    Widget block(List<Widget> children) => _GlassBlock(
+      child: Padding(
+        padding: const .symmetric(vertical: _kHeaderPadding),
+        child: Column(
+          mainAxisSize: .min,
+          spacing: _kHeaderSpacing,
+          children: children,
+        ),
+      ),
+    );
+
+    if (room >= _kHeaderFull || (avatar == null && room >= _kHeaderTwo)) {
+      _reportMessages(messages != null);
+      return (
+        block([
+          ?avatar,
+          if (messages != null) button(messages),
+          if (canSearch)
+            button(
+              IconButton(
+                tooltip: '搜索',
+                icon: const Icon(Icons.search_rounded, semanticLabel: '搜索'),
+                onPressed: widget.onSearch,
+              ),
+            ),
+        ]),
+        false,
+      );
+    }
+    if (room >= _kHeaderTwo && messages != null) {
+      _reportMessages(true);
+      return (block([?avatar, button(messages)]), canSearch);
+    }
+    _reportMessages(false);
+    if (avatar != null && room >= _kAvatarAlone) {
+      final size = room.clamp(_kAvatarAlone, _kWidth);
+      return (
+        SizedBox.square(
+          dimension: size,
+          child: _GlassSurface(
+            radius: Radius.circular(size / 2),
+            child: Center(child: avatar),
+          ),
+        ),
+        canSearch,
+      );
+    }
+    return (null, canSearch);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
     final isDark = colorScheme.brightness == .dark;
     final viewPadding = MediaQuery.viewPaddingOf(context);
-    final action = widget.action;
-    final header = widget.header;
     return Padding(
       padding: EdgeInsets.fromLTRB(
         _kEdge + viewPadding.left,
@@ -407,15 +509,22 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
               0.0,
               height,
             );
-            // what is left above it for the header; a phone on its side
-            // leaves less than the header's height, so the header then
-            // scrolls in the room it has instead of spilling over the tabs
+            // what is left above it for the header
             final headerRoom = railTop - _kGap;
+            final (header, searchBelow) = _header(headerRoom);
+            final action =
+                widget.action ??
+                (searchBelow
+                    ? LiquidGlassDockAction(
+                        icon: Icons.search_rounded,
+                        label: '搜索',
+                        onTap: widget.onSearch!,
+                      )
+                    : null);
             return Stack(
               clipBehavior: .none,
               children: [
-                // too short to show even one of its buttons, it is left out
-                if (header.isNotEmpty && headerRoom >= _kWidth)
+                if (header != null)
                   Positioned(
                     top: 0,
                     left: 0,
@@ -423,19 +532,7 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
                     height: headerRoom,
                     child: Align(
                       alignment: const Alignment(0, 2 * _kHeaderAt - 1),
-                      child: _GlassBlock(
-                        child: ClipRRect(
-                          borderRadius: const .all(_kCorner),
-                          child: SingleChildScrollView(
-                            padding: const .symmetric(vertical: 10),
-                            child: Column(
-                              mainAxisSize: .min,
-                              spacing: 6,
-                              children: header,
-                            ),
-                          ),
-                        ),
-                      ),
+                      child: header,
                     ),
                   ),
                 // the action hangs under the tabs

@@ -22,7 +22,6 @@ import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/desktop/tray_controller.dart';
 import 'package:PiliPlus/utils/desktop/window_controller.dart';
 import 'package:PiliPlus/utils/extension/context_ext.dart';
-import 'package:PiliPlus/utils/extension/size_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/mobile_observer.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
@@ -82,7 +81,9 @@ class _MainAppState extends PopScopeState<MainApp>
       }
     }
     if (!_mainController.useSideBar) {
-      _mainController.useBottomNav = MediaQuery.sizeOf(context).isPortrait;
+      _mainController.useBottomNav = _mainController.bottomNavFor(
+        MediaQuery.sizeOf(context),
+      );
     }
   }
 
@@ -186,18 +187,18 @@ class _MainAppState extends PopScopeState<MainApp>
           : null,
       // the avatar, messages and search at the top left, as on the
       // original side bar
-      header: [
-        userAvatar(colorScheme: _colorScheme, mainController: _mainController),
-        msgBadge(_mainController),
-        IconButton(
-          tooltip: '搜索',
-          icon: const Icon(Icons.search_rounded, semanticLabel: '搜索'),
-          onPressed: () => Get.toNamed(
-            '/search',
-            parameters: hint?.isNotEmpty == true ? {'hintText': hint!} : null,
-          ),
-        ),
-      ],
+      avatar: userAvatar(
+        colorScheme: _colorScheme,
+        mainController: _mainController,
+      ),
+      messages: msgBadge(_mainController),
+      onSearch: () => Get.toNamed(
+        '/search',
+        parameters: hint?.isNotEmpty == true ? {'hintText': hint!} : null,
+      ),
+      // left out of a short rail, the messages float on the home page's
+      // tabs, as on a phone held upright
+      onMessagesShown: (shown) => _mainController.railMessages.value = shown,
       destinations: bars
           .map(
             (e) => LiquidGlassNavigationDestination(
