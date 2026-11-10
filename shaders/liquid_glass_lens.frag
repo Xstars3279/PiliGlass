@@ -1,8 +1,10 @@
 // Liquid glass lens for BackdropFilter (ImageFilter.shader, Impeller only).
 //
-// Refraction ported from SukiSU-Ultra's ui/component/liquid/Lens.kt, which is
-// adapted from Kyant0/AndroidLiquidGlass (Apache License 2.0):
+// Refraction ported from SukiSU-Ultra's ui/component/liquid/Lens.kt (GPL-3.0):
+// https://github.com/SukiSU-Ultra/SukiSU-Ultra
+// which is adapted from Kyant0/AndroidLiquidGlass (Apache License 2.0):
 // https://github.com/Kyant0/AndroidLiquidGlass
+// Modified for PiliGlass. See NOTICE, and LICENSES/Apache-2.0.txt.
 //
 // All coordinates are physical pixels of the render pass the backdrop filter
 // runs in (the screen, for a widget that is not inside a save layer).

@@ -173,6 +173,22 @@ Commit Hash: ${BuildConfig.commitHash}''',
           title: const Text('Source Code'),
           subtitle: Text(Constants.sourceCodeUrl, style: subTitleStyle),
         ),
+        // GPL-3.0 §5d and Apache-2.0 §4a: the app shows its legal notices
+        // and the licenses of the code it contains
+        ListTile(
+          onTap: () => showLicensePage(
+            context: context,
+            applicationName: Constants.appName,
+            applicationVersion: currentVersion,
+            applicationLegalese:
+                'Copyright (C) 2026 Xstars3279\n'
+                '基于 PiliPlus 修改，以 GPL-3.0 协议开源，不提供任何担保。',
+          ),
+          leading: revampLeading(const Icon(Icons.gavel_outlined)),
+          title: const Text('开源许可'),
+          subtitle: Text('本应用及所用开源项目的协议', style: subTitleStyle),
+          trailing: Icon(Icons.arrow_forward, size: 16, color: outline),
+        ),
         if (Platform.isAndroid)
           ListTile(
             onTap: AndroidHelper.openLinkVerifySettings,

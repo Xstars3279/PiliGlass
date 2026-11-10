@@ -1,0 +1,114 @@
+PiliGlass
+Copyright (C) 2026 Xstars3279
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version. See LICENSE.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+
+================================================================================
+Modification notice (GPL-3.0, section 5a)
+================================================================================
+
+PiliGlass is a modified version of PiliPlus
+(https://github.com/bggRGjQaUbCoE/PiliPlus, GPL-3.0), which in turn derives
+from PiliPalaX (https://github.com/orz12/PiliPalaX) and pilipala
+(https://github.com/guozhigq/pilipala).
+
+Modified by Xstars3279 since 2026; first released as v0.1.0 on 2026-10-23.
+The modifications are mainly to the user interface: the liquid glass dock,
+rail and surfaces, spring animations, the redesigned pages, and the in-app
+updater. Every change, with its date and author, is recorded in the git
+history of https://github.com/Xstars3279/PiliGlass.
+
+
+================================================================================
+Third-party code in this repository
+================================================================================
+
+The files below contain code by others, under the licenses named. Each license
+is compatible with GPL-3.0. The texts are in LICENSES/ or next to the files.
+Third-party packages pulled in through pubspec.yaml carry their own licenses;
+the app lists all of them under 关于 › 开源许可.
+
+--------------------------------------------------------------------------------
+1. Liquid glass
+--------------------------------------------------------------------------------
+
+Files:
+  shaders/liquid_glass_lens.frag
+  lib/common/widgets/liquid_glass/liquid_glass_navigation_bar.dart
+
+Ported to Flutter (Dart and GLSL) from SukiSU-Ultra, which itself adapted the
+code from the two Apache-2.0 projects below.
+
+  SukiSU-Ultra
+    https://github.com/SukiSU-Ultra/SukiSU-Ultra
+    License: GPL-3.0 (see LICENSE)
+    Source files: manager/.../ui/component/FloatingBottomBar.kt,
+                  manager/.../ui/component/liquid/Lens.kt,
+                  manager/.../ui/component/miuix/animation/DampedDragAnimation.kt
+
+  AndroidLiquidGlass, by Kyant0
+    https://github.com/Kyant0/AndroidLiquidGlass
+    License: Apache-2.0 (see LICENSES/Apache-2.0.txt)
+    Used for: the lens refraction (Lens.kt in SukiSU-Ultra)
+
+  miuix, by compose-miuix-ui
+    https://github.com/compose-miuix-ui/miuix
+    License: Apache-2.0 (see LICENSES/Apache-2.0.txt)
+    Used for: the floating bar, from its example IosLiquidGlassNavigationBar
+              (FloatingBottomBar.kt in SukiSU-Ultra)
+
+Neither Apache-2.0 project ships a NOTICE file.
+
+--------------------------------------------------------------------------------
+2. Flutter framework
+--------------------------------------------------------------------------------
+
+Files: those under lib/ whose header reads "Copyright 2013/2014 The Flutter
+Authors", mostly in lib/common/widgets/flutter/ (modified copies of Flutter
+widgets).
+
+  Flutter
+    https://github.com/flutter/flutter
+    Copyright 2014 The Flutter Authors. All rights reserved.
+    License: BSD-3-Clause (see LICENSES/BSD-3-Clause-Flutter.txt)
+
+--------------------------------------------------------------------------------
+3. Android Open Source Project
+--------------------------------------------------------------------------------
+
+File: android/app/src/main/java/com/example/piliplus/MediaHelper.java
+
+  Copyright 2018 The Android Open Source Project
+  License: Apache-2.0 (see LICENSES/Apache-2.0.txt)
+
+--------------------------------------------------------------------------------
+4. Anime4K
+--------------------------------------------------------------------------------
+
+Files: assets/shaders/Anime4K_*.glsl
+
+  Anime4K, by bloc97
+    https://github.com/bloc97/Anime4K
+    Copyright (c) 2019 bloc97
+    License: MIT, and the Unlicense for the AutoDownscalePre shaders
+             (see assets/shaders/LICENSE and each file's header)
+
+--------------------------------------------------------------------------------
+5. dio_cookie_manager
+--------------------------------------------------------------------------------
+
+Files: lib/utils/accounts/account_manager/
+
+  dio_cookie_manager
+    https://github.com/cfug/dio
+    Copyright (c) 2018 Wen Du (wendux)
+    Copyright (c) 2022 The CFUG Team
+    License: MIT (see lib/utils/accounts/account_manager/LICENSE)
