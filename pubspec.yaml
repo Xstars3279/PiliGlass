@@ -268,6 +268,11 @@ flutter:
     - path: assets/images/live/
     - path: assets/images/paycoins/
     - path: assets/shaders/
+    # shown on the license page, see lib/common/licenses.dart
+    - path: LICENSE
+    - path: NOTICE
+    - path: LICENSES/
+    - path: lib/utils/accounts/account_manager/LICENSE
 
   shaders:
     - shaders/liquid_glass_lens.frag

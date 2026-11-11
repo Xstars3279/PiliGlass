@@ -60,6 +60,9 @@ PiliGlass 站在这些项目的肩膀上，没有它们就没有这个应用：
 - [bggRGjQaUbCoE/PiliPlus](https://github.com/bggRGjQaUbCoE/PiliPlus)：PiliGlass 的上游，几乎所有功能都来自这里
 - [orz12/PiliPalaX](https://github.com/orz12/PiliPalaX)：PiliPlus 的上游
 - [guozhigq/pilipala](https://github.com/guozhigq/pilipala)：最初的原作
+- [SukiSU-Ultra/SukiSU-Ultra](https://github.com/SukiSU-Ultra/SukiSU-Ultra)：液态玻璃底栏和折射效果移植自这里
+- [Kyant0/AndroidLiquidGlass](https://github.com/Kyant0/AndroidLiquidGlass)：液态玻璃折射算法的原作
+- [compose-miuix-ui/miuix](https://github.com/compose-miuix-ui/miuix)：液态玻璃底栏的原型
 - [bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)
 - [media-kit](https://github.com/media-kit/media-kit)
 - [flutter_meedu_videoplayer](https://github.com/zezo357/flutter_meedu_videoplayer)
@@ -73,3 +76,5 @@ PiliGlass 站在这些项目的肩膀上，没有它们就没有这个应用：
 ## 许可证
 
 与上游相同，以 [GPL-3.0](LICENSE) 协议开源。
+
+PiliGlass 是 PiliPlus 的修改版本，自 2026 年起由 Xstars3279 修改，主要改动在界面和交互，每一处改动都记录在 git 历史中。仓库中包含的第三方代码（液态玻璃、Flutter 框架、Anime4K 等）及其协议见 [NOTICE](NOTICE)，协议原文在 [LICENSES](LICENSES) 目录；应用内可在「关于 › 开源许可」查看所有依赖的协议。

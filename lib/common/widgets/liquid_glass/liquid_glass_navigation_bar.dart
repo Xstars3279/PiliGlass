@@ -1,3 +1,11 @@
+// Ported from SukiSU-Ultra's ui/component/FloatingBottomBar.kt and
+// DampedDragAnimation.kt (GPL-3.0):
+// https://github.com/SukiSU-Ultra/SukiSU-Ultra
+// FloatingBottomBar.kt is adapted from the IosLiquidGlassNavigationBar example
+// of compose-miuix-ui/miuix (Apache License 2.0):
+// https://github.com/compose-miuix-ui/miuix
+// Modified for PiliGlass. See NOTICE, and LICENSES/Apache-2.0.txt.
+
 import 'dart:ui' show lerpDouble;
 
 import 'package:PiliPlus/common/motion/springs.dart';

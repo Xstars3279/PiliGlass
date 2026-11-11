@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:PiliPlus/build_config.dart';
 import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/common/licenses.dart';
 import 'package:PiliPlus/common/motion/page_transition.dart';
 import 'package:PiliPlus/common/widgets/back_detector.dart';
 import 'package:PiliPlus/common/widgets/custom_toast.dart';
@@ -104,6 +105,7 @@ void main() async {
     DeviceUtils.exitApp();
   }
   ScaledWidgetsFlutterBinding.instance.scaleFactor = Pref.uiScale;
+  AppLicenses.register();
   if (Pref.modernPageTransition) PiliPageTransition.install();
   await Future.wait([
     _initDownPath(),
