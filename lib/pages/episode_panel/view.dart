@@ -61,6 +61,7 @@ class EpisodePanel extends CommonSlidePage {
     required this.onChangeEpisode,
     this.onClose,
     this.inSheet = false,
+    this.sheetScroll,
   }) : assert(type == EpisodeType.pgc || ugcIntroController != null);
 
   final UgcIntroController? ugcIntroController;
@@ -84,6 +85,12 @@ class EpisodePanel extends CommonSlidePage {
 
   /// inside the redesign's glass sheet: no background of its own
   final bool inSheet;
+
+  /// The glass sheet's own scroll controller: the list of the section the
+  /// panel opens on scrolls on it, so it moves the sheet as the comments
+  /// do, dragged down from its top. The other sections, and a list the
+  /// other way round, keep controllers of their own.
+  final ScrollController? sheetScroll;
 
   @override
   State<EpisodePanel> createState() => _EpisodePanelState();
@@ -112,6 +119,19 @@ class _EpisodePanelState extends State<EpisodePanel>
   late final List<bool> _isReversed;
   late final List<ScrollController> _itemScrollController;
 
+  /// the section on the sheet's scroll controller, see
+  /// [EpisodePanel.sheetScroll]
+  late final int _sheetTab = widget.initialTabIndex;
+
+  ScrollController _scrollOf(int tabIndex) {
+    final sheetScroll = widget.sheetScroll;
+    return sheetScroll != null &&
+            tabIndex == _sheetTab &&
+            !_isReversed[tabIndex]
+        ? sheetScroll
+        : _itemScrollController[tabIndex];
+  }
+
   // fav
   Rx<LoadingState<bool>>? _favState;
 
@@ -132,7 +152,7 @@ class _EpisodePanelState extends State<EpisodePanel>
       if (_currentItemIndex != newItemIndex) {
         _currentItemIndex = newItemIndex;
         try {
-          _itemScrollController[_currentTabIndex.value].jumpTo(
+          _scrollOf(_currentTabIndex.value).jumpTo(
             _calcItemOffset(newItemIndex),
           );
         } catch (e, s) {
@@ -175,6 +195,16 @@ class _EpisodePanelState extends State<EpisodePanel>
       growable: false,
     );
     _isReversed = List.filled(widget.list.length, false);
+    // the sheet's controller starts at the top: on to the current episode
+    // once the list is on it
+    if (widget.sheetScroll case final sheetScroll?
+        when _currentItemIndex != 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && sheetScroll.hasClients) {
+          sheetScroll.jumpTo(_calcItemOffset(_currentItemIndex));
+        }
+      });
+    }
 
     if (widget.type == EpisodeType.season && Accounts.main.isLogin) {
       final favState =
@@ -287,7 +317,7 @@ class _EpisodePanelState extends State<EpisodePanel>
       child: CustomScrollView(
         reverse: _isReversed[tabIndex],
         physics: const AlwaysScrollableScrollPhysics(),
-        controller: _itemScrollController[tabIndex],
+        controller: _scrollOf(tabIndex),
         slivers: [
           SliverPadding(
             padding: EdgeInsets.only(
@@ -641,7 +671,7 @@ class _EpisodePanelState extends State<EpisodePanel>
 
   void _animToTopOrBottom({bool top = true}) {
     final tabIndex = _currentTabIndex.value;
-    _itemScrollController[tabIndex].animTo(
+    _scrollOf(tabIndex).animTo(
       top ^ _isReversed[tabIndex]
           ? 0
           : _calcItemOffset(_getCurrEpisodes.length),
@@ -691,7 +721,7 @@ class _EpisodePanelState extends State<EpisodePanel>
               _tabController.animateTo(widget.initialTabIndex);
               await Future.pause(const Duration(milliseconds: 225));
             }
-            _itemScrollController[widget.initialTabIndex].animTo(
+            _scrollOf(widget.initialTabIndex).animTo(
               _calcItemOffset(_currentItemIndex),
               duration: const Duration(milliseconds: 200),
             );

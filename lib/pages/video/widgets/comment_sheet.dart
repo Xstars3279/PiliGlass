@@ -29,8 +29,14 @@ ValueNotifier<bool> _openOf(VideoReplyController controller) =>
 /// Opens another panel in a video's sheet, see [CommentSheet.showPanel].
 final _panelOpeners = Expando<void Function(SheetPanelBuilder)>();
 
-/// builds a panel for the sheet, given the way to close the sheet
-typedef SheetPanelBuilder = Widget Function(VoidCallback close);
+/// Builds a panel for the sheet, given the way to close the sheet and the
+/// sheet's own scroll controller. A list of the panel's on [scroll] moves
+/// the sheet as the comments do: dragged down from its top, the sheet comes
+/// down, and closes. One list at most, as it is one sheet.
+typedef SheetPanelBuilder = Widget Function(
+  VoidCallback close,
+  ScrollController scroll,
+);
 
 /// The comments of the redesigned video page: a sheet of liquid glass over
 /// the whole page.
@@ -129,7 +135,7 @@ class _CommentSheetState extends State<CommentSheet>
   ScrollController? _listCtr;
 
   /// a panel shown in place of the comments, see [CommentSheet.showPanel]
-  Widget? _panel;
+  SheetPanelBuilder? _panel;
 
   /// The threads shown in the sheet over the list: a 评论详情, and a 对话列表
   /// opened from it. Each slides in over the same glass, so the page below
@@ -463,7 +469,7 @@ class _CommentSheetState extends State<CommentSheet>
   }
 
   void _openPanel(SheetPanelBuilder panel) {
-    setState(() => _panel = panel(_close));
+    setState(() => _panel = panel);
     if (!_isOpen.value) _isOpen.value = true;
   }
 
@@ -802,7 +808,9 @@ class _CommentSheetState extends State<CommentSheet>
   /// The list, and the thread sliding in over it from the right: the list
   /// drifts left and fades, like a page pushed in a navigation stack.
   Widget _buildContent(ScrollController scrollController) {
-    if (_panel case final panel?) return panel;
+    // on the sheet's scroll controller in place of the comments, so it moves
+    // the sheet as they do
+    if (_panel case final panel?) return panel(_close, scrollController);
     // made once per build, so the animation below does not rebuild them
     final list = PrimaryScrollController(
       controller: scrollController,

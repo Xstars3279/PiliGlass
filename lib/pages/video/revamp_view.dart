@@ -16,7 +16,7 @@ extension _VideoRevamp on _VideoDetailPageVState {
 
   /// Shows [panel] in the comment sheet, e.g. 合集; false if there is no
   /// sheet to show it in.
-  bool _showInSheet(Widget Function(VoidCallback close) panel) =>
+  bool _showInSheet(SheetPanelBuilder panel) =>
       _replyInSheet && CommentSheet.showPanel(_videoReplyController, panel);
 
   /// The sheet covers the player: pause, and play again once it leaves, if

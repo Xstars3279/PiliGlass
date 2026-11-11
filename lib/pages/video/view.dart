@@ -1992,6 +1992,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       bool enableSlide = true,
       VoidCallback? onClose,
       bool inSheet = false,
+      ScrollController? sheetScroll,
     }) => EpisodePanel(
       heroTag: heroTag,
       ugcIntroController: videoDetailController.isUgc
@@ -2030,6 +2031,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         onReversePlay(isSeason: season != null);
       },
       inSheet: inSheet,
+      sheetScroll: sheetScroll,
     );
     if (isFullScreen || videoDetailController.showVideoSheet) {
       final child = listSheetContent(enableSlide: false);
@@ -2040,10 +2042,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             : child,
       );
     } else if (!_showInSheet(
-      (close) => listSheetContent(
+      (close, scroll) => listSheetContent(
         enableSlide: false,
         onClose: close,
         inSheet: true,
+        sheetScroll: scroll,
       ),
     )) {
       videoDetailController.childKey.currentState?.showBottomSheet(
