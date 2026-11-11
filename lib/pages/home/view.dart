@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/ui_icons.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
@@ -371,7 +372,11 @@ Widget msgBadge(MainController mainController) {
                 ? const Alignment(0.0, -0.85)
                 : const Alignment(1.0, -0.85),
             label: isNumBadge && count != null ? Text(count) : null,
-            child: const Icon(Icons.notifications_none),
+            child: Icon(
+              Revamp.enabled
+                  ? UiIcons.of(Icons.notifications_none)
+                  : Icons.notifications_none,
+            ),
           ),
         );
       }

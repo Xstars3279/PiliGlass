@@ -312,11 +312,14 @@ class _MineMenuState extends State<_MineMenu> {
                     Springs.bouncy,
                     const Duration(milliseconds: 700),
                   ),
-                  child: Icon(Icons.expand_more_rounded, color: outline),
+                  child: Icon(
+                    UiIcons.of(Icons.expand_more_rounded),
+                    color: outline,
+                  ),
                 ),
               )
             else
-              Icon(Icons.chevron_right_rounded, color: outline),
+              Icon(UiIcons.of(Icons.chevron_right_rounded), color: outline),
           ],
         ),
         onTap: onOpen,
@@ -422,7 +425,10 @@ class _MineMenuState extends State<_MineMenu> {
                       BuildConfig.versionName,
                       style: TextStyle(color: outline),
                     ),
-                    Icon(Icons.chevron_right_rounded, color: outline),
+                    Icon(
+                      UiIcons.of(Icons.chevron_right_rounded),
+                      color: outline,
+                    ),
                   ],
                 ),
                 onTap: () => Get.to(() => const AboutPage()),

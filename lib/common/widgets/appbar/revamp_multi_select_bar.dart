@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/ui_icons.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
 import 'package:PiliPlus/pages/common/multi_select/base.dart';
@@ -39,7 +40,7 @@ class RevampMultiSelectBar extends StatelessWidget {
                 IconButton(
                   tooltip: '取消',
                   onPressed: ctr.handleSelect,
-                  icon: const Icon(Icons.close_rounded),
+                  icon: Icon(UiIcons.of(Icons.close_rounded)),
                 ),
                 Expanded(
                   child: Obx(

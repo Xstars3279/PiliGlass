@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
 import 'package:PiliPlus/common/motion/springs.dart';
+import 'package:PiliPlus/common/ui_icons.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
@@ -527,7 +528,10 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
             button(
               IconButton(
                 tooltip: '搜索',
-                icon: const Icon(Icons.search_rounded, semanticLabel: '搜索'),
+                icon: Icon(
+                  UiIcons.of(Icons.search_rounded),
+                  semanticLabel: '搜索',
+                ),
                 onPressed: widget.onSearch,
               ),
             ),
@@ -590,7 +594,7 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
                 widget.action ??
                 (searchBelow
                     ? LiquidGlassDockAction(
-                        icon: Icons.search_rounded,
+                        icon: UiIcons.of(Icons.search_rounded),
                         label: '搜索',
                         onTap: widget.onSearch!,
                       )

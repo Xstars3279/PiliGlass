@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/motion/spring_slide.dart';
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/ui_icons.dart';
 import 'package:PiliPlus/common/widgets/floating_navigation_bar.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -524,7 +526,11 @@ class _MainAppState extends PopScopeState<MainApp>
   }
 
   Widget _buildIcon({required NavigationBarType type, bool selected = false}) {
-    final icon = selected ? type.selectIcon : type.icon;
+    final icon = Revamp.enabled
+        ? UiIcons.nav(type, selected: selected)
+        : selected
+        ? type.selectIcon
+        : type.icon;
     return type == .dynamics
         ? Obx(
             () {

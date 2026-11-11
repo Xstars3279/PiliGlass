@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/motion/appear_in.dart';
 import 'package:PiliPlus/common/motion/pressable_scale.dart';
+import 'package:PiliPlus/common/ui_icons.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
@@ -447,8 +448,8 @@ Widget revampGroupRow({
 }
 
 /// A row's leading icon as the redesign draws it, e.g. in a settings list:
-/// plain, 24dp, in the gray of secondary text; no tile behind it, the
-/// accent is not for decoration.
+/// plain, rounded and outlined (UiIcons), 24dp, in the gray of secondary
+/// text; no tile behind it, the accent is not for decoration.
 class RevampIconTile extends StatelessWidget {
   const RevampIconTile({super.key, required this.icon});
 
@@ -461,7 +462,7 @@ class RevampIconTile extends StatelessWidget {
         size: 24,
         color: ColorScheme.of(context).onSurfaceVariant,
       ),
-      child: icon,
+      child: UiIcons.rounded(icon),
     );
   }
 }

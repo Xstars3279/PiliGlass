@@ -12,6 +12,7 @@ import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
 import 'package:PiliPlus/common/motion/springs.dart';
+import 'package:PiliPlus/common/ui_icons.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/lens_motion.dart';
@@ -667,7 +668,7 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     final hintOpacity = action != null
         ? 0.0
         : (_search.value * 2 - 0.6).clamp(0.0, 1.0);
-    final icon = action?.icon ?? Icons.search;
+    final icon = UiIcons.of(action?.icon ?? Icons.search);
     return Semantics(
       button: true,
       label: action?.label ?? '搜索',
