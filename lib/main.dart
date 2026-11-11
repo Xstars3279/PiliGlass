@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:PiliPlus/build_config.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/licenses.dart';
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/motion/page_transition.dart';
 import 'package:PiliPlus/common/widgets/back_detector.dart';
 import 'package:PiliPlus/common/widgets/custom_toast.dart';
@@ -260,7 +262,7 @@ class MyApp extends StatelessWidget {
   static (ThemeData, ThemeData) getAllTheme() {
     final dynamicColor = _light != null && _dark != null && Pref.dynamicColor;
 
-    final ColorScheme lightScheme, darkScheme;
+    ColorScheme lightScheme, darkScheme;
     if (dynamicColor) {
       lightScheme = _light!;
       darkScheme = _dark!;
@@ -273,6 +275,11 @@ class MyApp extends StatelessWidget {
 
       lightScheme = brandColor.asColorSchemeSeed(variant, .light);
       darkScheme = brandColor.asColorSchemeSeed(variant, .dark);
+    }
+    // the redesign's surfaces are neutral, whatever the accent
+    if (Revamp.enabled) {
+      lightScheme = UiColor.neutralize(lightScheme);
+      darkScheme = UiColor.neutralize(darkScheme);
     }
 
     return (

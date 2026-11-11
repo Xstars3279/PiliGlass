@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/motion/pressable_scale.dart';
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass.dart';
 import 'package:material_ui/material_ui.dart';
@@ -64,7 +65,7 @@ class RevampFab extends StatelessWidget {
         style: TextStyle(
           color: colorScheme.primary,
           fontSize: 15,
-          fontWeight: FontWeight.w700,
+          fontWeight: UiType.title.fontWeight,
         ),
         child: _extended
             ? Padding(

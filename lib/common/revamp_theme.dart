@@ -1,17 +1,18 @@
 import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The redesign's look for the standard components, so the pages that are
 /// not redesigned one by one (most of them) still speak the same language:
-/// tabs on a raised pill, rounded menus, sheets and dialogs, pill buttons.
+/// UiType's five sizes, tabs on a tonal pill, white menus, sheets and
+/// dialogs with UiRadius's corners, pill buttons.
 abstract final class RevampTheme {
   static ThemeData apply(ThemeData theme) {
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
     final isDark = colorScheme.brightness == Brightness.dark;
-    final shadow = Colors.black.withValues(alpha: isDark ? 0.4 : 0.12);
     // modal sheets come up on the comment sheet's spring
     // (tool/patches/material-ui_glass_sheet.patch)
     if (GlassFeatures.sheetSpring) {
@@ -31,25 +32,35 @@ abstract final class RevampTheme {
       width: 0.8,
     );
 
+    // every size snapped to one of UiType's five; bodyMedium, the default
+    // of a Text and the size of a video card's title, stays as it is
+    TextStyle? snap(TextStyle? style, TextStyle to) => style?.merge(to);
+    final type = textTheme.copyWith(
+      headlineMedium: snap(textTheme.headlineMedium, UiType.largeTitle),
+      headlineSmall: snap(textTheme.headlineSmall, UiType.largeTitle),
+      titleLarge: snap(textTheme.titleLarge, UiType.title),
+      titleMedium: snap(textTheme.titleMedium, UiType.bodyStrong),
+      titleSmall: snap(textTheme.titleSmall, UiType.bodyStrong),
+      bodyLarge: snap(textTheme.bodyLarge, UiType.body),
+      bodySmall: snap(textTheme.bodySmall, UiType.caption),
+      labelLarge: snap(textTheme.labelLarge, UiType.bodyStrong),
+      labelMedium: snap(textTheme.labelMedium, UiType.caption),
+      labelSmall: snap(textTheme.labelSmall, UiType.label),
+    );
+
     return theme.copyWith(
+      textTheme: type,
       tabBarTheme: TabBarThemeData(
-        indicator: PillTabIndicator(
-          color: colorScheme.surfaceContainerHighest,
-          shadow: shadow,
-        ),
+        indicator: PillTabIndicator(color: colorScheme.secondaryContainer),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         dividerHeight: 0,
-        labelColor: colorScheme.onSurface,
+        labelColor: colorScheme.onSecondaryContainer,
         unselectedLabelColor: colorScheme.onSurfaceVariant,
-        labelStyle: textTheme.titleSmall!.copyWith(
-          fontSize: 15,
-          fontWeight: FontWeight.w800,
+        labelStyle: type.titleSmall!.merge(
+          UiType.bodyStrong.copyWith(fontWeight: UiType.title.fontWeight),
         ),
-        unselectedLabelStyle: textTheme.titleSmall!.copyWith(
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-        ),
+        unselectedLabelStyle: type.titleSmall!.merge(UiType.bodyStrong),
         // the pill is the feedback; a rectangular ripple would cut across it
         overlayColor: const WidgetStatePropertyAll(Colors.transparent),
         splashFactory: NoSplash.splashFactory,
@@ -69,10 +80,12 @@ abstract final class RevampTheme {
         trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
       ),
       popupMenuTheme: theme.popupMenuTheme.copyWith(
-        color: colorScheme.surfaceContainer.withValues(alpha: glass(0.72)),
+        color: colorScheme.surfaceContainerLow.withValues(alpha: glass(0.72)),
         elevation: 0,
         shape: Revamp.rounded(Revamp.menuRadius, side: rim),
-        menuPadding: const EdgeInsets.symmetric(vertical: 8),
+        menuPadding: const EdgeInsets.symmetric(vertical: UiSpace.s8),
+        textStyle: type.bodyLarge,
+        labelTextStyle: WidgetStatePropertyAll(type.bodyLarge),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: colorScheme.primary,
@@ -80,18 +93,21 @@ abstract final class RevampTheme {
         elevation: 4,
         highlightElevation: 2,
         shape: const StadiumBorder(),
-        extendedTextStyle: textTheme.labelLarge!.copyWith(
-          fontSize: 15,
-          fontWeight: FontWeight.w700,
+        extendedTextStyle: type.labelLarge!.merge(
+          UiType.bodyStrong.copyWith(fontWeight: UiType.title.fontWeight),
         ),
       ),
       // translucent like the menus, and blurred by the same kind of patch
       // (tool/patches/material-ui_glass_sheet.patch)
       dialogTheme: theme.dialogTheme.copyWith(
-        backgroundColor: colorScheme.surfaceContainerHigh.withValues(
+        backgroundColor: colorScheme.surfaceContainerLow.withValues(
           alpha: glass(0.85),
         ),
         shape: Revamp.rounded(Revamp.sheetRadius, side: rim),
+        titleTextStyle: theme.dialogTheme.titleTextStyle?.merge(UiType.title),
+        contentTextStyle: type.bodyLarge!.copyWith(
+          color: colorScheme.onSurfaceVariant,
+        ),
       ),
       bottomSheetTheme: theme.bottomSheetTheme.copyWith(
         backgroundColor: colorScheme.surfaceContainerLow.withValues(
@@ -105,35 +121,50 @@ abstract final class RevampTheme {
           side: rim,
         ),
       ),
-      // the cards of the pages not redesigned one by one, with the corners
-      // of a cover
+      // the cards of the pages not redesigned one by one: white blocks on
+      // the gray page, set off by the difference alone, no shadow or tint
       cardTheme: theme.cardTheme.copyWith(
+        color: colorScheme.surfaceContainerLow,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
         shape: Revamp.rounded(Revamp.coverRadius),
       ),
       appBarTheme: theme.appBarTheme.copyWith(
-        titleTextStyle: theme.appBarTheme.titleTextStyle?.copyWith(
-          fontSize: 17,
-          fontWeight: FontWeight.w700,
+        titleTextStyle: theme.appBarTheme.titleTextStyle?.merge(UiType.title),
+      ),
+      // a row: its title as the body, the line under it as a caption, the
+      // icon 12 from the text
+      listTileTheme: theme.listTileTheme.copyWith(
+        titleTextStyle: type.bodyLarge!.copyWith(color: colorScheme.onSurface),
+        subtitleTextStyle: type.bodySmall!.copyWith(
+          color: colorScheme.onSurfaceVariant,
         ),
+        horizontalTitleGap: UiSpace.iconText,
+        minLeadingWidth: 24,
+      ),
+      dividerTheme: theme.dividerTheme.copyWith(
+        color: colorScheme.outlineVariant,
       ),
     );
   }
 }
 
-/// A raised pill behind the selected tab, inset from the tab's edges: the
-/// one pill of every tab bar in the redesign, the glass ones included.
+/// A flat tonal pill behind the selected tab, inset from the tab's edges:
+/// the one pill of every tab bar in the redesign, the glass ones included.
+/// One material only, no shadow or rim: on glass it reads as part of it.
 ///
 /// TabBarThemeData has no indicator padding, and a pill filling the whole
 /// tab height looks heavy, so the inset is part of the decoration.
 class PillTabIndicator extends Decoration {
   const PillTabIndicator({
     required this.color,
-    required this.shadow,
-    this.insets = const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+    this.insets = const EdgeInsets.symmetric(
+      horizontal: UiSpace.s4,
+      vertical: UiSpace.s8,
+    ),
   });
 
   final Color color;
-  final Color shadow;
   final EdgeInsets insets;
 
   @override
@@ -154,21 +185,6 @@ class _PillPainter extends BoxPainter {
       rect,
       Radius.circular(rect.height / 2),
     );
-    canvas
-      ..drawRRect(
-        rrect.shift(const Offset(0, 1.5)),
-        Paint()
-          ..color = decoration.shadow
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
-      )
-      ..drawRRect(rrect, Paint()..color = decoration.color)
-      // a faint light edge, which shows the pill on a dark page
-      ..drawRRect(
-        rrect.deflate(0.5),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
-          ..color = const Color(0x14FFFFFF),
-      );
+    canvas.drawRRect(rrect, Paint()..color = decoration.color);
   }
 }

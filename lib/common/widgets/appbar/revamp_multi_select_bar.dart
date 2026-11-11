@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
 import 'package:PiliPlus/pages/common/multi_select/base.dart';
 import 'package:get/get.dart';
@@ -46,8 +47,8 @@ class RevampMultiSelectBar extends StatelessWidget {
                       '已选 ${ctr.checkedCount} 项',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleMedium!.copyWith(
-                        fontWeight: FontWeight.w700,
+                      style: theme.textTheme.titleMedium!.merge(
+                        UiType.title,
                       ),
                     ),
                   ),

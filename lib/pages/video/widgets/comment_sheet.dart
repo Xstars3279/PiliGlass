@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -934,10 +935,7 @@ class _CommentSheetState extends State<CommentSheet>
                             ),
                             Text(
                               _threads.last.dialog != null ? '对话列表' : '评论详情',
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: .w800,
-                              ),
+                              style: UiType.title,
                             ),
                             const Spacer(),
                             IconButton(
@@ -950,10 +948,7 @@ class _CommentSheetState extends State<CommentSheet>
                       : Row(
                           crossAxisAlignment: .center,
                           children: [
-                            const Text(
-                              '评论',
-                              style: TextStyle(fontSize: 17, fontWeight: .w800),
-                            ),
+                            Text('评论', style: UiType.title),
                             const SizedBox(width: 8),
                             Obx(() {
                               final count = _replyCtr.count.value;
@@ -1193,10 +1188,7 @@ class _CommentPreviewCardState extends State<CommentPreviewCard> {
               children: [
                 Row(
                   children: [
-                    const Text(
-                      '评论',
-                      style: TextStyle(fontSize: 15, fontWeight: .w800),
-                    ),
+                    Text('评论', style: UiType.title),
                     const SizedBox(width: 6),
                     Obx(() {
                       final count = _replyCtr.count.value;

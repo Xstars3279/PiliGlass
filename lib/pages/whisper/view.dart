@@ -263,15 +263,15 @@ class _WhisperPageState extends State<WhisperPage> {
                               label: Text(' $count '),
                               child: DecoratedBox(
                                 decoration: ShapeDecoration(
-                                  color: colorScheme.primaryContainer,
+                                  color: Revamp.tile(colorScheme),
                                   shape: Revamp.tileShape,
                                 ),
                                 child: SizedBox.square(
                                   dimension: 46,
                                   child: Icon(
                                     item.icon,
-                                    size: 22,
-                                    color: colorScheme.onPrimaryContainer,
+                                    size: 24,
+                                    color: colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                               ),

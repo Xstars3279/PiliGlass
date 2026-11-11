@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/pages/setting/pages/glass_features.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/services/account_service.dart';
@@ -243,21 +244,21 @@ class _SettingPageState extends State<SettingPage> {
     );
   }
 
-  /// A field-like capsule on the wash that opens the settings search.
+  /// A field-like white capsule on the page that opens the settings search.
   Widget _revampSearch() {
     final colorScheme = theme.colorScheme;
     return Padding(
       padding: const .fromLTRB(16, 0, 16, 12),
       child: Material(
-        color: Revamp.wash(colorScheme),
+        color: Revamp.onPage(colorScheme),
         shape: const StadiumBorder(),
         clipBehavior: .antiAlias,
         child: InkWell(
           onTap: () => Get.toNamed('/settingsSearch'),
           child: Padding(
-            padding: const .symmetric(horizontal: 16, vertical: 11),
+            padding: const .symmetric(horizontal: 16, vertical: 12),
             child: Row(
-              spacing: 10,
+              spacing: 12,
               children: [
                 Icon(
                   Icons.search,
@@ -293,10 +294,10 @@ class _SettingPageState extends State<SettingPage> {
               () => face.value.isEmpty
                   ? CircleAvatar(
                       radius: 26,
-                      backgroundColor: colorScheme.primaryContainer,
+                      backgroundColor: colorScheme.surfaceContainerHigh,
                       child: Icon(
                         Icons.person_outline,
-                        color: colorScheme.onPrimaryContainer,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     )
                   : NetworkImgLayer(
@@ -313,7 +314,9 @@ class _SettingPageState extends State<SettingPage> {
               final user = account.isLogin.value ? Pref.userInfoCache : null;
               return Text(
                 user?.uname ?? '未登录',
-                style: titleStyle.copyWith(fontWeight: FontWeight.w700),
+                style: titleStyle.copyWith(
+                  fontWeight: UiType.title.fontWeight,
+                ),
               );
             }),
             subtitle: Text(

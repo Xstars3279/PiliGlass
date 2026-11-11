@@ -29,9 +29,7 @@ extension _SearchRevamp on _SearchPageState {
           sliver: SliverToBoxAdapter(
             child: Text(
               '搜索',
-              style: theme.textTheme.headlineMedium!.copyWith(
-                fontWeight: .w900,
-              ),
+              style: theme.textTheme.headlineMedium,
             ),
           ),
         ),

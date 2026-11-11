@@ -46,7 +46,7 @@ class SearchText extends StatelessWidget {
       color:
           bgColor ??
           (Revamp.enabled
-              ? Revamp.wash(colorScheme)
+              ? Revamp.onPage(colorScheme)
               : colorScheme.onInverseSurface),
       borderRadius: borderRadius,
       child: InkWell(

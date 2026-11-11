@@ -142,12 +142,9 @@ extension _MineRevamp on _MediaPageState {
                             userInfo.uname ?? '点击登录',
                             maxLines: 1,
                             overflow: .ellipsis,
-                            style: theme.textTheme.titleLarge!.copyWith(
-                              fontWeight: .w900,
-                              color: isVip && userInfo.vipType == 2
-                                  ? colorScheme.vipColor
-                                  : null,
-                            ),
+                            // the name in the text's color, vip or not:
+                            // the pink is the badge's alone
+                            style: theme.textTheme.titleLarge,
                           ),
                         ),
                         BiliUtils.levelPicture(
@@ -201,7 +198,6 @@ extension _MineRevamp on _MediaPageState {
               Text(
                 count?.toString() ?? '-',
                 style: theme.textTheme.titleLarge!.copyWith(
-                  fontWeight: .w800,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),

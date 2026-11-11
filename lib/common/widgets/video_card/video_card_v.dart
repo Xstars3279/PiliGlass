@@ -3,6 +3,7 @@ import 'package:PiliPlus/common/motion/appear_in.dart';
 import 'package:PiliPlus/common/motion/cover_hero.dart';
 import 'package:PiliPlus/common/motion/pressable_scale.dart';
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -230,7 +231,10 @@ class VideoCardV extends StatelessWidget {
               videoItem.title,
               maxLines: 2,
               overflow: .ellipsis,
-              style: const TextStyle(height: 1.35),
+              style: TextStyle(
+                height: 1.35,
+                fontWeight: Revamp.enabled ? UiType.cardTitleWeight : null,
+              ),
             ),
             const SizedBox(height: 4),
             Row(

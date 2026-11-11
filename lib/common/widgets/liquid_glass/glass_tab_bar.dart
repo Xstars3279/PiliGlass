@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/revamp_theme.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:material_ui/material_ui.dart';
@@ -45,23 +46,17 @@ class GlassTabBar extends StatelessWidget {
         dividerColor: Colors.transparent,
         dividerHeight: 0,
         overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-        labelColor: colorScheme.onSurface,
+        labelColor: colorScheme.onSecondaryContainer,
         unselectedLabelColor: colorScheme.onSurfaceVariant,
-        labelStyle: theme.textTheme.titleMedium!.copyWith(
-          fontWeight: FontWeight.w800,
-        ),
-        unselectedLabelStyle: theme.textTheme.titleMedium!.copyWith(
-          fontWeight: FontWeight.w500,
-        ),
+        labelStyle: theme.tabBarTheme.labelStyle,
+        unselectedLabelStyle: theme.tabBarTheme.unselectedLabelStyle,
         indicatorSize: TabBarIndicatorSize.tab,
         indicatorPadding: EdgeInsets.zero,
-        // the theme's pill, filling the capsule's height here
+        // the theme's pill, 4 inside the capsule all round, so the two
+        // rounds share a center
         indicator: PillTabIndicator(
-          color: colorScheme.surfaceContainerHighest,
-          shadow: Colors.black.withValues(
-            alpha: colorScheme.brightness == .dark ? 0.4 : 0.12,
-          ),
-          insets: EdgeInsets.zero,
+          color: colorScheme.secondaryContainer,
+          insets: const EdgeInsets.all(UiSpace.s4),
         ),
         onTap: (index) {
           feedBack();

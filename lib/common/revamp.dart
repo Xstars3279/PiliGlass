@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/motion/appear_in.dart';
 import 'package:PiliPlus/common/motion/pressable_scale.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -15,24 +16,20 @@ abstract final class Revamp {
   static Color wash(ColorScheme colorScheme) =>
       colorScheme.onSurface.withValues(alpha: 0.06);
 
-  // Surfaces, from the bottom up: the page (surface); a group setting off a
-  // section on it, solid (surfaceContainerLow, see [RevampGroup]); a tile on
-  // something tinted or on glass, e.g. in the video intro, the [wash]; and
-  // what rises over the page, sheets, dialogs and menus, see RevampTheme.
+  // Surfaces, from the bottom up: the light gray page (surface); a white
+  // block on it, a group or a card (surfaceContainerLow, see [RevampGroup]);
+  // a block inside that, e.g. the sub-replies (surfaceContainerHigh, see
+  // [tile]); and what rises over the page, sheets, dialogs and menus, white
+  // again, see RevampTheme. See UiColor.neutralize.
   //
-  // Corners, smallest to largest: an icon tile 10, a tile and a thumbnail
-  // 14, a cover 16, a menu 20, a group and a field 24, a sheet 28. All of
-  // them continuous, see [shape].
+  // The corners are UiRadius's, all of them continuous, see [shape].
 
   /// the color of a group, see [RevampGroup]
   static Color groupColor(ColorScheme colorScheme) =>
       colorScheme.surfaceContainerLow;
 
   /// corner radius of a group
-  static const double groupRadius = 24;
-
-  /// corner radius of an icon on its tile, see [RevampIconTile]
-  static const double iconTileRadius = 10;
+  static const double groupRadius = UiRadius.large;
 
   /// The redesign's corner: continuous, a superellipse rather than a
   /// circle's quarter, so the edge eases into its turn instead of starting
@@ -75,25 +72,26 @@ abstract final class Revamp {
       : colorScheme.surface;
 
   /// corner radius of what rises over a page: sheets and dialogs
-  static const double sheetRadius = 28;
+  static const double sheetRadius = UiRadius.large;
 
-  /// corner radius of a capsule to type in, e.g. the reply panel
-  static const double fieldRadius = 24;
+  /// corner radius of a capsule to type in, e.g. the reply panel: round at
+  /// its usual height
+  static const double fieldRadius = UiRadius.large;
 
   /// corner radius of a menu
-  static const double menuRadius = 20;
+  static const double menuRadius = UiRadius.large;
 
   /// corner radius of a cover across a card, and of a thumbnail beside a
   /// card's text
-  static const double coverRadius = 16;
-  static const double thumbRadius = 14;
+  static const double coverRadius = UiRadius.medium;
+  static const double thumbRadius = UiRadius.medium;
 
   /// 关注 and 追番 buttons: the primary color while the tap would follow,
-  /// the wash once followed. Null where the redesign is off, for upstream's.
+  /// a [tile]'s once followed. Null where the redesign is off, for upstream's.
   static Color? followBg(ColorScheme colorScheme, bool followed) => !enabled
       ? null
       : followed
-      ? wash(colorScheme)
+      ? tile(colorScheme)
       : colorScheme.primary;
   static Color? followFg(ColorScheme colorScheme, bool followed) => !enabled
       ? null
@@ -108,7 +106,7 @@ abstract final class Revamp {
       : card;
 
   /// corner radius of a tile; upstream's small blocks where it is off
-  static final double tileCorner = enabled ? 14 : 6;
+  static final double tileCorner = enabled ? UiRadius.medium : 6;
   static final BorderRadius tileRadius = BorderRadius.all(
     Radius.circular(tileCorner),
   );
@@ -116,9 +114,14 @@ abstract final class Revamp {
   /// a tile's [shape], e.g. for a Material, or an InkWell's customBorder
   static final OutlinedBorder tileShape = shape(tileRadius);
 
-  /// a tile's color; upstream's where the redesign is off
+  /// a block inside a white block, e.g. the sub-replies or an episode;
+  /// upstream's where the redesign is off
   static Color tile(ColorScheme colorScheme) =>
-      enabled ? wash(colorScheme) : colorScheme.onInverseSurface;
+      enabled ? colorScheme.surfaceContainerHigh : colorScheme.onInverseSurface;
+
+  /// a field or an unselected capsule straight on the gray page: white
+  static Color onPage(ColorScheme colorScheme) =>
+      colorScheme.surfaceContainerLow;
 
   /// Buttons over the video: a dark round of smoked glass behind each, so
   /// they read on a bright frame as well as a dark one.
@@ -185,7 +188,14 @@ class RevampGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: margin ?? const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      padding:
+          margin ??
+          const EdgeInsets.fromLTRB(
+            UiSpace.page,
+            0,
+            UiSpace.page,
+            UiSpace.section,
+          ),
       // a Material, not a ColoredBox: ink ripples paint on the nearest
       // Material, and one below the group would be hidden by its color
       child: Material(
@@ -209,7 +219,14 @@ class RevampSliverGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverPadding(
-      padding: margin ?? const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      padding:
+          margin ??
+          const EdgeInsets.fromLTRB(
+            UiSpace.page,
+            0,
+            UiSpace.page,
+            UiSpace.section,
+          ),
       sliver: DecoratedSliver(
         decoration: ShapeDecoration(
           color: Revamp.groupColor(ColorScheme.of(context)),
@@ -264,7 +281,7 @@ class RevampLargeAppBar extends StatelessWidget {
       ),
       child: SliverAppBar.large(
         automaticallyImplyLeading: implyLeading,
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(title),
         actions: actions,
       ),
     );
@@ -335,24 +352,26 @@ class RevampQuote extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      margin: const EdgeInsets.only(bottom: UiSpace.s8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: UiSpace.s12,
+        vertical: UiSpace.s8,
+      ),
       decoration: ShapeDecoration(
-        color: Revamp.wash(theme.colorScheme),
+        color: Revamp.tile(theme.colorScheme),
         shape: Revamp.tileShape,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 2,
+        spacing: UiSpace.s4,
         children: [
           for (final line in shown)
             Text(
               line,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelMedium!.copyWith(
-                color: theme.colorScheme.outline,
-                height: 1.4,
+              style: UiType.caption.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
         ],
@@ -401,7 +420,12 @@ Widget revampGroupRow({
   final first = index == 0;
   final last = index == count - 1;
   return Padding(
-    padding: EdgeInsets.fromLTRB(12, first ? 4 : 0, 12, last ? 12 : 0),
+    padding: EdgeInsets.fromLTRB(
+      UiSpace.page,
+      first ? UiSpace.s4 : 0,
+      UiSpace.page,
+      last ? UiSpace.section : 0,
+    ),
     // a Material, not a ColoredBox: ink ripples paint on the nearest
     // Material, and one below the group would be hidden by its color
     child: Material(
@@ -414,14 +438,19 @@ Widget revampGroupRow({
       ),
       clipBehavior: Clip.antiAlias,
       child: Padding(
-        padding: EdgeInsets.only(top: first ? 8 : 0, bottom: last ? 8 : 0),
+        padding: EdgeInsets.only(
+          top: first ? UiSpace.s8 : 0,
+          bottom: last ? UiSpace.s8 : 0,
+        ),
         child: child,
       ),
     ),
   );
 }
 
-/// An icon on a tinted rounded square, as in a settings list.
+/// A row's leading icon as the redesign draws it, e.g. in a settings list:
+/// plain, 24dp, in the gray of secondary text; no tile behind it, the
+/// accent is not for decoration.
 class RevampIconTile extends StatelessWidget {
   const RevampIconTile({super.key, required this.icon});
 
@@ -429,27 +458,18 @@ class RevampIconTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = ColorScheme.of(context);
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: colorScheme.primaryContainer,
-        shape: Revamp.rounded(Revamp.iconTileRadius),
+    return IconTheme.merge(
+      data: IconThemeData(
+        size: 24,
+        color: ColorScheme.of(context).onSurfaceVariant,
       ),
-      child: SizedBox.square(
-        dimension: 34,
-        child: IconTheme.merge(
-          data: IconThemeData(
-            size: 20,
-            color: colorScheme.onPrimaryContainer,
-          ),
-          child: Center(child: icon),
-        ),
-      ),
+      child: icon,
     );
   }
 }
 
-/// A settings row's leading icon, on a tile when the redesign is on.
+/// A settings row's leading icon, as [RevampIconTile] when the redesign is
+/// on.
 Widget? revampLeading(Widget? leading) =>
     Revamp.enabled && leading != null ? RevampIconTile(icon: leading) : leading;
 

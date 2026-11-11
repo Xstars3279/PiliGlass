@@ -3,6 +3,7 @@ import 'package:PiliPlus/common/motion/appear_in.dart';
 import 'package:PiliPlus/common/motion/cover_hero.dart';
 import 'package:PiliPlus/common/motion/pressable_scale.dart';
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -203,6 +204,7 @@ class VideoCardH extends StatelessWidget {
                   fontSize: theme.textTheme.bodyMedium!.fontSize,
                   height: 1.42,
                   letterSpacing: 0.3,
+                  fontWeight: Revamp.enabled ? UiType.cardTitleWeight : null,
                 ),
                 maxLines: 2,
                 overflow: .ellipsis,

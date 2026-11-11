@@ -3,9 +3,9 @@ import 'package:material_ui/material_ui.dart'
 
 abstract final class Style {
   static const cardSpace = 8.0;
-  static const safeSpace = 12.0;
+  static const safeSpace = 16.0;
   static const mdRadius = BorderRadius.all(imgRadius);
-  static const imgRadius = Radius.circular(10);
+  static const imgRadius = Radius.circular(12);
   static const borderRadius6 = BorderRadius.all(.circular(6));
   static const aspectRatio = 16 / 10;
   static const aspectRatio16x9 = 16 / 9;
