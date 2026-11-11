@@ -42,6 +42,15 @@ abstract final class UiSpace {
 
   /// between one section and the next
   static const double section = s24;
+
+  /// the dock: its height, and its gap to the bottom's safe area
+  static const double dock = 64;
+  static const double dockGap = s8;
+
+  /// the room under a list on a page with the dock, so its last row
+  /// scrolls clear of it: the dock, its gap and the safe area, and 24
+  static double underDock(BuildContext context) =>
+      MediaQuery.viewPaddingOf(context).bottom + dockGap + dock + s24;
 }
 
 /// Corners. An inner corner is the outer one less the space between them,

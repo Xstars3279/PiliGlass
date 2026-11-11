@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/button/more_btn.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -219,10 +220,10 @@ class _PgcPageState extends State<PgcPage> with AutomaticKeepAliveClientMixin {
   List<Widget> _buildRcmd(ThemeData theme) => [
     _buildRcmdTitle(theme),
     SliverPadding(
-      padding: const EdgeInsets.only(
+      padding: EdgeInsets.only(
         left: Style.safeSpace,
         right: Style.safeSpace,
-        bottom: 100,
+        bottom: Revamp.enabled ? UiSpace.underDock(context) : 100,
       ),
       sliver: Obx(
         () => _buildRcmdBody(controller.loadingState.value),

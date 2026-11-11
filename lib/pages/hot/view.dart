@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -111,7 +112,10 @@ class _HotPageState extends State<HotPage>
               ),
             ),
           SliverPadding(
-            padding: const EdgeInsets.only(top: 7, bottom: 100),
+            padding: EdgeInsets.only(
+              top: 7,
+              bottom: Revamp.enabled ? UiSpace.underDock(context) : 100,
+            ),
             sliver: Obx(
               () => _buildBody(controller.loadingState.value),
             ),

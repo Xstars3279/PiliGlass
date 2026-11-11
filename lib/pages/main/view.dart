@@ -527,7 +527,7 @@ class _MainAppState extends PopScopeState<MainApp>
 
   Widget _buildIcon({required NavigationBarType type, bool selected = false}) {
     final icon = Revamp.enabled
-        ? UiIcons.nav(type, selected: selected)
+        ? UiIcons.nav(type)
         : selected
         ? type.selectIcon
         : type.icon;

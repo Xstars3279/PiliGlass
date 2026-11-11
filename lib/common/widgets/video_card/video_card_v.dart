@@ -125,14 +125,16 @@ class VideoCardV extends StatelessWidget {
               ),
             ),
           ),
+          // 更多: a 20 icon on a 40 tap target, centered 10 in from the
+          // card's right edge
           if (videoItem.goto == 'av')
             Positioned(
-              right: -5,
-              bottom: -2,
-              width: 29,
-              height: 29,
+              right: -10,
+              bottom: -10,
+              width: 40,
+              height: 40,
               child: VideoPopupMenu(
-                iconSize: 17,
+                iconSize: 20,
                 videoItem: videoItem,
                 onRemove: onRemove,
               ),
@@ -165,48 +167,50 @@ class VideoCardV extends StatelessWidget {
               borderRadius: BorderRadius.zero,
             ),
           ),
-          const Positioned(
+          // the lower 40% of the cover darkened, so its figures read on a
+          // white cover as well as on one with big words of its own
+          Positioned(
             left: 0,
             right: 0,
             bottom: 0,
-            height: 40,
-            child: DecoratedBox(
+            height: height * 0.4,
+            child: const DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: .topCenter,
                   end: .bottomCenter,
-                  colors: [Color(0x00000000), Color(0x8C000000)],
+                  colors: [Color(0x00000000), Color(0x99000000)],
                 ),
               ),
             ),
           ),
           Positioned(
-            left: 8,
-            right: 8,
-            bottom: 6,
+            left: UiSpace.s8,
+            right: UiSpace.s8,
+            bottom: UiSpace.s8,
             child: Row(
-              spacing: 6,
+              spacing: UiSpace.s8,
               children: [
                 StatWidget(
                   type: .play,
                   value: videoItem.stat.view,
                   color: white,
+                  textStyle: UiType.label.copyWith(color: white),
                 ),
                 if (videoItem.goto != 'picture')
                   StatWidget(
                     type: .danmaku,
                     value: videoItem.stat.danmu,
                     color: white,
+                    textStyle: UiType.label.copyWith(color: white),
                   ),
                 const Spacer(),
                 if (videoItem.duration > 0)
                   Text(
                     DurationUtils.formatDuration(videoItem.duration),
-                    style: const TextStyle(
+                    style: UiType.label.copyWith(
                       color: white,
-                      fontSize: 11,
-                      fontWeight: .w600,
-                      fontFeatures: [FontFeature.tabularFigures()],
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
               ],
@@ -221,7 +225,8 @@ class VideoCardV extends StatelessWidget {
     final theme = Theme.of(context);
     return Expanded(
       child: Padding(
-        padding: const .fromLTRB(2, 8, 2, 4),
+        // 8 below the cover, nothing left over at the bottom
+        padding: const .fromLTRB(2, UiSpace.s8, 2, 0),
         child: Column(
           crossAxisAlignment: .start,
           children: [
@@ -282,11 +287,12 @@ class VideoCardV extends StatelessWidget {
                     style: TextStyle(
                       height: 1.5,
                       fontSize: theme.textTheme.labelMedium!.fontSize,
-                      color: theme.colorScheme.outline,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
-                if (videoItem.goto == 'av') const SizedBox(width: 10),
+                // room for 更多
+                if (videoItem.goto == 'av') const SizedBox(width: 20),
               ],
             ),
           ],

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:PiliPlus/common/motion/appear_in.dart';
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -59,7 +60,10 @@ class _DynamicsTabPageState extends State<DynamicsTabPage>
         slivers: [
           RevampTopInset.sliver(context),
           SliverPadding(
-            padding: EdgeInsets.only(top: Revamp.enabled ? 8 : 0, bottom: 100),
+            padding: EdgeInsets.only(
+              top: Revamp.enabled ? 8 : 0,
+              bottom: Revamp.enabled ? UiSpace.underDock(context) : 100,
+            ),
             sliver: buildPage(
               Obx(() => _buildBody(controller.loadingState.value)),
             ),

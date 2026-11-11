@@ -2,6 +2,7 @@ import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/skeleton/video_card_v.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/button/more_btn.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
@@ -63,9 +64,9 @@ class _LivePageState extends State<LivePage>
           slivers: [
             RevampTopInset.sliver(context),
             SliverPadding(
-              padding: const EdgeInsets.only(
+              padding: EdgeInsets.only(
                 top: Style.cardSpace,
-                bottom: 100,
+                bottom: Revamp.enabled ? UiSpace.underDock(context) : 100,
               ),
               sliver: SliverMainAxisGroup(
                 slivers: [

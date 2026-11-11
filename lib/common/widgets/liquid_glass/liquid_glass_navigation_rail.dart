@@ -441,12 +441,9 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
             child: ClipPath(
               clipper: _PillClipper(pillRRect),
               child: IconTheme.merge(
-                data: IconThemeData(
-                  size: 24,
-                  color: colorScheme.onSecondaryContainer,
-                ),
+                data: IconThemeData(size: 24, color: colorScheme.primary),
                 child: DefaultTextStyle.merge(
-                  style: TextStyle(color: colorScheme.onSecondaryContainer),
+                  style: TextStyle(color: colorScheme.primary),
                   child: tabs(selected: true),
                 ),
               ),

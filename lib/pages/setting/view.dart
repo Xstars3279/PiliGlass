@@ -157,13 +157,14 @@ class _SettingPageState extends State<SettingPage> {
 
   Widget _revampList() {
     final colorScheme = theme.colorScheme;
-    final titleStyle = theme.textTheme.titleMedium!;
-    final subTitleStyle = theme.textTheme.labelMedium!.copyWith(
-      color: colorScheme.outline,
+    final titleStyle = UiType.body.copyWith(color: colorScheme.onSurface);
+    final subTitleStyle = UiType.caption.copyWith(
+      color: colorScheme.onSurfaceVariant,
     );
     final chevron = Icon(
       Icons.chevron_right_rounded,
-      color: colorScheme.outline,
+      size: 20,
+      color: colorScheme.onSurfaceVariant,
     );
     _SettingsModel item(SettingType type) =>
         _items.firstWhere((e) => e.type == type);
@@ -194,17 +195,8 @@ class _SettingPageState extends State<SettingPage> {
       child: Column(
         crossAxisAlignment: .start,
         children: [
-          Padding(
-            padding: const .fromLTRB(28, 6, 28, 6),
-            child: Text(
-              label,
-              style: theme.textTheme.labelLarge!.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          RevampGroup(child: Column(children: types.map(tile).toList())),
+          RevampGroupLabel(label),
+          RevampGroup(child: Column(children: revampDivided(types.map(tile)))),
         ],
       ),
     );
@@ -215,12 +207,7 @@ class _SettingPageState extends State<SettingPage> {
         SliverToBoxAdapter(child: _revampSearch()),
         SliverToBoxAdapter(child: _revampAccount(titleStyle, chevron)),
         // what PiliGlass adds, on its own above upstream's settings
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const .only(bottom: 6),
-            child: RevampGroup(child: tile(.glassSetting)),
-          ),
-        ),
+        SliverToBoxAdapter(child: RevampGroup(child: tile(.glassSetting))),
         section('内容', const [
           .privacySetting,
           .recommendSetting,
@@ -234,9 +221,26 @@ class _SettingPageState extends State<SettingPage> {
           .webdavSetting,
         ]),
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const .only(top: 6),
-            child: RevampGroup(child: tile(.about, showSubtitle: false)),
+          child: RevampGroup(child: tile(.about, showSubtitle: false)),
+        ),
+        // signing out at the very end, on its own, in red
+        SliverToBoxAdapter(
+          child: Obx(
+            () => _noAccount.value
+                ? const SizedBox.shrink()
+                : RevampGroup(
+                    child: ListTile(
+                      onTap: () => _logoutDialog(context),
+                      leading: Icon(
+                        Icons.logout_rounded,
+                        color: colorScheme.error,
+                      ),
+                      title: Text(
+                        '退出登录',
+                        style: UiType.body.copyWith(color: colorScheme.error),
+                      ),
+                    ),
+                  ),
           ),
         ),
         SliverPadding(padding: EdgeInsets.only(bottom: padding.bottom + 60)),
@@ -284,16 +288,18 @@ class _SettingPageState extends State<SettingPage> {
     final account = Get.find<AccountService>();
     final face = account.face;
     return RevampGroup(
-      margin: const .fromLTRB(12, 0, 12, 18),
       child: Column(
         children: [
           ListTile(
-            contentPadding: const .fromLTRB(16, 10, 16, 10),
+            contentPadding: const .symmetric(
+              horizontal: UiSpace.card,
+              vertical: UiSpace.s12,
+            ),
             onTap: () => LoginPageController.switchAccountDialog(context),
             leading: Obx(
               () => face.value.isEmpty
                   ? CircleAvatar(
-                      radius: 26,
+                      radius: 24,
                       backgroundColor: colorScheme.surfaceContainerHigh,
                       child: Icon(
                         Icons.person_outline,
@@ -302,8 +308,8 @@ class _SettingPageState extends State<SettingPage> {
                     )
                   : NetworkImgLayer(
                       src: face.value,
-                      width: 52,
-                      height: 52,
+                      width: 48,
+                      height: 48,
                       type: .avatar,
                     ),
             ),
@@ -314,35 +320,16 @@ class _SettingPageState extends State<SettingPage> {
               final user = account.isLogin.value ? Pref.userInfoCache : null;
               return Text(
                 user?.uname ?? '未登录',
-                style: titleStyle.copyWith(
-                  fontWeight: UiType.title.fontWeight,
-                ),
+                style: UiType.bodyStrong.copyWith(color: colorScheme.onSurface),
               );
             }),
             subtitle: Text(
               '切换账号',
-              style: theme.textTheme.labelMedium!.copyWith(
-                color: colorScheme.outline,
+              style: UiType.caption.copyWith(
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
             trailing: chevron,
-          ),
-          Obx(
-            () => _noAccount.value
-                ? const SizedBox.shrink()
-                : ListTile(
-                    onTap: () => _logoutDialog(context),
-                    leading: RevampIconTile(
-                      icon: Icon(
-                        Icons.logout_outlined,
-                        color: colorScheme.error,
-                      ),
-                    ),
-                    title: Text(
-                      '退出登录',
-                      style: titleStyle.copyWith(color: colorScheme.error),
-                    ),
-                  ),
           ),
         ],
       ),

@@ -122,16 +122,14 @@ abstract final class Revamp {
   static Color onPage(ColorScheme colorScheme) =>
       colorScheme.surfaceContainerLow;
 
-  /// Buttons over the video: a dark round of smoked glass behind each, so
-  /// they read on a bright frame as well as a dark one.
-  /// The light rim shows the round on the black bars beside a video too.
+  /// Buttons over the video or a cover: a round of black 32% behind each,
+  /// 40 across, so the white icon reads on a bright frame as well as a dark
+  /// one. Never light glass.
   static const overlayButtonStyle = ButtonStyle(
     padding: WidgetStatePropertyAll(EdgeInsets.zero),
-    backgroundColor: WidgetStatePropertyAll(Color(0x47000000)),
-    shape: WidgetStatePropertyAll(
-      CircleBorder(side: BorderSide(color: Color(0x33FFFFFF), width: 0.8)),
-    ),
-    fixedSize: WidgetStatePropertyAll(Size.square(34)),
+    backgroundColor: WidgetStatePropertyAll(Color(0x52000000)),
+    shape: WidgetStatePropertyAll(CircleBorder()),
+    fixedSize: WidgetStatePropertyAll(Size.square(40)),
     minimumSize: WidgetStatePropertyAll(Size.zero),
     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
   );
@@ -139,10 +137,8 @@ abstract final class Revamp {
   /// the smoked round of [overlayButtonStyle], for controls that are not
   /// buttons of their own
   static const overlayRoundDecoration = ShapeDecoration(
-    color: Color(0x47000000),
-    shape: CircleBorder(
-      side: BorderSide(color: Color(0x33FFFFFF), width: 0.8),
-    ),
+    color: Color(0x52000000),
+    shape: CircleBorder(),
   );
 
   /// [child] on the smoked round when the redesign is on
@@ -152,10 +148,8 @@ abstract final class Revamp {
 
   /// the smoked glass of [overlayRoundDecoration] as a capsule
   static const overlayCapsuleDecoration = ShapeDecoration(
-    color: Color(0x47000000),
-    shape: StadiumBorder(
-      side: BorderSide(color: Color(0x33FFFFFF), width: 0.8),
-    ),
+    color: Color(0x52000000),
+    shape: StadiumBorder(),
   );
 
   /// A label over the video, e.g. 1.0X or 1080P, on a capsule of the same
@@ -278,7 +272,9 @@ class RevampLargeAppBar extends StatelessWidget {
           systemOverlayStyle: a.systemOverlayStyle,
         ),
       ),
-      child: SliverAppBar.large(
+      // medium, not large: its title is the large title's 24, and it sits
+      // just below the bar instead of a bar's height lower
+      child: SliverAppBar.medium(
         automaticallyImplyLeading: implyLeading,
         title: Text(title),
         actions: actions,
@@ -325,6 +321,59 @@ class RevampLargeTitle extends StatelessWidget {
     );
   }
 }
+
+/// The small label above a group, e.g. 内容 over the settings: lined up with
+/// the text in the group, 8 above it.
+class RevampGroupLabel extends StatelessWidget {
+  const RevampGroupLabel(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(
+      UiSpace.page + UiSpace.card,
+      0,
+      UiSpace.page + UiSpace.card,
+      UiSpace.s8,
+    ),
+    child: Text(
+      text,
+      style: UiType.caption.copyWith(
+        fontWeight: UiType.label.fontWeight,
+        color: ColorScheme.of(context).onSurfaceVariant,
+      ),
+    ),
+  );
+}
+
+/// The line between two rows of a group: 1dp, from where the row's text
+/// starts, past its 24 icon and the 12 after it, to the group's padding.
+class RevampRowDivider extends StatelessWidget {
+  const RevampRowDivider({super.key, this.indent = rowTextStart});
+
+  /// where a row's text starts: its padding, the icon, the gap
+  static const double rowTextStart = UiSpace.card + 24 + UiSpace.iconText;
+
+  final double indent;
+
+  @override
+  Widget build(BuildContext context) => Divider(
+    height: 1,
+    thickness: 1,
+    indent: indent,
+    endIndent: UiSpace.card,
+    color: ColorScheme.of(context).outlineVariant,
+  );
+}
+
+/// [rows] with a [RevampRowDivider] between each two
+List<Widget> revampDivided(Iterable<Widget> rows) => [
+  for (final (index, row) in rows.indexed) ...[
+    if (index > 0) const RevampRowDivider(),
+    row,
+  ],
+];
 
 /// [rows] drawn as one rounded group, see [revampGroupRow]
 List<Widget> revampGroupRows(BuildContext context, List<Widget> rows) => [

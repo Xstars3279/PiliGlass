@@ -59,7 +59,7 @@ abstract final class RevampTheme {
         labelStyle: type.titleSmall!.merge(
           UiType.bodyStrong.copyWith(fontWeight: UiType.title.fontWeight),
         ),
-        unselectedLabelStyle: type.titleSmall!.merge(UiType.bodyStrong),
+        unselectedLabelStyle: type.titleSmall!.merge(UiType.body),
         // the pill is the feedback; a rectangular ripple would cut across it
         overlayColor: const WidgetStatePropertyAll(Colors.transparent),
         splashFactory: NoSplash.splashFactory,
@@ -140,6 +140,9 @@ abstract final class RevampTheme {
         ),
         horizontalTitleGap: UiSpace.iconText,
         minLeadingWidth: 24,
+        minTileHeight: 56,
+        minVerticalPadding: UiSpace.s12,
+        contentPadding: const EdgeInsets.symmetric(horizontal: UiSpace.card),
       ),
       dividerTheme: theme.dividerTheme.copyWith(
         color: colorScheme.outlineVariant,

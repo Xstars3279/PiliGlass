@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/ui_icons.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
@@ -116,6 +117,29 @@ class _HomePageState extends CommonPageState<HomePage>
           ),
         ),
       ),
+      // the feed fades out behind the tabs: the page's color at the top,
+      // nothing 24 below them
+      if (_homeController.tabs.length > 1)
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: _floatingTabsHeight + UiSpace.s24,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: .topCenter,
+                  end: .bottomCenter,
+                  colors: [
+                    _colorScheme.surface,
+                    _colorScheme.surface.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       Positioned(top: 0, left: 0, right: 0, child: tabBar),
     ],
   );
@@ -163,7 +187,7 @@ class _HomePageState extends CommonPageState<HomePage>
                       refraction: true,
                       padding: EdgeInsets.zero,
                       child: SizedBox.square(
-                        dimension: 48,
+                        dimension: GlassTabBar.height,
                         child: Center(child: msgBadge(_mainController)),
                       ),
                     )

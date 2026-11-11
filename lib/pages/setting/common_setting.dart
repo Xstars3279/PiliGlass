@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/models/common/setting_type.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
@@ -62,22 +63,23 @@ class _CommonSettingState extends State<CommonSetting> {
             ),
             SliverPadding(
               padding: EdgeInsets.fromLTRB(
-                (showAppBar ? padding.left : 0) + 12,
-                4,
-                (showAppBar ? padding.right : 0) + 12,
+                (showAppBar ? padding.left : 0) + UiSpace.page,
+                UiSpace.s4,
+                (showAppBar ? padding.right : 0) + UiSpace.page,
                 padding.bottom + 60,
               ),
               sliver: RevampSliverGroup(
                 margin: EdgeInsets.zero,
                 sliver: SliverPadding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  sliver: SliverList.builder(
+                  sliver: SliverList.separated(
                     itemCount: settings.length,
                     // ink ripples need a Material above the group's color
                     itemBuilder: (context, index) => Material(
                       type: MaterialType.transparency,
                       child: settings[index].widget,
                     ),
+                    separatorBuilder: (_, _) => const RevampRowDivider(),
                   ),
                 ),
               ),

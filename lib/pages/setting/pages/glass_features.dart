@@ -57,12 +57,12 @@ class GlassFeaturesPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    label(name),
+                    RevampGroupLabel(name),
                     RevampGroup(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Column(
-                          children: models.map((e) => e.widget).toList(),
+                          children: revampDivided(models.map((e) => e.widget)),
                         ),
                       ),
                     ),

@@ -44,7 +44,10 @@ class _RcmdPageState extends State<RcmdPage>
           slivers: [
             RevampTopInset.sliver(context),
             SliverPadding(
-              padding: const .only(top: Style.cardSpace, bottom: 100),
+              padding: .only(
+                top: Style.cardSpace,
+                bottom: Revamp.enabled ? UiSpace.underDock(context) : 100,
+              ),
               sliver: Obx(
                 () => _buildBody(colorScheme, controller.loadingState.value),
               ),
@@ -60,8 +63,11 @@ class _RcmdPageState extends State<RcmdPage>
     crossAxisSpacing: Revamp.enabled ? UiSpace.gridColumn : Style.cardSpace,
     maxCrossAxisExtent: Pref.recommendCardWidth,
     childAspectRatio: Style.aspectRatio,
-    // text below the cover: two title lines and the UP row
-    mainAxisExtent: MediaQuery.textScalerOf(context).scale(76),
+    // text below the cover: 8, two title lines, 4 and the UP row, and no
+    // more
+    mainAxisExtent: MediaQuery.textScalerOf(context).scale(
+      Revamp.enabled ? 70 : 76,
+    ),
   );
 
   /// when the current list arrived, so its cards can animate in

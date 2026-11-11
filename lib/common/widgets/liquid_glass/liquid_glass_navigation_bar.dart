@@ -45,13 +45,14 @@ final _pullSpring = SpringDescription.withDurationAndBounce(
 const _kPullLimit = 7 / 32;
 const _kPullStretch = 0.5;
 
-const _kBarHeight = 64.0;
+const _kBarHeight = UiSpace.dock;
 const _kBarPadding = 4.0;
-const _kPillHeight = _kBarHeight - 2 * _kBarPadding;
+// the selected tab's pill, 8 inside the bar above and below
+const _kPillHeight = 48.0;
 const _kTabWidth = 82.0;
 const _kPressedScale = 78 / 56;
 // dock: the bar and the search button side by side
-const _kDockGap = 10.0;
+const _kDockGap = UiSpace.s8;
 const _kDockEdge = 16.0;
 // shape changes of the dock overshoot a little
 final _dockSpring = _spring(0.75, 320);
@@ -548,12 +549,9 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
                 bottom: _kBarPadding,
               ),
               child: IconTheme.merge(
-                data: IconThemeData(
-                  size: 24,
-                  color: colorScheme.onSecondaryContainer,
-                ),
+                data: IconThemeData(size: 24, color: colorScheme.primary),
                 child: DefaultTextStyle.merge(
-                  style: TextStyle(color: colorScheme.onSecondaryContainer),
+                  style: TextStyle(color: colorScheme.primary),
                   child: _tabs(
                     selected: true,
                     scale: lerpDouble(1, 1.2, press)!,
@@ -759,7 +757,7 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     );
     final hasSearch = widget.onSearch != null;
 
-    return Padding(
+    final dock = Padding(
       padding: .fromLTRB(
         viewPadding.left,
         0,
@@ -875,6 +873,34 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
           );
         },
       ),
+    );
+    // the content fades out behind the dock, from 40 above it to the
+    // bottom of the screen, so no half line of text shows by its edges
+    return Stack(
+      clipBehavior: .none,
+      children: [
+        Positioned(
+          left: 0,
+          right: 0,
+          top: -40,
+          bottom: 0,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: .topCenter,
+                  end: .bottomCenter,
+                  colors: [
+                    colorScheme.surface.withValues(alpha: 0),
+                    colorScheme.surface.withValues(alpha: 0.9),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        dock,
+      ],
     );
   }
 }

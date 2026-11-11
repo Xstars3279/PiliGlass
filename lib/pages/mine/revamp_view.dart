@@ -31,7 +31,7 @@ extension _MineRevamp on _MediaPageState {
               onRefresh: controller.onRefresh,
               child: onBuild(
                 ListView(
-                  padding: const .only(bottom: 150),
+                  padding: .only(bottom: UiSpace.underDock(context)),
                   physics: const AlwaysScrollableScrollPhysics(),
                   children: [
                     // who and their numbers in one card, like the account

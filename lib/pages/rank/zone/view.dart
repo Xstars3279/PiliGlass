@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/video_card/video_card_h.dart';
@@ -45,7 +47,10 @@ class _ZonePageState extends State<ZonePage>
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.only(top: 7, bottom: 100),
+            padding: EdgeInsets.only(
+              top: 7,
+              bottom: Revamp.enabled ? UiSpace.underDock(context) : 100,
+            ),
             sliver: Obx(() => _buildBody(controller.loadingState.value)),
           ),
         ],

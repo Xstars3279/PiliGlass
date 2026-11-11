@@ -14,7 +14,11 @@ class StatWidget extends StatelessWidget {
     required this.value,
     this.color,
     this.iconSize = 13,
+    this.textStyle,
   });
+
+  /// the number's style in place of the default 12, e.g. over a cover
+  final TextStyle? textStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +37,7 @@ class StatWidget extends StatelessWidget {
         ),
         Text(
           NumUtils.numFormat(value),
-          style: TextStyle(fontSize: 12, color: color),
+          style: textStyle ?? TextStyle(fontSize: 12, color: color),
         ),
       ],
     );

@@ -25,9 +25,18 @@ class GlassTabBar extends StatelessWidget {
   final bool refraction;
 
   /// the bar's own height; with [margin], the room it takes over a feed
-  static const height = 48.0;
-  static const margin = EdgeInsets.fromLTRB(12, 6, 12, 4);
-  static const extent = 6.0 + height + 4;
+  static const height = 44.0;
+  static const margin = EdgeInsets.fromLTRB(
+    UiSpace.page,
+    UiSpace.s8,
+    UiSpace.page,
+    UiSpace.s4,
+  );
+  static const extent = UiSpace.s8 + height + UiSpace.s4;
+
+  /// the width over which the tabs fade out at the right, so a tab that
+  /// runs out of room is never cut off sharp
+  static const fade = UiSpace.s24;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +45,17 @@ class GlassTabBar extends StatelessWidget {
     return GlassCapsule(
       // a feed passing under it is bent like the dock bends it
       refraction: refraction,
-      child: TabBar(
+      child: ShaderMask(
+        blendMode: BlendMode.dstIn,
+        shaderCallback: (bounds) => LinearGradient(
+          colors: const [Colors.white, Colors.white, Colors.transparent],
+          stops: [
+            0,
+            ((bounds.width - fade) / bounds.width).clamp(0.0, 1.0),
+            1,
+          ],
+        ).createShader(Offset.zero & bounds.size),
+        child: TabBar(
         controller: controller,
         tabs: labels.map((e) => Tab(text: e)).toList(),
         isScrollable: true,
@@ -62,6 +81,7 @@ class GlassTabBar extends StatelessWidget {
           feedBack();
           onTap?.call(index);
         },
+        ),
       ),
     );
   }
