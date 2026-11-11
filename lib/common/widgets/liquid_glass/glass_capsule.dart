@@ -1,10 +1,12 @@
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// A capsule of the dock's glass, for the rows of controls at the top of a
-/// page, e.g. the home tabs: the same tint, rim and shadow as the dock, so
-/// the top of a page and its bottom read as one set.
+/// A capsule of the shell, as the dock is (UiGlass, G1), for the rows of
+/// controls at the top of a page, e.g. the home tabs: the same color,
+/// shadow and transparency as the dock, so the top of a page and its bottom
+/// read as one set.
 class GlassCapsule extends StatelessWidget {
   const GlassCapsule({
     super.key,
@@ -16,28 +18,27 @@ class GlassCapsule extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
 
-  /// over content that moves, e.g. a feed: clearer, and bending it at the
-  /// rim like the dock
+  /// over content that moves, e.g. a feed: bending it at the rim like the
+  /// dock, where the shell is glass enough (极致)
   final bool refraction;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
     final isDark = colorScheme.brightness == .dark;
+    final lens = refraction && UiGlass.refraction;
     // the painters and the glass round off whatever the height
     return CustomPaint(
       painter: _StadiumShadow(
-        Colors.black.withValues(alpha: isDark ? 0.2 : 0.08),
+        UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
       ),
-      foregroundPainter: _StadiumRim(isDark),
+      foregroundPainter: _StadiumRim(isDark, UiGlass.edge(colorScheme)),
       child: LiquidGlass(
-        blurSigma: 3,
-        refractionHeight: refraction ? 16 : 0,
-        refractionAmount: refraction ? 18 : 0,
-        saturation: 1.5,
-        color: colorScheme.surfaceContainer.withValues(
-          alpha: refraction ? 0.32 : 0.55,
-        ),
+        blurSigma: UiGlass.shellBlur,
+        refractionHeight: lens ? 16 : 0,
+        refractionAmount: lens ? 18 : 0,
+        saturation: UiGlass.saturation,
+        color: UiGlass.shell(colorScheme),
         child: Padding(padding: padding, child: child),
       ),
     );
@@ -45,32 +46,35 @@ class GlassCapsule extends StatelessWidget {
 }
 
 class _StadiumShadow extends CustomPainter {
-  _StadiumShadow(this.color);
+  _StadiumShadow(this.shadow);
 
-  final Color color;
+  final BoxShadow? shadow;
 
   @override
-  void paint(Canvas canvas, Size size) => GlassShadowPainter(
+  void paint(Canvas canvas, Size size) => GlassShadowPainter.of(
     radius: Radius.circular(size.height / 2),
-    color: color,
+    shadow: shadow,
   ).paint(canvas, size);
 
   @override
-  bool shouldRepaint(_StadiumShadow old) => old.color != color;
+  bool shouldRepaint(_StadiumShadow old) => old.shadow != shadow;
 }
 
 class _StadiumRim extends CustomPainter {
-  _StadiumRim(this.isDark);
+  _StadiumRim(this.isDark, this.edge);
 
   final bool isDark;
+  final Color? edge;
 
   @override
   void paint(Canvas canvas, Size size) => GlassRimPainter(
     radius: Radius.circular(size.height / 2),
-    opacity: 0.75,
+    opacity: UiGlass.rim,
     isDark: isDark,
+    edge: edge,
   ).paint(canvas, size);
 
   @override
-  bool shouldRepaint(_StadiumRim old) => old.isDark != isDark;
+  bool shouldRepaint(_StadiumRim old) =>
+      old.isDark != isDark || old.edge != edge;
 }

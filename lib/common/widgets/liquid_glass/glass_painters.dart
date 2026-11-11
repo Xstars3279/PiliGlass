@@ -3,13 +3,28 @@ import 'package:material_ui/material_ui.dart';
 /// A drop shadow drawn only outside the shape, so it does not darken the
 /// translucent glass.
 class GlassShadowPainter extends CustomPainter {
-  GlassShadowPainter({required this.radius, required this.color});
+  GlassShadowPainter({
+    required this.radius,
+    required this.color,
+    this.offset = const Offset(0, 2),
+    this.sigma = 10,
+  });
+
+  /// [shadow] around the shape, or nothing for none, e.g. in the dark,
+  /// see UiGlass.shadowIn
+  GlassShadowPainter.of({required this.radius, required BoxShadow? shadow})
+    : color = shadow?.color ?? const Color(0x00000000),
+      offset = shadow?.offset ?? Offset.zero,
+      sigma = shadow?.blurSigma ?? 0;
 
   final Radius radius;
   final Color color;
+  final Offset offset;
+  final double sigma;
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (color.a == 0) return;
     final rrect = RRect.fromRectAndRadius(Offset.zero & size, radius);
     canvas
       ..save()
@@ -20,21 +35,25 @@ class GlassShadowPainter extends CustomPainter {
           ..addRRect(rrect),
       )
       ..drawRRect(
-        rrect.shift(const Offset(0, 2)),
+        rrect.shift(offset),
         Paint()
           ..color = color
-          ..maskFilter = const MaskFilter.blur(.normal, 10),
+          ..maskFilter = MaskFilter.blur(.normal, sigma),
       )
       ..restore();
   }
 
   @override
   bool shouldRepaint(GlassShadowPainter oldDelegate) =>
-      oldDelegate.radius != radius || oldDelegate.color != color;
+      oldDelegate.radius != radius ||
+      oldDelegate.color != color ||
+      oldDelegate.offset != offset ||
+      oldDelegate.sigma != sigma;
 }
 
 /// The specular rim: light from the top left and, weaker, the bottom right.
-/// Optionally a glow under the finger and an inner shadow.
+/// Optionally a glow under the finger, an inner shadow, and a plain [edge]
+/// all round, the outline a floating surface has in the dark.
 class GlassRimPainter extends CustomPainter {
   GlassRimPainter({
     required this.radius,
@@ -43,6 +62,7 @@ class GlassRimPainter extends CustomPainter {
     this.glow = 0,
     this.glowCenter = 0,
     this.innerShadow = 0,
+    this.edge,
   });
 
   final Radius radius;
@@ -51,6 +71,7 @@ class GlassRimPainter extends CustomPainter {
   final double glow;
   final double glowCenter;
   final double innerShadow;
+  final Color? edge;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -98,6 +119,16 @@ class GlassRimPainter extends CustomPainter {
         ..restore();
     }
 
+    if (edge case final edge?) {
+      canvas.drawRRect(
+        rrect.deflate(0.5),
+        Paint()
+          ..style = .stroke
+          ..strokeWidth = 1
+          ..color = edge,
+      );
+    }
+
     if (opacity <= 0) return;
     final peak = (isDark ? 0.35 : 0.6) * opacity;
     canvas.drawRRect(
@@ -126,5 +157,6 @@ class GlassRimPainter extends CustomPainter {
       old.isDark != isDark ||
       old.glow != glow ||
       old.glowCenter != glowCenter ||
-      old.innerShadow != innerShadow;
+      old.innerShadow != innerShadow ||
+      old.edge != edge;
 }

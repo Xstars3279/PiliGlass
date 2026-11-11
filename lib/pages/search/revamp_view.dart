@@ -103,21 +103,22 @@ extension _SearchRevamp on _SearchPageState {
     final colorScheme = theme.colorScheme;
     final isDark = colorScheme.brightness == .dark;
     Widget result = CustomPaint(
-      painter: GlassShadowPainter(
+      painter: GlassShadowPainter.of(
         radius: radius,
-        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.1),
+        shadow: UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
       ),
       foregroundPainter: GlassRimPainter(
         radius: radius,
-        opacity: 0.75,
+        opacity: UiGlass.rim,
         isDark: isDark,
+        edge: UiGlass.edge(colorScheme),
       ),
       child: LiquidGlass(
-        blurSigma: 3,
-        refractionHeight: 20,
-        refractionAmount: 20,
-        saturation: 1.5,
-        color: colorScheme.surfaceContainer.withValues(alpha: 0.4),
+        blurSigma: UiGlass.shellBlur,
+        refractionHeight: UiGlass.refraction ? 20 : 0,
+        refractionAmount: UiGlass.refraction ? 20 : 0,
+        saturation: UiGlass.saturation,
+        color: UiGlass.shell(colorScheme),
         child: Center(child: child),
       ),
     );

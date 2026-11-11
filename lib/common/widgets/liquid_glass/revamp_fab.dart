@@ -83,21 +83,22 @@ class RevampFab extends StatelessWidget {
       height: size,
       width: _extended ? null : size,
       child: CustomPaint(
-        painter: GlassShadowPainter(
+        painter: GlassShadowPainter.of(
           radius: radius,
-          color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.12),
+          shadow: UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
         ),
         foregroundPainter: GlassRimPainter(
           radius: radius,
-          opacity: 0.8,
+          opacity: UiGlass.rim,
           isDark: isDark,
+          edge: UiGlass.edge(colorScheme),
         ),
         child: LiquidGlass(
-          blurSigma: 3,
-          refractionHeight: 18,
-          refractionAmount: 20,
-          saturation: 1.5,
-          color: colorScheme.surfaceContainer.withValues(alpha: 0.4),
+          blurSigma: UiGlass.shellBlur,
+          refractionHeight: UiGlass.refraction ? 18 : 0,
+          refractionAmount: UiGlass.refraction ? 20 : 0,
+          saturation: UiGlass.saturation,
+          color: UiGlass.shell(colorScheme),
           child: content,
         ),
       ),

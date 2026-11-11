@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
 import 'package:PiliPlus/common/motion/springs.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/lens_motion.dart';
@@ -360,9 +361,7 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
     final tabHeight = _tabHeight;
     final height = _heightFor(tabHeight);
     final corner = Radius.circular(width / 2);
-    final selectedFill = (isDark ? Colors.white : Colors.black).withValues(
-      alpha: 0.1,
-    );
+    final selectedFill = colorScheme.secondaryContainer;
 
     // stretched along the motion and thinner across it, or squashed braking
     final jelly = _jelly.value;
@@ -399,9 +398,10 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
       child: Stack(
         clipBehavior: .none,
         children: [
-          // the rail: the glass's tint, rim and shadow, nothing blurred
+          // the rail, a surface of the shell like the dock
           Positioned.fill(child: _GlassSurface(radius: corner)),
-          // selected at rest, almost nothing when pressed
+          // the selected tab's pill; pressed, almost nothing where the lens
+          // of clear glass shows instead (极致), solid everywhere else
           Positioned.fromRect(
             rect: pillRect,
             child: DecoratedBox(
@@ -409,11 +409,13 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(pillRadius),
                 ),
-                color: Color.lerp(
-                  selectedFill,
-                  Colors.black.withValues(alpha: 0.03),
-                  press,
-                ),
+                color: UiGlass.refraction
+                    ? Color.lerp(
+                        selectedFill,
+                        Colors.black.withValues(alpha: 0.03),
+                        press,
+                      )
+                    : selectedFill,
               ),
             ),
           ),
@@ -422,9 +424,12 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
             child: ClipPath(
               clipper: _PillClipper(pillRRect, inverse: true),
               child: IconTheme.merge(
-                data: IconThemeData(size: 24, color: colorScheme.onSurface),
+                data: IconThemeData(
+                  size: 24,
+                  color: colorScheme.onSurfaceVariant,
+                ),
                 child: DefaultTextStyle.merge(
-                  style: TextStyle(color: colorScheme.onSurface),
+                  style: TextStyle(color: colorScheme.onSurfaceVariant),
                   child: tabs(selected: false),
                 ),
               ),
@@ -435,16 +440,20 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
             child: ClipPath(
               clipper: _PillClipper(pillRRect),
               child: IconTheme.merge(
-                data: IconThemeData(size: 24, color: colorScheme.primary),
+                data: IconThemeData(
+                  size: 24,
+                  color: colorScheme.onSecondaryContainer,
+                ),
                 child: DefaultTextStyle.merge(
-                  style: TextStyle(color: colorScheme.primary),
+                  style: TextStyle(color: colorScheme.onSecondaryContainer),
                   child: tabs(selected: true),
                 ),
               ),
             ),
           ),
-          // the pill's lens, above the accent tabs so they bend too
-          if (press > 0.001)
+          // the pill's lens, above the accent tabs so they bend too; only
+          // where the shell is glass (极致)
+          if (UiGlass.refraction && press > 0.001)
             Positioned.fromRect(
               rect: pillRect,
               child: CustomPaint(
@@ -664,9 +673,8 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
   }
 }
 
-/// The rail's look without blurring anything: the page behind it is plain,
-/// so the glass's tint over it is a flat color, with the glass's rim and
-/// shadow.
+/// A surface of the shell (UiGlass, G1), as the dock is: solid, or
+/// showing the page through at 标准 and 极致, with the shell's shadow.
 class _GlassSurface extends StatelessWidget {
   const _GlassSurface({this.radius = _kCorner, this.child});
 
@@ -678,22 +686,21 @@ class _GlassSurface extends StatelessWidget {
     final colorScheme = ColorScheme.of(context);
     final isDark = colorScheme.brightness == .dark;
     return CustomPaint(
-      painter: GlassShadowPainter(
+      painter: GlassShadowPainter.of(
         radius: radius,
-        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.1),
+        shadow: UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
       ),
       foregroundPainter: GlassRimPainter(
         radius: radius,
-        opacity: 0.75,
+        opacity: UiGlass.rim,
         isDark: isDark,
+        edge: UiGlass.edge(colorScheme),
       ),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: isDark
-              ? colorScheme.surfaceContainerHigh
-              : colorScheme.surfaceContainerLowest,
-          borderRadius: BorderRadius.all(radius),
-        ),
+      child: LiquidGlass(
+        radius: radius.x,
+        blurSigma: UiGlass.shellBlur,
+        saturation: UiGlass.saturation,
+        color: UiGlass.shell(colorScheme),
         child: child,
       ),
     );

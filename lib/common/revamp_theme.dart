@@ -23,14 +23,13 @@ abstract final class RevampTheme {
       );
       PiliSheetMotion.reverseCurve = Curves.easeInCubic;
     }
-    // translucent, so the patches blur what is behind; opaque with the
-    // glass surfaces off
-    double glass(double alpha) => GlassFeatures.glassSurfaces ? alpha : 1;
-    // the light catching the edge of the glass surfaces
-    final rim = BorderSide(
-      color: Colors.white.withValues(alpha: isDark ? 0.12 : 0.6),
-      width: 0.8,
-    );
+    // menus, sheets and dialogs are panels (UiGlass, G2): white, solid at
+    // 无, at 标准 and 极致 just translucent enough for the patches to blur
+    // what is behind them; a shadow in the light, an outline in the dark
+    final panel = UiGlass.panel(colorScheme);
+    final rim = UiGlass.side(colorScheme);
+    // a Material's shadow at 6 comes near the panel's, see UiGlass.panelShadow
+    final shadow = isDark ? Colors.transparent : Colors.black;
 
     // every size snapped to one of UiType's five; bodyMedium, the default
     // of a Text and the size of a video card's title, stays as it is
@@ -80,8 +79,9 @@ abstract final class RevampTheme {
         trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
       ),
       popupMenuTheme: theme.popupMenuTheme.copyWith(
-        color: colorScheme.surfaceContainerLow.withValues(alpha: glass(0.72)),
-        elevation: 0,
+        color: panel,
+        elevation: 6,
+        shadowColor: shadow,
         shape: Revamp.rounded(Revamp.menuRadius, side: rim),
         menuPadding: const EdgeInsets.symmetric(vertical: UiSpace.s8),
         textStyle: type.bodyLarge,
@@ -100,9 +100,9 @@ abstract final class RevampTheme {
       // translucent like the menus, and blurred by the same kind of patch
       // (tool/patches/material-ui_glass_sheet.patch)
       dialogTheme: theme.dialogTheme.copyWith(
-        backgroundColor: colorScheme.surfaceContainerLow.withValues(
-          alpha: glass(0.85),
-        ),
+        backgroundColor: panel,
+        elevation: 6,
+        shadowColor: shadow,
         shape: Revamp.rounded(Revamp.sheetRadius, side: rim),
         titleTextStyle: theme.dialogTheme.titleTextStyle?.merge(UiType.title),
         contentTextStyle: type.bodyLarge!.copyWith(
@@ -110,12 +110,11 @@ abstract final class RevampTheme {
         ),
       ),
       bottomSheetTheme: theme.bottomSheetTheme.copyWith(
-        backgroundColor: colorScheme.surfaceContainerLow.withValues(
-          alpha: glass(0.82),
-        ),
-        modalBackgroundColor: colorScheme.surfaceContainerLow.withValues(
-          alpha: glass(0.82),
-        ),
+        backgroundColor: panel,
+        modalBackgroundColor: panel,
+        elevation: 6,
+        modalElevation: 6,
+        shadowColor: shadow,
         shape: Revamp.shape(
           const BorderRadius.vertical(top: Radius.circular(Revamp.sheetRadius)),
           side: rim,

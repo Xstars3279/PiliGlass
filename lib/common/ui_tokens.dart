@@ -1,4 +1,5 @@
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
+import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart' show FlexSchemeVariant;
 import 'package:material_ui/material_ui.dart';
@@ -130,4 +131,88 @@ abstract final class UiColor {
       surfaceTint: Colors.transparent,
     );
   }
+}
+
+/// 透明效果 in 设置 › PiliGlass 特性: how much of the content shows
+/// through what floats over it. 无 by default: floating, but solid.
+enum UiGlassLevel {
+  none('无'),
+  standard('标准'),
+  extreme('极致');
+
+  const UiGlassLevel(this.label);
+
+  final String label;
+}
+
+/// What floats over the content, in two kinds:
+/// - the shell (G1): the dock, the rail, the home tabs, the round buttons;
+/// - a panel (G2): the comments, menus, sheets, dialogs, input bars, which
+///   carry text to read and so are always all but solid.
+///
+/// Both are white blocks with a shadow, an outline instead in the dark,
+/// where a shadow does not show. The player's controls (G3) keep their dark
+/// gradient at every level, and the content is solid at every level.
+abstract final class UiGlass {
+  static const String key = 'glassLevel';
+
+  /// read once, like the other features: a restart applies a change
+  static final UiGlassLevel level =
+      UiGlassLevel.values[(GStorage.setting.get(key, defaultValue: 0) as int)
+          .clamp(0, UiGlassLevel.values.length - 1)];
+
+  /// anything showing through at all
+  static bool get clear => level != UiGlassLevel.none;
+
+  /// the shell bending what is behind it, at 极致 only
+  static bool get refraction => level == UiGlassLevel.extreme;
+
+  /// the colors behind the shell made more vivid where it shows them
+  static double get saturation => clear ? 1.5 : 1;
+
+  /// the shell: solid, 90% or 80%
+  static double get shellAlpha => switch (level) {
+    UiGlassLevel.none => 1,
+    UiGlassLevel.standard => 0.9,
+    UiGlassLevel.extreme => 0.8,
+  };
+  static double get shellBlur => clear ? 6 : 0;
+  static Color shell(ColorScheme colorScheme) =>
+      colorScheme.surfaceContainerLow.withValues(alpha: shellAlpha);
+
+  /// a panel: solid, or 95% with a weak blur
+  static double get panelAlpha => clear ? 0.95 : 1;
+  static double get panelBlur => clear ? 4 : 0;
+  static Color panel(ColorScheme colorScheme) =>
+      colorScheme.surfaceContainerLow.withValues(alpha: panelAlpha);
+
+  static const shellShadow = BoxShadow(
+    color: Color(0x14000000),
+    offset: Offset(0, 4),
+    blurRadius: 16,
+  );
+  static const panelShadow = BoxShadow(
+    color: Color(0x1F000000),
+    offset: Offset(0, 8),
+    blurRadius: 24,
+  );
+
+  /// [shadow] in the light, none in the dark
+  static BoxShadow? shadowIn(ColorScheme colorScheme, BoxShadow shadow) =>
+      colorScheme.brightness.isDark ? null : shadow;
+
+  /// the outline in the dark, none in the light
+  static Color? edge(ColorScheme colorScheme) =>
+      colorScheme.brightness.isDark ? colorScheme.outlineVariant : null;
+
+  /// the dark outline as a side, for a shape
+  static BorderSide side(ColorScheme colorScheme) => switch (edge(
+    colorScheme,
+  )) {
+    final color? => BorderSide(color: color),
+    null => BorderSide.none,
+  };
+
+  /// the lit rim of glass, at 极致 only, where the shell is glass
+  static double get rim => refraction ? 0.75 : 0;
 }

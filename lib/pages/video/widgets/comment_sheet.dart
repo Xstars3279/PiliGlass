@@ -14,7 +14,6 @@ import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/pages/video/reply/controller.dart';
 import 'package:PiliPlus/pages/video/reply/view.dart';
 import 'package:PiliPlus/pages/video/reply_reply/view.dart';
-import 'package:PiliPlus/pages/video/widgets/ambient_background.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:flutter/scheduler.dart' show SchedulerBinding;
 import 'package:get/get.dart';
@@ -286,6 +285,8 @@ class _CommentSheetState extends State<CommentSheet>
   }
 
   Future<void> _captureBackdrop() async {
+    // solid at 无: nothing shows through to take a still of
+    if (!UiGlass.clear) return;
     final boundary =
         _pageKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
     if (boundary == null || !boundary.hasSize) return;
@@ -306,8 +307,8 @@ class _CommentSheetState extends State<CommentSheet>
         bounds,
         Paint()
           ..imageFilter = ui.ImageFilter.blur(
-            sigmaX: 24 * scale,
-            sigmaY: 24 * scale,
+            sigmaX: 8 * scale,
+            sigmaY: 8 * scale,
             tileMode: .clamp,
           )
           ..colorFilter = ColorFilter.matrix(_saturation(1.7)),
@@ -748,32 +749,28 @@ class _CommentSheetState extends State<CommentSheet>
           right: 0,
           top: 0,
           bottom: -_height,
-          // no drop shadow: on a sheet this large its blur costs frames too
+          // a panel (UiGlass, G2): white and even all over, the page behind
+          // showing faintly at 标准 and 极致 only. No drop shadow: on a sheet
+          // this large its blur costs frames too
           child: CustomPaint(
             foregroundPainter: GlassRimPainter(
               radius: radius,
-              opacity: 0.8,
+              opacity: 0,
               isDark: isDark,
+              edge: UiGlass.edge(colorScheme),
             ),
             child: ClipRRect(
               borderRadius: const .vertical(top: radius),
-              child: AmbientTintBuilder(
-                cover: widget.cover,
-                builder: (context, tint, _) {
-                  final glass = Color.lerp(colorScheme.surface, tint, 0.35)!;
-                  return CustomPaint(
-                    painter: _FrozenGlassPainter(
-                      backdrop: _backdrop,
-                      scale: _backdropScale,
-                      shown: _shown,
-                      height: _height,
-                      // until the still is ready: the glass's color, opaque
-                      // enough to read on
-                      base: glass.withValues(alpha: 0.94),
-                      color: glass.withValues(alpha: isDark ? 0.6 : 0.64),
-                    ),
-                  );
-                },
+              child: CustomPaint(
+                painter: _FrozenGlassPainter(
+                  backdrop: _backdrop,
+                  scale: _backdropScale,
+                  shown: _shown,
+                  height: _height,
+                  // the same until the still is ready
+                  base: UiGlass.panel(colorScheme),
+                  color: UiGlass.panel(colorScheme),
+                ),
               ),
             ),
           ),
@@ -1095,22 +1092,21 @@ class _InputBar extends StatelessWidget {
           // nothing was opened, e.g. replies are closed: forget the bar
           Future.microtask(() => PublishRoute.pendingMorph = null);
         },
+        // an input bar: a panel (UiGlass, G2)
         child: CustomPaint(
-          painter: GlassShadowPainter(
+          painter: GlassShadowPainter.of(
             radius: radius,
-            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.12),
+            shadow: UiGlass.shadowIn(colorScheme, UiGlass.panelShadow),
           ),
           foregroundPainter: GlassRimPainter(
             radius: radius,
-            opacity: 0.75,
+            opacity: 0,
             isDark: isDark,
+            edge: UiGlass.edge(colorScheme),
           ),
           child: LiquidGlass(
-            blurSigma: 3,
-            refractionHeight: 16,
-            refractionAmount: 18,
-            saturation: 1.5,
-            color: colorScheme.surfaceContainer.withValues(alpha: 0.4),
+            blurSigma: UiGlass.panelBlur,
+            color: UiGlass.panel(colorScheme),
             child: Padding(
               padding: const .symmetric(horizontal: 18),
               child: Row(

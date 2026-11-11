@@ -12,6 +12,7 @@ import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
 import 'package:PiliPlus/common/motion/springs.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/lens_motion.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass.dart';
@@ -48,8 +49,6 @@ const _kBarPadding = 4.0;
 const _kPillHeight = _kBarHeight - 2 * _kBarPadding;
 const _kTabWidth = 82.0;
 const _kPressedScale = 78 / 56;
-const _kBarBlur = 3.0;
-const _kBarSaturation = 1.5;
 // dock: the bar and the search button side by side
 const _kDockGap = 10.0;
 const _kDockEdge = 16.0;
@@ -382,7 +381,7 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
                     Text(
                       e.label,
                       maxLines: 1,
-                      style: const TextStyle(fontSize: 12, height: 1.2),
+                      style: UiType.label,
                     ),
                   ],
                 ),
@@ -446,24 +445,24 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
                   1,
                 ),
                 child: CustomPaint(
-                  painter: GlassShadowPainter(
+                  painter: GlassShadowPainter.of(
                     radius: barRadius,
-                    color: Colors.black.withValues(
-                      alpha: isDark ? 0.2 : 0.1,
-                    ),
+                    shadow: UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
                   ),
                   foregroundPainter: GlassRimPainter(
                     radius: barRadius,
-                    opacity: 0.75,
+                    opacity: UiGlass.rim,
                     isDark: isDark,
-                    glow: press,
+                    edge: UiGlass.edge(colorScheme),
+                    // the light under the finger is the glass's
+                    glow: UiGlass.refraction ? press : 0,
                     glowCenter: pillCenter.dx - panelOffset,
                   ),
                   child: LiquidGlass(
-                    blurSigma: _kBarBlur,
-                    refractionHeight: 24,
-                    refractionAmount: 24,
-                    saturation: _kBarSaturation,
+                    blurSigma: UiGlass.shellBlur,
+                    refractionHeight: UiGlass.refraction ? 24 : 0,
+                    refractionAmount: UiGlass.refraction ? 24 : 0,
+                    saturation: UiGlass.saturation,
                     color: barTint,
                   ),
                 ),
@@ -496,8 +495,8 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
                     height: _kPillHeight,
                   ),
                   child: LiquidGlass(
-                    blurSigma: _kBarBlur,
-                    saturation: _kBarSaturation,
+                    blurSigma: UiGlass.shellBlur,
+                    saturation: UiGlass.saturation,
                     color: barTint,
                   ),
                 ),
@@ -505,17 +504,20 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
             ),
           ),
         ),
-        // selected at rest, almost nothing when pressed
+        // the selected tab's pill; pressed, almost nothing where the lens
+        // of clear glass shows instead (极致), solid everywhere else
         Positioned.fromRect(
           rect: pillRect,
           child: DecoratedBox(
             decoration: ShapeDecoration(
               shape: const StadiumBorder(),
-              color: Color.lerp(
-                selectedFill,
-                Colors.black.withValues(alpha: 0.03),
-                press,
-              ),
+              color: UiGlass.refraction
+                  ? Color.lerp(
+                      selectedFill,
+                      Colors.black.withValues(alpha: 0.03),
+                      press,
+                    )
+                  : selectedFill,
             ),
           ),
         ),
@@ -547,10 +549,10 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
               child: IconTheme.merge(
                 data: IconThemeData(
                   size: 24,
-                  color: colorScheme.primary,
+                  color: colorScheme.onSecondaryContainer,
                 ),
                 child: DefaultTextStyle.merge(
-                  style: TextStyle(color: colorScheme.primary),
+                  style: TextStyle(color: colorScheme.onSecondaryContainer),
                   child: _tabs(
                     selected: true,
                     scale: lerpDouble(1, 1.2, press)!,
@@ -561,8 +563,9 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
           ),
         ),
         // The pill's lens, above the accent tabs so they bend too.
-        // Without blur: pressed, the pill is clear glass.
-        if (press > 0.001)
+        // Without blur: pressed, the pill is clear glass. Only where the
+        // shell is glass (极致); elsewhere the pill stays as it is.
+        if (UiGlass.refraction && press > 0.001)
           Positioned.fromRect(
             rect: pillRect,
             child: CustomPaint(
@@ -603,20 +606,21 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
       children: [
         Positioned.fill(
           child: CustomPaint(
-            painter: GlassShadowPainter(
+            painter: GlassShadowPainter.of(
               radius: barRadius,
-              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.1),
+              shadow: UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
             ),
             foregroundPainter: GlassRimPainter(
               radius: barRadius,
-              opacity: 0.75,
+              opacity: UiGlass.rim,
               isDark: isDark,
+              edge: UiGlass.edge(colorScheme),
             ),
             child: LiquidGlass(
-              blurSigma: _kBarBlur,
-              refractionHeight: 24,
-              refractionAmount: 24,
-              saturation: _kBarSaturation,
+              blurSigma: UiGlass.shellBlur,
+              refractionHeight: UiGlass.refraction ? 24 : 0,
+              refractionAmount: UiGlass.refraction ? 24 : 0,
+              saturation: UiGlass.saturation,
               color: barTint,
             ),
           ),
@@ -671,20 +675,21 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
       child: GestureDetector(
         onTap: action?.onTap ?? _openSearch,
         child: CustomPaint(
-          painter: GlassShadowPainter(
+          painter: GlassShadowPainter.of(
             radius: radius,
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.1),
+            shadow: UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
           ),
           foregroundPainter: GlassRimPainter(
             radius: radius,
-            opacity: 0.75,
+            opacity: UiGlass.rim,
             isDark: isDark,
+            edge: UiGlass.edge(colorScheme),
           ),
           child: LiquidGlass(
-            blurSigma: _kBarBlur,
-            refractionHeight: 20,
-            refractionAmount: 20,
-            saturation: _kBarSaturation,
+            blurSigma: UiGlass.shellBlur,
+            refractionHeight: UiGlass.refraction ? 20 : 0,
+            refractionAmount: UiGlass.refraction ? 20 : 0,
+            saturation: UiGlass.saturation,
             color: barTint,
             child: Padding(
               padding: const .symmetric(horizontal: (_kBarHeight - 24) / 2),
@@ -741,15 +746,13 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = colorScheme.brightness == .dark;
     final viewPadding = MediaQuery.viewPaddingOf(context);
-    final barTint = colorScheme.surfaceContainer.withValues(alpha: 0.28);
-    final selectedFill = (isDark ? Colors.white : Colors.black).withValues(
-      alpha: 0.1,
-    );
+    final barTint = UiGlass.shell(colorScheme);
+    final selectedFill = colorScheme.secondaryContainer;
 
     final baseTabs = IconTheme.merge(
-      data: IconThemeData(size: 24, color: colorScheme.onSurface),
+      data: IconThemeData(size: 24, color: colorScheme.onSurfaceVariant),
       child: DefaultTextStyle.merge(
-        style: TextStyle(color: colorScheme.onSurface),
+        style: TextStyle(color: colorScheme.onSurfaceVariant),
         child: _tabs(selected: false),
       ),
     );

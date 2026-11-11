@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/utils/storage.dart';
 
 /// PiliGlass's own features, each with its switch in 设置 › PiliGlass 特性
@@ -12,8 +13,6 @@ abstract final class GlassFeatures {
       commentSheetKey = 'glassCommentSheet',
       danmakuBarKey = 'glassDanmakuBar',
       ambientKey = 'glassAmbient',
-      refractionKey = 'glassRefraction',
-      glassSurfacesKey = 'glassSurfaces',
       toastKey = 'glassToast',
       refreshBallKey = 'glassRefreshBall',
       jellySwitchKey = 'glassJellySwitch',
@@ -41,11 +40,9 @@ abstract final class GlassFeatures {
   /// the video page tinted with the cover's color
   static final bool ambient = _get(ambientKey);
 
-  /// the glass bending what is behind it; blur only where it is off
-  static final bool refraction = _get(refractionKey);
-
-  /// menus, sheets and dialogs of frosted glass
-  static final bool glassSurfaces = _get(glassSurfacesKey);
+  /// the glass bending what is behind it, at 透明效果 极致 only; see
+  /// [UiGlass]
+  static bool get refraction => UiGlass.refraction;
 
   /// toasts on a capsule of glass
   static final bool toast = _get(toastKey);

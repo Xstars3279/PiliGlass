@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass.dart';
 import 'package:material_ui/material_ui.dart';
@@ -24,21 +25,22 @@ class GlassRefreshIndicator extends StatelessWidget {
       child: SizedBox.square(
         dimension: _size,
         child: CustomPaint(
-          painter: GlassShadowPainter(
+          painter: GlassShadowPainter.of(
             radius: radius,
-            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.12),
+            shadow: UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
           ),
           foregroundPainter: GlassRimPainter(
             radius: radius,
-            opacity: 0.8,
+            opacity: UiGlass.rim,
             isDark: isDark,
+            edge: UiGlass.edge(colorScheme),
           ),
           child: LiquidGlass(
-            blurSigma: 3,
-            refractionHeight: 12,
-            refractionAmount: 14,
-            saturation: 1.5,
-            color: colorScheme.surfaceContainer.withValues(alpha: 0.4),
+            blurSigma: UiGlass.shellBlur,
+            refractionHeight: UiGlass.refraction ? 12 : 0,
+            refractionAmount: UiGlass.refraction ? 14 : 0,
+            saturation: UiGlass.saturation,
+            color: UiGlass.shell(colorScheme),
             child: Padding(
               padding: const EdgeInsets.all(8),
               child: CircularProgressIndicator(

@@ -1,5 +1,7 @@
 import 'package:PiliPlus/common/glass_features.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
+import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/slider_dialog.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
@@ -15,8 +17,8 @@ const List<(String, List<SettingsModel>)> glassSettingGroups = [
     '界面',
     [
       SwitchModel(
-        title: '液态玻璃底栏与新界面',
-        subtitle: '悬浮的玻璃底栏、搜索按钮，以及重新设计的各个页面；关闭后回到原版样式',
+        title: '新界面',
+        subtitle: '悬浮底栏、搜索按钮，以及重新设计的各个页面；关闭后回到原版样式',
         leading: Icon(Icons.water_drop_outlined),
         setKey: SettingBoxKey.liquidGlassNavBar,
         defaultVal: true,
@@ -65,21 +67,11 @@ const List<(String, List<SettingsModel>)> glassSettingGroups = [
   (
     '玻璃效果',
     [
-      SwitchModel(
-        title: '液态玻璃折射',
-        subtitle: '玻璃边缘折射背后的内容；关闭后只保留模糊，更省电',
+      NormalModel(
+        title: '透明效果',
         leading: Icon(Icons.lens_blur_outlined),
-        setKey: GlassFeatures.refractionKey,
-        defaultVal: true,
-        needReboot: true,
-      ),
-      SwitchModel(
-        title: '玻璃菜单与弹窗',
-        subtitle: '弹出菜单、底部弹窗、对话框为半透明磨砂玻璃',
-        leading: Icon(Icons.layers_outlined),
-        setKey: GlassFeatures.glassSurfacesKey,
-        defaultVal: true,
-        needReboot: true,
+        getSubtitle: _glassLevelSubtitle,
+        onTap: _showGlassLevelDialog,
       ),
       SwitchModel(
         title: '玻璃提示框',
@@ -185,6 +177,38 @@ const List<(String, List<SettingsModel>)> glassSettingGroups = [
 final List<SettingsModel> glassSettings = [
   for (final (_, models) in glassSettingGroups) ...models,
 ];
+
+/// as set, while [UiGlass.level] keeps what the app started with
+UiGlassLevel _glassLevelNow() =>
+    UiGlassLevel.values[(GStorage.setting.get(
+      UiGlass.key,
+      defaultValue: 0,
+    ) as int).clamp(0, UiGlassLevel.values.length - 1)];
+
+String _glassLevelSubtitle() => switch (_glassLevelNow()) {
+  UiGlassLevel.none => '无：底栏、顶栏、面板都不透明，文字最清楚',
+  UiGlassLevel.standard => '标准：底栏、顶栏微微透出背后的内容，面板近乎不透明',
+  UiGlassLevel.extreme => '极致：底栏、顶栏更通透，边缘折射背后的内容，更耗电',
+};
+
+Future<void> _showGlassLevelDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<UiGlassLevel>(
+    context: context,
+    builder: (context) => SelectDialog<UiGlassLevel>(
+      title: '透明效果',
+      value: _glassLevelNow(),
+      values: [for (final e in UiGlassLevel.values) (e, e.label)],
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(UiGlass.key, res.index);
+    SmartDialog.showToast('重启生效');
+    setState();
+  }
+}
 
 /// as set, while [GlassFeatures.railWidth] keeps what the app started with
 double _railWidthNow() =>

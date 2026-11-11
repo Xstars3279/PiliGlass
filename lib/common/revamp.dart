@@ -65,11 +65,9 @@ abstract final class Revamp {
           child: child,
         );
 
-  /// A bar pinned over a list, e.g. the sort bar over the comments: nearly
-  /// solid, so what scrolls under it shows faintly, as on the video page.
-  static Color barColor(ColorScheme colorScheme) => enabled
-      ? colorScheme.surface.withValues(alpha: 0.94)
-      : colorScheme.surface;
+  /// A bar pinned over a list, e.g. the sort bar over the comments: part
+  /// of the content, so solid, the page's own gray.
+  static Color barColor(ColorScheme colorScheme) => colorScheme.surface;
 
   /// corner radius of what rises over a page: sheets and dialogs
   static const double sheetRadius = UiRadius.large;
