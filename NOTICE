@@ -70,8 +70,10 @@ Neither Apache-2.0 project ships a NOTICE file.
 The motion of the dock's and the rail's lens (how it lands with a bounce,
 follows a finger, stretches and squashes with its speed, pulls back like
 rubber past the ends and carries a flick on), and the bar's stretch after a
-finger that leaves it, follow prism_ui's NavigationDock, written anew for
-PiliGlass:
+finger that leaves it, are adapted from prism_ui's NavigationDock: its
+springs and constants, its rubber band and saturation curves, and the way
+it derives the stretch from the lens's speed and braking, carried over to
+PiliGlass's own springs and widgets:
 
 Files:
   lib/common/widgets/liquid_glass/lens_motion.dart

@@ -1,6 +1,9 @@
-// The lens's motion follows prism_ui's NavigationDock, the dock of FlClash
-// (GPL-3.0): https://github.com/chen08209/prism_ui
-// Written for PiliGlass after it. See NOTICE.
+// Adapted from prism_ui's lib/navigation_dock.dart (FloatingNavigationBar),
+// the dock of FlClash, by chen08209 (GPL-3.0):
+// https://github.com/chen08209/prism_ui
+// Its springs, constants, rubber band and saturation curves and the way it
+// derives the lens's stretch, carried over to PiliGlass's SpringFollower.
+// See NOTICE.
 
 import 'dart:math' as math;
 
