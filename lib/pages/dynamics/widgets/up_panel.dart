@@ -243,46 +243,50 @@ class _UpPanelState extends State<UpPanel> {
     return SizedBox(
       height: 76,
       width: isTop ? 70 : null,
-      child: Revamp.pressable(InkWell(
-        borderRadius: Revamp.enabled ? Revamp.tileRadius : null,
-        onTap: () {
-          feedBack();
-          if (isLive) {
-            PageUtils.toLiveRoom(item.roomId);
-          } else {
-            _onSelect(item);
-          }
-        },
-        // onDoubleTap: isLive ? () => _onSelect(data) : null,
-        onLongPress: !isAll ? toMemberPage : null,
-        onSecondaryTap: !isAll && !PlatformUtils.isMobile ? toMemberPage : null,
-        child: Opacity(
-          opacity: isCurrent ? 1 : 0.6,
-          child: Column(
-            spacing: 4,
-            mainAxisSize: .min,
-            mainAxisAlignment: .center,
-            children: [
-              avatar,
-              Padding(
-                padding: const .symmetric(horizontal: 4),
-                child: Text(
-                  isTop ? '${item.uname}\n' : item.uname!,
-                  maxLines: 2,
-                  textAlign: .center,
-                  style: TextStyle(
-                    color: currentMid == item.mid
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.outline,
-                    height: 1.1,
-                    fontSize: 12.5,
+      child: Revamp.pressable(
+        InkWell(
+          customBorder: Revamp.enabled ? Revamp.tileShape : null,
+          onTap: () {
+            feedBack();
+            if (isLive) {
+              PageUtils.toLiveRoom(item.roomId);
+            } else {
+              _onSelect(item);
+            }
+          },
+          // onDoubleTap: isLive ? () => _onSelect(data) : null,
+          onLongPress: !isAll ? toMemberPage : null,
+          onSecondaryTap: !isAll && !PlatformUtils.isMobile
+              ? toMemberPage
+              : null,
+          child: Opacity(
+            opacity: isCurrent ? 1 : 0.6,
+            child: Column(
+              spacing: 4,
+              mainAxisSize: .min,
+              mainAxisAlignment: .center,
+              children: [
+                avatar,
+                Padding(
+                  padding: const .symmetric(horizontal: 4),
+                  child: Text(
+                    isTop ? '${item.uname}\n' : item.uname!,
+                    maxLines: 2,
+                    textAlign: .center,
+                    style: TextStyle(
+                      color: currentMid == item.mid
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.outline,
+                      height: 1.1,
+                      fontSize: 12.5,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      )),
+      ),
     );
   }
 }

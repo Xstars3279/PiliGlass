@@ -163,9 +163,9 @@ class _PagesPanelState extends State<PagesPanel> {
                     : null,
                 child: Material(
                   color: Revamp.tile(colorScheme),
-                  borderRadius: Revamp.tileRadius,
+                  shape: Revamp.tileShape,
                   child: InkWell(
-                    borderRadius: Revamp.tileRadius,
+                    customBorder: Revamp.tileShape,
                     onTap: () {
                       if (widget.onDownload case final onDownload?) {
                         if (onDownload(item) && mounted) {

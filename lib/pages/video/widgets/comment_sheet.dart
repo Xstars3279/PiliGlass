@@ -1181,7 +1181,7 @@ class _CommentPreviewCardState extends State<CommentPreviewCard> {
       padding: const .fromLTRB(12, 12, 12, 0),
       child: Material(
         color: Revamp.tile(colorScheme),
-        borderRadius: Revamp.tileRadius,
+        shape: Revamp.tileShape,
         clipBehavior: .antiAlias,
         child: InkWell(
           onTap: () => CommentSheet.open(_replyCtr),

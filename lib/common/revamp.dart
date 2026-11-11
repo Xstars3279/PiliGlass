@@ -15,12 +15,58 @@ abstract final class Revamp {
   static Color wash(ColorScheme colorScheme) =>
       colorScheme.onSurface.withValues(alpha: 0.06);
 
-  // The redesign has two kinds of blocks. A group sets off a section on a
-  // plain page: solid, see [RevampGroup]. A tile sits on something tinted
-  // or on glass, e.g. in the video intro: the wash, smaller corners.
+  // Surfaces, from the bottom up: the page (surface); a group setting off a
+  // section on it, solid (surfaceContainerLow, see [RevampGroup]); a tile on
+  // something tinted or on glass, e.g. in the video intro, the [wash]; and
+  // what rises over the page, sheets, dialogs and menus, see RevampTheme.
+  //
+  // Corners, smallest to largest: an icon tile 10, a tile and a thumbnail
+  // 14, a cover 16, a menu 20, a group and a field 24, a sheet 28. All of
+  // them continuous, see [shape].
+
+  /// the color of a group, see [RevampGroup]
+  static Color groupColor(ColorScheme colorScheme) =>
+      colorScheme.surfaceContainerLow;
 
   /// corner radius of a group
   static const double groupRadius = 24;
+
+  /// corner radius of an icon on its tile, see [RevampIconTile]
+  static const double iconTileRadius = 10;
+
+  /// The redesign's corner: continuous, a superellipse rather than a
+  /// circle's quarter, so the edge eases into its turn instead of starting
+  /// it all at once, as Apple's corners do. Upstream's round corners where
+  /// the redesign is off.
+  static OutlinedBorder shape(
+    BorderRadiusGeometry radius, {
+    BorderSide side = BorderSide.none,
+  }) => enabled
+      ? RoundedSuperellipseBorder(borderRadius: radius, side: side)
+      : RoundedRectangleBorder(borderRadius: radius, side: side);
+
+  /// [shape] with the same [radius] at every corner
+  static OutlinedBorder rounded(
+    double radius, {
+    BorderSide side = BorderSide.none,
+  }) => shape(BorderRadius.all(Radius.circular(radius)), side: side);
+
+  /// [child] clipped to [shape]
+  static Widget clip({
+    required BorderRadius radius,
+    required Widget child,
+    Clip clipBehavior = Clip.antiAlias,
+  }) => enabled
+      ? ClipRSuperellipse(
+          borderRadius: radius,
+          clipBehavior: clipBehavior,
+          child: child,
+        )
+      : ClipRRect(
+          borderRadius: radius,
+          clipBehavior: clipBehavior,
+          child: child,
+        );
 
   /// A bar pinned over a list, e.g. the sort bar over the comments: nearly
   /// solid, so what scrolls under it shows faintly, as on the video page.
@@ -66,6 +112,9 @@ abstract final class Revamp {
   static final BorderRadius tileRadius = BorderRadius.all(
     Radius.circular(tileCorner),
   );
+
+  /// a tile's [shape], e.g. for a Material, or an InkWell's customBorder
+  static final OutlinedBorder tileShape = shape(tileRadius);
 
   /// a tile's color; upstream's where the redesign is off
   static Color tile(ColorScheme colorScheme) =>
@@ -140,10 +189,8 @@ class RevampGroup extends StatelessWidget {
       // a Material, not a ColoredBox: ink ripples paint on the nearest
       // Material, and one below the group would be hidden by its color
       child: Material(
-        color: ColorScheme.of(context).surfaceContainerLow,
-        borderRadius: const BorderRadius.all(
-          Radius.circular(Revamp.groupRadius),
-        ),
+        color: Revamp.groupColor(ColorScheme.of(context)),
+        shape: Revamp.rounded(Revamp.groupRadius),
         clipBehavior: Clip.antiAlias,
         child: child,
       ),
@@ -164,11 +211,9 @@ class RevampSliverGroup extends StatelessWidget {
     return SliverPadding(
       padding: margin ?? const EdgeInsets.fromLTRB(12, 0, 12, 12),
       sliver: DecoratedSliver(
-        decoration: BoxDecoration(
-          color: ColorScheme.of(context).surfaceContainerLow,
-          borderRadius: const BorderRadius.all(
-            Radius.circular(Revamp.groupRadius),
-          ),
+        decoration: ShapeDecoration(
+          color: Revamp.groupColor(ColorScheme.of(context)),
+          shape: Revamp.rounded(Revamp.groupRadius),
         ),
         sliver: sliver,
       ),
@@ -292,9 +337,9 @@ class RevampQuote extends StatelessWidget {
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Revamp.wash(theme.colorScheme),
-        borderRadius: Revamp.tileRadius,
+        shape: Revamp.tileShape,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,10 +405,12 @@ Widget revampGroupRow({
     // a Material, not a ColoredBox: ink ripples paint on the nearest
     // Material, and one below the group would be hidden by its color
     child: Material(
-      color: ColorScheme.of(context).surfaceContainerLow,
-      borderRadius: BorderRadius.vertical(
-        top: first ? radius : Radius.zero,
-        bottom: last ? radius : Radius.zero,
+      color: Revamp.groupColor(ColorScheme.of(context)),
+      shape: Revamp.shape(
+        BorderRadius.vertical(
+          top: first ? radius : Radius.zero,
+          bottom: last ? radius : Radius.zero,
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: Padding(
@@ -384,9 +431,9 @@ class RevampIconTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
     return DecoratedBox(
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: colorScheme.primaryContainer,
-        borderRadius: const BorderRadius.all(Radius.circular(10)),
+        shape: Revamp.rounded(Revamp.iconTileRadius),
       ),
       child: SizedBox.square(
         dimension: 34,

@@ -58,7 +58,7 @@ class NetworkImgLayer extends StatelessWidget {
       } else if (isAvatar) {
         return ClipOval(child: child);
       } else {
-        return ClipRRect(borderRadius: _radius, child: child);
+        return Revamp.clip(radius: _radius, child: child);
       }
     } else {
       return getPlaceHolder?.call() ??

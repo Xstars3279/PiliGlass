@@ -104,9 +104,9 @@ class _SeasonPanelState extends State<SeasonPanel> {
       ),
       child: Material(
         color: Revamp.tile(theme.colorScheme),
-        borderRadius: Revamp.tileRadius,
+        shape: Revamp.tileShape,
         child: InkWell(
-          borderRadius: Revamp.tileRadius,
+          customBorder: Revamp.tileShape,
           onTap: widget.canTap
               ? () => widget.showEpisodes(
                   _videoDetailController.seasonIndex.value,

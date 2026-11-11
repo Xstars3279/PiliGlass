@@ -149,8 +149,8 @@ class VideoCardV extends StatelessWidget {
   /// Only the image flies to the player; the labels stay on the card.
   Widget _cover(double width, double height) {
     const white = Colors.white;
-    return ClipRRect(
-      borderRadius: _coverRadius,
+    return Revamp.clip(
+      radius: _coverRadius,
       child: Stack(
         fit: .expand,
         children: [

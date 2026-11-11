@@ -78,8 +78,8 @@ class VideoCardH extends StatelessWidget {
 
                           final progress = videoItem.progress;
 
-                          return ClipRRect(
-                            borderRadius: _coverRadius,
+                          return Revamp.clip(
+                            radius: _coverRadius,
                             child: Stack(
                               clipBehavior: .none,
                               children: [

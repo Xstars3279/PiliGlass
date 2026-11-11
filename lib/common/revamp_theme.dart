@@ -71,12 +71,7 @@ abstract final class RevampTheme {
       popupMenuTheme: theme.popupMenuTheme.copyWith(
         color: colorScheme.surfaceContainer.withValues(alpha: glass(0.72)),
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.all(
-            Radius.circular(Revamp.menuRadius),
-          ),
-          side: rim,
-        ),
+        shape: Revamp.rounded(Revamp.menuRadius, side: rim),
         menuPadding: const EdgeInsets.symmetric(vertical: 8),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -96,12 +91,7 @@ abstract final class RevampTheme {
         backgroundColor: colorScheme.surfaceContainerHigh.withValues(
           alpha: glass(0.85),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.all(
-            Radius.circular(Revamp.sheetRadius),
-          ),
-          side: rim,
-        ),
+        shape: Revamp.rounded(Revamp.sheetRadius, side: rim),
       ),
       bottomSheetTheme: theme.bottomSheetTheme.copyWith(
         backgroundColor: colorScheme.surfaceContainerLow.withValues(
@@ -110,12 +100,15 @@ abstract final class RevampTheme {
         modalBackgroundColor: colorScheme.surfaceContainerLow.withValues(
           alpha: glass(0.82),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(Revamp.sheetRadius),
-          ),
+        shape: Revamp.shape(
+          const BorderRadius.vertical(top: Radius.circular(Revamp.sheetRadius)),
           side: rim,
         ),
+      ),
+      // the cards of the pages not redesigned one by one, with the corners
+      // of a cover
+      cardTheme: theme.cardTheme.copyWith(
+        shape: Revamp.rounded(Revamp.coverRadius),
       ),
       appBarTheme: theme.appBarTheme.copyWith(
         titleTextStyle: theme.appBarTheme.titleTextStyle?.copyWith(

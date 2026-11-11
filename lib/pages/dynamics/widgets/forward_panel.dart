@@ -53,9 +53,9 @@ Widget forwardPanel(
       ? Container(
           margin: const .symmetric(horizontal: 12),
           padding: const .symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             color: Revamp.tile(theme.colorScheme),
-            borderRadius: Revamp.tileRadius,
+            shape: Revamp.tileShape,
           ),
           child: child,
         )

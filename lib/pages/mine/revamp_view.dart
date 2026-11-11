@@ -191,7 +191,7 @@ extension _MineRevamp on _MediaPageState {
     final colorScheme = theme.colorScheme;
     Widget stat(int? count, String label, VoidCallback onTap) => Expanded(
       child: InkWell(
-        borderRadius: Revamp.tileRadius,
+        customBorder: Revamp.tileShape,
         onTap: onTap,
         child: Padding(
           padding: const .symmetric(vertical: 10),

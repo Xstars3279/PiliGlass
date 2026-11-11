@@ -43,9 +43,9 @@ class SeasonPanel extends StatelessWidget {
             margin: index != seasons.length - 1 ? const .only(right: 10) : null,
             child: Material(
               color: Revamp.tile(colorScheme),
-              borderRadius: Revamp.tileRadius,
+              shape: Revamp.tileShape,
               child: InkWell(
-                borderRadius: Revamp.tileRadius,
+                customBorder: Revamp.tileShape,
                 onTap: () {
                   if (isCurr || pgcController.changingSeason) return;
                   pgcController.changeSeason(item.seasonId!).then((res) {

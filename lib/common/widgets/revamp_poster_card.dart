@@ -99,8 +99,8 @@ class RevampPosterCard extends StatelessWidget {
   Widget _poster(double width, double height) {
     final label = this.label;
     final hasLabel = label?.isNotEmpty == true;
-    return ClipRRect(
-      borderRadius: _radius,
+    return Revamp.clip(
+      radius: _radius,
       child: Stack(
         fit: .expand,
         children: [

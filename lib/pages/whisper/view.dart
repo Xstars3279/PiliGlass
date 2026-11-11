@@ -241,7 +241,7 @@ class _WhisperPageState extends State<WhisperPage> {
                 final item = _controller.msgFeedTopItems[index];
                 return Revamp.pressable(
                   InkWell(
-                    borderRadius: Revamp.tileRadius,
+                    customBorder: Revamp.tileShape,
                     onTap: () {
                       if (!item.enabled) {
                         SmartDialog.showToast('已禁用');
@@ -262,9 +262,9 @@ class _WhisperPageState extends State<WhisperPage> {
                               isLabelVisible: count > 0,
                               label: Text(' $count '),
                               child: DecoratedBox(
-                                decoration: BoxDecoration(
+                                decoration: ShapeDecoration(
                                   color: colorScheme.primaryContainer,
-                                  borderRadius: Revamp.tileRadius,
+                                  shape: Revamp.tileShape,
                                 ),
                                 child: SizedBox.square(
                                   dimension: 46,
