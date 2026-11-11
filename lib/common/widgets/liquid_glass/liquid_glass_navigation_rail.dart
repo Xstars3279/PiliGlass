@@ -1,12 +1,17 @@
+// The lens's motion follows prism_ui's NavigationDock, the dock of FlClash
+// (GPL-3.0), see lens_motion.dart.
+
+import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/lens_motion.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass_navigation_bar.dart'
     show LiquidGlassDockAction, LiquidGlassNavigationDestination;
-import 'package:flutter/gestures.dart' show kTouchSlop;
+import 'package:flutter/gestures.dart' show VelocityTracker, kTouchSlop;
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -139,11 +144,51 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
     _scaleX,
     _scaleY,
     _open,
+    _jelly,
   ]);
 
   late int _currentIndex = widget.selectedIndex;
   int? _pointer;
   double _downY = 0;
+
+  /// the lens stretched along its motion (> 0) or squashed (< 0), see
+  /// [LensMotion]
+  late final _jelly = _follower(0, LensMotion.jelly);
+
+  /// the finger has moved past the slop: the lens follows it
+  bool _dragging = false;
+
+  /// the tab the lens is over while pressed
+  int _pressedIndex = 0;
+
+  VelocityTracker? _tracker;
+
+  @override
+  void initState() {
+    super.initState();
+    _position.addListener(_wobble);
+  }
+
+  void _wobble() {
+    final target = LensMotion.jellyTarget(_position);
+    if ((target - _jelly.target).abs() > 1e-4) _jelly.animateTo(target);
+  }
+
+  int get _lastIndex => math.max(0, _count - 1);
+
+  /// to a tab, landing with a little bounce
+  void _travelTo(int index) {
+    _position.animateTo(index.toDouble(), spring: LensMotion.travel);
+  }
+
+  int _indexAt(double position) => position.round().clamp(0, _lastIndex);
+
+  void _select(int index) {
+    if (index != _pressedIndex) {
+      HapticFeedback.selectionClick();
+      _pressedIndex = index;
+    }
+  }
 
   int get _count => widget.destinations.length;
 
@@ -159,12 +204,13 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
     // selected from outside, e.g. by the back button
     if (widget.selectedIndex != _currentIndex && _pointer == null) {
       _currentIndex = widget.selectedIndex;
-      _moveTo(_currentIndex.toDouble());
+      _travelTo(_currentIndex);
     }
   }
 
   @override
   void dispose() {
+    _jelly.dispose();
     _position.dispose();
     _press.dispose();
     _scaleX.dispose();
@@ -173,23 +219,16 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
     super.dispose();
   }
 
-  void _moveTo(double target) {
-    final clamped = target.clamp(0.0, (_count - 1).toDouble());
-    if (clamped.round() != _position.target.round()) {
-      HapticFeedback.selectionClick();
-    }
-    _position.animateTo(clamped);
-  }
-
-  /// The tab under [y], in the space of the closed rail the finger landed
-  /// on. The rail swells from its middle, so a point is mapped onto the
-  /// rail as it is drawn now.
-  double _tabAt(double y) {
+  /// The tab under [y], in tabs, centered: 0 in the middle of the first; past
+  /// the end tabs it pulls back like rubber. [y] is in the space of the
+  /// closed rail the finger landed on, and the rail swells from its middle,
+  /// so it is mapped onto the rail as it is drawn now.
+  double _positionAt(double y) {
     final tabHeight = _tabHeight;
     final top = (_heightFor(_kTabHeight) - _heightFor(tabHeight)) / 2;
-    return ((y - top - _kPadding) / tabHeight).floorToDouble().clamp(
-      0.0,
-      (_count - 1).toDouble(),
+    return LensMotion.banded(
+      (y - top - _kPadding) / tabHeight - 0.5,
+      _lastIndex,
     );
   }
 
@@ -197,29 +236,54 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
     if (_pointer != null) return;
     _pointer = event.pointer;
     _downY = event.position.dy;
+    _dragging = false;
+    _tracker = VelocityTracker.withKind(event.kind)
+      ..addPosition(event.timeStamp, event.localPosition);
     _press.animateTo(1);
     _scaleX.animateTo(_kPressedScaleX);
     _scaleY.animateTo(_kPressedScaleY);
     _open.animateTo(1, spring: _openSpring);
-    _moveTo(_tabAt(event.localPosition.dy));
+    _pressedIndex = _indexAt(_positionAt(event.localPosition.dy));
+    _travelTo(_pressedIndex);
   }
 
   void _onPointerMove(PointerMoveEvent event) {
     if (event.pointer != _pointer) return;
-    final dy = event.localDelta.dy;
-    if (dy == 0) return;
-    _moveTo(_position.target + dy / _tabHeight);
+    _tracker?.addPosition(event.timeStamp, event.localPosition);
+    if (!_dragging) {
+      if ((event.position.dy - _downY).abs() < kTouchSlop) return;
+      _dragging = true;
+    }
+    final position = _positionAt(event.localPosition.dy);
+    _position.animateTo(position, spring: LensMotion.drag);
+    _select(_indexAt(position));
   }
 
   void _onPointerEnd(PointerEvent event) {
     if (event.pointer != _pointer) return;
     _pointer = null;
-    final index = _position.target.round();
-    _moveTo(index.toDouble());
+    final tracker = _tracker;
+    _tracker = null;
+    final up = event is PointerUpEvent;
+    if (up && tracker != null && _dragging) {
+      // let go mid-flick, the lens goes on to the next tab
+      _select(
+        LensMotion.flung(
+          target: _position.target,
+          velocity: tracker.getVelocity().pixelsPerSecond.dy / _tabHeight,
+          pressed: _pressedIndex,
+          lastIndex: _lastIndex,
+        ),
+      );
+    }
+    final index = up ? _pressedIndex : _currentIndex;
+    _dragging = false;
+    _travelTo(index);
     _press.animateTo(0);
     _scaleX.animateTo(1);
     _scaleY.animateTo(1);
     _open.animateTo(0, spring: _closeSpring);
+    if (!up) return;
     if (index != _currentIndex) {
       _currentIndex = index;
       widget.onDestinationSelected?.call(index);
@@ -250,7 +314,7 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
               label: e.label,
               onTap: () {
                 _currentIndex = i;
-                _moveTo(i.toDouble());
+                _travelTo(i);
                 widget.onDestinationSelected?.call(i);
               },
               excludeSemantics: true,
@@ -300,10 +364,11 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
       alpha: 0.1,
     );
 
-    // stretch along the motion, squash across it
-    final velocity = (_position.velocity / 10).abs();
-    final scaleY = _scaleY.value / (1 - (velocity * 0.3).clamp(0.0, 0.06));
-    final scaleX = _scaleX.value * (1 - (velocity * 0.15).clamp(0.0, 0.04));
+    // stretched along the motion and thinner across it, or squashed braking
+    final jelly = _jelly.value;
+    final scaleY = _scaleY.value * (1 + jelly);
+    final scaleX =
+        _scaleX.value * (1 - jelly * LensMotion.jellyAspect).clamp(0.5, 1.5);
 
     final pillCenter = Offset(
       width / 2,

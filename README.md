@@ -63,6 +63,7 @@ PiliGlass 站在这些项目的肩膀上，没有它们就没有这个应用：
 - [SukiSU-Ultra/SukiSU-Ultra](https://github.com/SukiSU-Ultra/SukiSU-Ultra)：液态玻璃底栏和折射效果移植自这里
 - [Kyant0/AndroidLiquidGlass](https://github.com/Kyant0/AndroidLiquidGlass)：液态玻璃折射算法的原作
 - [compose-miuix-ui/miuix](https://github.com/compose-miuix-ui/miuix)：液态玻璃底栏的原型
+- [chen08209/prism_ui](https://github.com/chen08209/prism_ui)（[FlClash](https://github.com/chen08209/FlClash) 的 UI 库）：底栏指示块的弹簧、拉伸和回弹手感参考自这里
 - [bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)
 - [media-kit](https://github.com/media-kit/media-kit)
 - [flutter_meedu_videoplayer](https://github.com/zezo357/flutter_meedu_videoplayer)

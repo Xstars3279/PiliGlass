@@ -4,14 +4,18 @@
 // FloatingBottomBar.kt is adapted from the IosLiquidGlassNavigationBar example
 // of compose-miuix-ui/miuix (Apache License 2.0):
 // https://github.com/compose-miuix-ui/miuix
+// The lens's motion and the bar's pull follow prism_ui's NavigationDock, the
+// dock of FlClash (GPL-3.0): https://github.com/chen08209/prism_ui
 // Modified for PiliGlass. See NOTICE, and LICENSES/Apache-2.0.txt.
 
+import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/lens_motion.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass.dart';
-import 'package:flutter/gestures.dart' show kTouchSlop;
+import 'package:flutter/gestures.dart' show VelocityTracker, kTouchSlop;
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -28,14 +32,22 @@ final _pressSpring = _spring(1, 1000);
 // different damping on each axis: the pill wobbles like jelly
 final _scaleXSpring = _spring(0.6, 150);
 final _scaleYSpring = _spring(0.7, 150);
-final _panelSpring = _spring(1, 300);
+
+// The bar goes after a finger that leaves it, as far as rubber lets it, and
+// its glass widens, after prism_ui's NavigationDock (FlClash); the lens
+// moves as LensMotion says.
+final _pullSpring = SpringDescription.withDurationAndBounce(
+  duration: const Duration(milliseconds: 120),
+);
+// how far, as part of the bar's height
+const _kPullLimit = 7 / 32;
+const _kPullStretch = 0.5;
 
 const _kBarHeight = 64.0;
 const _kBarPadding = 4.0;
 const _kPillHeight = _kBarHeight - 2 * _kBarPadding;
 const _kTabWidth = 82.0;
 const _kPressedScale = 78 / 56;
-const _kRubberBand = 4.0;
 const _kBarBlur = 3.0;
 const _kBarSaturation = 1.5;
 // dock: the bar and the search button side by side
@@ -132,8 +144,11 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
   late final _scaleX = _follower(1, _scaleXSpring);
   late final _scaleY = _follower(1, _scaleYSpring);
 
-  /// raw horizontal drag distance, mapped to a small rubber band offset
-  late final _panel = _follower(0, _panelSpring);
+  /// how far the bar goes after a finger past its ends, in dp
+  late final _pull = _follower(0, _pullSpring);
+
+  /// the lens stretched along its motion (> 0) or squashed (< 0)
+  late final _jelly = _follower(0, LensMotion.jelly);
 
   /// 1: the bar is a circle because of scrolling
   late final _mini = _follower(widget.minimized ? 1 : 0, _dockSpring);
@@ -146,7 +161,8 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     _press,
     _scaleX,
     _scaleY,
-    _panel,
+    _pull,
+    _jelly,
     _mini,
     _search,
   ]);
@@ -156,6 +172,20 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
 
   /// where the finger came down, to tell a tap from a drag
   double _downX = 0;
+
+  /// the finger has moved past the slop: the lens follows it
+  bool _dragging = false;
+
+  /// the tab the lens is over while pressed
+  int _pressedIndex = 0;
+
+  VelocityTracker? _tracker;
+
+  @override
+  void initState() {
+    super.initState();
+    _position.addListener(_wobble);
+  }
 
   int get _count => widget.destinations.length;
 
@@ -171,7 +201,7 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     // selected from outside, e.g. by the back button
     if (widget.selectedIndex != _currentIndex && _pointer == null) {
       _currentIndex = widget.selectedIndex;
-      _moveTo(_currentIndex.toDouble());
+      _travelTo(_currentIndex);
     }
     if (widget.minimized != oldWidget.minimized) {
       _mini.animateTo(
@@ -209,25 +239,40 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     _press.dispose();
     _scaleX.dispose();
     _scaleY.dispose();
-    _panel.dispose();
+    _pull.dispose();
+    _jelly.dispose();
     _mini.dispose();
     _search.dispose();
     super.dispose();
   }
 
-  void _moveTo(double target) {
-    final clamped = target.clamp(0.0, (_count - 1).toDouble());
-    if (clamped.round() != _position.target.round()) {
-      HapticFeedback.selectionClick();
-    }
-    _position.animateTo(clamped);
+  int get _lastIndex => math.max(0, _count - 1);
+
+  /// to a tab, landing with a little bounce
+  void _travelTo(int index) {
+    _position.animateTo(index.toDouble(), spring: LensMotion.travel);
   }
 
-  double _tabAt(double x) =>
-      ((x - _kBarPadding) / _tabWidth).floorToDouble().clamp(
-        0.0,
-        (_count - 1).toDouble(),
-      );
+  /// The lens stretches after its speed and squashes as it brakes, on a
+  /// spring of its own, so it overshoots both ways and wobbles to rest.
+  void _wobble() {
+    final target = LensMotion.jellyTarget(_position);
+    if ((target - _jelly.target).abs() > 1e-4) _jelly.animateTo(target);
+  }
+
+  /// the tab under [x], in tabs, centered: 0 in the middle of the first;
+  /// past the end tabs it pulls back like rubber
+  double _positionAt(double x) =>
+      LensMotion.banded((x - _kBarPadding) / _tabWidth - 0.5, _lastIndex);
+
+  int _indexAt(double position) => position.round().clamp(0, _lastIndex);
+
+  void _select(int index) {
+    if (index != _pressedIndex) {
+      HapticFeedback.selectionClick();
+      _pressedIndex = index;
+    }
+  }
 
   void _onPointerDown(PointerDownEvent event) {
     if (_pointer != null) return;
@@ -238,29 +283,65 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     }
     _pointer = event.pointer;
     _downX = event.position.dx;
+    _dragging = false;
+    _tracker = VelocityTracker.withKind(event.kind)
+      ..addPosition(event.timeStamp, event.localPosition);
     _press.animateTo(1);
     _scaleX.animateTo(_kPressedScale);
     _scaleY.animateTo(_kPressedScale);
-    _moveTo(_tabAt(event.localPosition.dx));
+    _pressedIndex = _indexAt(_positionAt(event.localPosition.dx));
+    _travelTo(_pressedIndex);
   }
 
   void _onPointerMove(PointerMoveEvent event) {
     if (event.pointer != _pointer) return;
-    final dx = event.localDelta.dx;
-    if (dx == 0) return;
-    _moveTo(_position.target + dx / _tabWidth);
-    _panel.jumpTo(_panel.value + dx);
+    _tracker?.addPosition(event.timeStamp, event.localPosition);
+    final x = event.localPosition.dx;
+    if (!_dragging) {
+      if ((event.position.dx - _downX).abs() < kTouchSlop) return;
+      _dragging = true;
+    }
+    // the bar goes after a finger that leaves it, as far as rubber lets it
+    final overshoot = x - x.clamp(0.0, _width);
+    _pull.animateTo(
+      LensMotion.rubberBand(overshoot, _kBarHeight * _kPullLimit),
+    );
+    final position = _positionAt(x);
+    _position.animateTo(position, spring: LensMotion.drag);
+    _select(_indexAt(position));
+  }
+
+  /// A drag let go mid-flick goes on to the next tab, one past the one under
+  /// the finger at most.
+  void _fling(double velocityX) {
+    if (!_dragging) return;
+    _select(
+      LensMotion.flung(
+        target: _position.target,
+        velocity: velocityX / _tabWidth,
+        pressed: _pressedIndex,
+        lastIndex: _lastIndex,
+      ),
+    );
   }
 
   void _onPointerEnd(PointerEvent event) {
     if (event.pointer != _pointer) return;
     _pointer = null;
-    final index = _position.target.round();
-    _moveTo(index.toDouble());
+    final tracker = _tracker;
+    _tracker = null;
+    final up = event is PointerUpEvent;
+    if (up && tracker != null) {
+      _fling(tracker.getVelocity().pixelsPerSecond.dx);
+    }
+    final index = up ? _pressedIndex : _currentIndex;
+    _dragging = false;
+    _travelTo(index);
     _press.animateTo(0);
     _scaleX.animateTo(1);
     _scaleY.animateTo(1);
-    _panel.animateTo(0);
+    _pull.animateTo(0, spring: _pressSpring);
+    if (!up) return;
     if (index != _currentIndex) {
       _currentIndex = index;
       widget.onDestinationSelected?.call(index);
@@ -270,12 +351,10 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     }
   }
 
-  double get _panelOffset {
-    final fraction = (_panel.value / _width).clamp(-1.0, 1.0);
-    return _kRubberBand *
-        fraction.sign *
-        Curves.easeOut.transform(fraction.abs());
-  }
+  double get _panelOffset => _pull.value;
+
+  /// the bar's glass widening after a finger past its ends
+  double get _pullStretch => 1 + _pull.value.abs() / _width * _kPullStretch;
 
   Widget _tabs({required bool selected, double scale = 1}) {
     return Row(
@@ -289,7 +368,7 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
               label: e.label,
               onTap: () {
                 _currentIndex = i;
-                _moveTo(i.toDouble());
+                _travelTo(i);
                 widget.onDestinationSelected?.call(i);
               },
               excludeSemantics: true,
@@ -326,10 +405,12 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     final press = _press.value.clamp(0.0, 1.0);
     final panelOffset = _panelOffset;
 
-    // stretch along the motion, squash across it
-    final velocity = (_position.velocity / 10).abs();
-    final scaleX = _scaleX.value / (1 - (velocity * 0.3).clamp(0.0, 0.06));
-    final scaleY = _scaleY.value * (1 - (velocity * 0.15).clamp(0.0, 0.04));
+    // stretched along the motion and thinner across it, or squashed braking
+    final jelly = _jelly.value;
+    final scaleX = _scaleX.value * (1 + jelly);
+    final scaleY =
+        _scaleY.value * (1 - jelly * LensMotion.jellyAspect).clamp(0.5, 1.5);
+    final stretch = _pullStretch;
 
     final pillCenter = Offset(
       _kBarPadding + (_position.value + 0.5) * _tabWidth + panelOffset,
@@ -357,8 +438,13 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
             clipper: _PillClipper(pillRRect, inverse: true),
             child: Transform.translate(
               offset: Offset(panelOffset, 0),
-              child: Transform.scale(
-                scale: barScale,
+              child: Transform(
+                alignment: .center,
+                transform: Matrix4.diagonal3Values(
+                  barScale * stretch,
+                  barScale,
+                  1,
+                ),
                 child: CustomPaint(
                   painter: GlassShadowPainter(
                     radius: barRadius,
@@ -406,7 +492,7 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
                       _width / 2 + panelOffset,
                       _kBarHeight / 2,
                     ),
-                    width: _width * barScale,
+                    width: _width * barScale * stretch,
                     height: _kPillHeight,
                   ),
                   child: LiquidGlass(

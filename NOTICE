@@ -67,6 +67,22 @@ code from the two Apache-2.0 projects below.
 
 Neither Apache-2.0 project ships a NOTICE file.
 
+The motion of the dock's and the rail's lens (how it lands with a bounce,
+follows a finger, stretches and squashes with its speed, pulls back like
+rubber past the ends and carries a flick on), and the bar's stretch after a
+finger that leaves it, follow prism_ui's NavigationDock, written anew for
+PiliGlass:
+
+Files:
+  lib/common/widgets/liquid_glass/lens_motion.dart
+  lib/common/widgets/liquid_glass/liquid_glass_navigation_bar.dart
+  lib/common/widgets/liquid_glass/liquid_glass_navigation_rail.dart
+
+  prism_ui, by chen08209, the UI library of FlClash
+    https://github.com/chen08209/prism_ui
+    License: GPL-3.0 (see LICENSE)
+    Source file: lib/navigation_dock.dart (FloatingNavigationBar)
+
 --------------------------------------------------------------------------------
 2. Flutter framework
 --------------------------------------------------------------------------------
