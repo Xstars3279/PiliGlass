@@ -30,6 +30,8 @@ abstract final class RevampTheme {
     final rim = UiGlass.side(colorScheme);
     // a Material's shadow at 6 comes near the panel's, see UiGlass.panelShadow
     final shadow = isDark ? Colors.transparent : Colors.black;
+    // what dims the page under a menu, a sheet or a dialog
+    final barrier = Colors.black.withValues(alpha: isDark ? 0.5 : 0.32);
 
     // every size snapped to one of UiType's five; bodyMedium, the default
     // of a Text and the size of a video card's title, stays as it is
@@ -105,9 +107,16 @@ abstract final class RevampTheme {
         shadowColor: shadow,
         shape: Revamp.rounded(Revamp.sheetRadius, side: rim),
         titleTextStyle: theme.dialogTheme.titleTextStyle?.merge(UiType.title),
-        contentTextStyle: type.bodyLarge!.copyWith(
+        contentTextStyle: UiType.caption.copyWith(
           color: colorScheme.onSurfaceVariant,
         ),
+        // the screen less 32 at each side, 360 at most
+        insetPadding: const EdgeInsets.symmetric(
+          horizontal: UiSpace.s32,
+          vertical: UiSpace.s24,
+        ),
+        constraints: const BoxConstraints(minWidth: 280, maxWidth: 360),
+        barrierColor: barrier,
       ),
       bottomSheetTheme: theme.bottomSheetTheme.copyWith(
         backgroundColor: panel,
@@ -115,6 +124,10 @@ abstract final class RevampTheme {
         elevation: 6,
         modalElevation: 6,
         shadowColor: shadow,
+        modalBarrierColor: barrier,
+        // only the top corners round; a handle 32 by 4, 8 from the top
+        dragHandleSize: const Size(32, 4),
+        dragHandleColor: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
         shape: Revamp.shape(
           const BorderRadius.vertical(top: Radius.circular(Revamp.sheetRadius)),
           side: rim,

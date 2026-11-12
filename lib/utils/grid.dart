@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/skeleton/video_card_h.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -21,11 +22,13 @@ mixin GridMixin {
 abstract final class Grid {
   static final double smallCardWidth = Pref.smallCardWidth;
 
+  /// In the redesign a cover 140 wide (87.5 high at 16:10) and 6 above and
+  /// below it, so 12 between two items.
   static SliverGridDelegateWithMaxCrossAxisExtent videoCardHDelegate({
-    double mainAxisExtent = 110,
+    double? mainAxisExtent,
   }) => SliverGridDelegateWithMaxCrossAxisExtent(
-    mainAxisSpacing: 2,
-    mainAxisExtent: mainAxisExtent,
+    mainAxisSpacing: Revamp.enabled ? 0 : 2,
+    mainAxisExtent: mainAxisExtent ?? (Revamp.enabled ? 140 / 1.6 + 12 : 110),
     maxCrossAxisExtent: Grid.smallCardWidth * 2,
   );
 }

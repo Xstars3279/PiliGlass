@@ -63,9 +63,9 @@ class VideoCardH extends StatelessWidget {
               onTap:
                   onTap ?? PressableScale.delayTap(() => pushVideoH(videoItem)),
               child: Padding(
-                padding: const .symmetric(
+                padding: .symmetric(
                   horizontal: Style.safeSpace,
-                  vertical: 5,
+                  vertical: Revamp.enabled ? UiSpace.s12 / 2 : 5,
                 ),
                 child: Row(
                   crossAxisAlignment: .start,
@@ -104,56 +104,119 @@ class VideoCardH extends StatelessWidget {
                                       _ => .primary,
                                     },
                                   ),
-                                if (progress != null && progress != 0) ...[
-                                  PBadge(
-                                    text: progress == -1
-                                        ? '已看完'
-                                        : '${DurationUtils.formatDuration(progress)}/${DurationUtils.formatDuration(videoItem.duration)}',
-                                    right: 6,
-                                    bottom: 8,
-                                    type: .gray,
-                                  ),
+                                if (Revamp.enabled) ...[
                                   Positioned(
                                     left: 0,
-                                    bottom: 0,
                                     right: 0,
-                                    child: VideoProgressIndicator(
-                                      color: theme.colorScheme.primary,
-                                      backgroundColor:
-                                          theme.colorScheme.secondaryContainer,
-                                      progress: progress == -1
-                                          ? 1
-                                          : progress / videoItem.duration,
+                                    bottom: 0,
+                                    height: maxHeight * 0.4,
+                                    child: const DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: .topCenter,
+                                          end: .bottomCenter,
+                                          colors: [
+                                            Color(0x00000000),
+                                            Color(0x99000000),
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                ] else if (videoItem.duration > 0)
-                                  PBadge(
-                                    text: DurationUtils.formatDuration(
-                                      videoItem.duration,
+                                  if (progress != null && progress != 0) ...[
+                                    Positioned(
+                                      right: UiSpace.s8,
+                                      bottom: UiSpace.s8,
+                                      child: Text(
+                                        progress == -1
+                                            ? '已看完'
+                                            : '${DurationUtils.formatDuration(progress)}/${DurationUtils.formatDuration(videoItem.duration)}',
+                                        style: UiType.label.copyWith(
+                                          color: Colors.white,
+                                        ),
+                                      ),
                                     ),
-                                    right: 6.0,
-                                    bottom: 6.0,
-                                    type: .gray,
-                                  ),
+                                    Positioned(
+                                      left: 0,
+                                      bottom: 0,
+                                      right: 0,
+                                      child: VideoProgressIndicator(
+                                        color: theme.colorScheme.primary,
+                                        backgroundColor: theme
+                                            .colorScheme
+                                            .secondaryContainer,
+                                        progress: progress == -1
+                                            ? 1
+                                            : progress / videoItem.duration,
+                                      ),
+                                    ),
+                                  ] else if (videoItem.duration > 0)
+                                    Positioned(
+                                      right: UiSpace.s8,
+                                      bottom: UiSpace.s8,
+                                      child: Text(
+                                        DurationUtils.formatDuration(
+                                          videoItem.duration,
+                                        ),
+                                        style: UiType.label.copyWith(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                ] else ...[
+                                  if (progress != null && progress != 0) ...[
+                                    PBadge(
+                                      text: progress == -1
+                                          ? '已看完'
+                                          : '${DurationUtils.formatDuration(progress)}/${DurationUtils.formatDuration(videoItem.duration)}',
+                                      right: 6,
+                                      bottom: 8,
+                                      type: .gray,
+                                    ),
+                                    Positioned(
+                                      left: 0,
+                                      bottom: 0,
+                                      right: 0,
+                                      child: VideoProgressIndicator(
+                                        color: theme.colorScheme.primary,
+                                        backgroundColor: theme
+                                            .colorScheme
+                                            .secondaryContainer,
+                                        progress: progress == -1
+                                            ? 1
+                                            : progress / videoItem.duration,
+                                      ),
+                                    ),
+                                  ] else if (videoItem.duration > 0)
+                                    PBadge(
+                                      text: DurationUtils.formatDuration(
+                                        videoItem.duration,
+                                      ),
+                                      right: 6.0,
+                                      bottom: 6.0,
+                                      type: .gray,
+                                    ),
+                                ],
                               ],
                             ),
                           );
                         },
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    SizedBox(width: Revamp.enabled ? UiSpace.s12 : 10),
                     content(theme),
                   ],
                 ),
               ),
             ),
+            // 更多: a 20 icon on a 40 tap target at the bottom right
             Positioned(
-              bottom: 0,
-              right: 12,
-              width: 29,
-              height: 29,
+              bottom: Revamp.enabled ? -4 : 0,
+              right: Revamp.enabled ? 6 : 12,
+              width: Revamp.enabled ? 40 : 29,
+              height: Revamp.enabled ? 40 : 29,
               child: VideoPopupMenu(
-                iconSize: 17,
+                iconSize: Revamp.enabled ? 20 : 17,
                 videoItem: videoItem,
                 onRemove: onRemove,
               ),
@@ -181,14 +244,22 @@ class VideoCardH extends StatelessWidget {
                       .map(
                         (e) => TextSpan(
                           text: e.text,
-                          style: TextStyle(
-                            fontSize: theme.textTheme.bodyMedium!.fontSize,
-                            height: 1.42,
-                            letterSpacing: 0.3,
-                            color: e.isEm
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurface,
-                          ),
+                          style:
+                              (Revamp.enabled
+                                      ? UiType.bodyStrong
+                                      : TextStyle(
+                                          fontSize: theme
+                                              .textTheme
+                                              .bodyMedium!
+                                              .fontSize,
+                                          height: 1.42,
+                                          letterSpacing: 0.3,
+                                        ))
+                                  .copyWith(
+                                    color: e.isEm
+                                        ? theme.colorScheme.primary
+                                        : theme.colorScheme.onSurface,
+                                  ),
                         ),
                       )
                       .toList(),
@@ -200,12 +271,13 @@ class VideoCardH extends StatelessWidget {
               child: Text(
                 videoItem.title,
                 textAlign: .start,
-                style: TextStyle(
-                  fontSize: theme.textTheme.bodyMedium!.fontSize,
-                  height: 1.42,
-                  letterSpacing: 0.3,
-                  fontWeight: Revamp.enabled ? UiType.cardTitleWeight : null,
-                ),
+                style: Revamp.enabled
+                    ? UiType.bodyStrong
+                    : TextStyle(
+                        fontSize: theme.textTheme.bodyMedium!.fontSize,
+                        height: 1.42,
+                        letterSpacing: 0.3,
+                      ),
                 maxLines: 2,
                 overflow: .ellipsis,
               ),
@@ -213,27 +285,52 @@ class VideoCardH extends StatelessWidget {
           Text(
             "$pubdate${videoItem.owner.name}",
             maxLines: 1,
-            style: TextStyle(
-              fontSize: 12,
-              height: 1,
-              color: theme.colorScheme.outline,
-              overflow: .clip,
-            ),
+            style: Revamp.enabled
+                ? UiType.caption.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    overflow: .clip,
+                  )
+                : TextStyle(
+                    fontSize: 12,
+                    height: 1,
+                    color: theme.colorScheme.outline,
+                    overflow: .clip,
+                  ),
           ),
           if (videoItem.isLive != true) ...[
-            const SizedBox(height: 3),
-            Row(
-              spacing: 8,
-              children: [
-                StatWidget(
-                  type: .play,
-                  value: videoItem.stat.view,
-                ),
-                StatWidget(
-                  type: .danmaku,
-                  value: videoItem.stat.danmu,
-                ),
-              ],
+            if (!Revamp.enabled) const SizedBox(height: 3),
+            // the figures' line ends where the cover does; room for 更多
+            Padding(
+              padding: .only(right: Revamp.enabled ? 28 : 0),
+              child: Row(
+                spacing: Revamp.enabled ? UiSpace.s12 : 8,
+                children: [
+                  StatWidget(
+                    type: .play,
+                    value: videoItem.stat.view,
+                    color: Revamp.enabled
+                        ? theme.colorScheme.onSurfaceVariant
+                        : null,
+                    textStyle: Revamp.enabled
+                        ? UiType.caption.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          )
+                        : null,
+                  ),
+                  StatWidget(
+                    type: .danmaku,
+                    value: videoItem.stat.danmu,
+                    color: Revamp.enabled
+                        ? theme.colorScheme.onSurfaceVariant
+                        : null,
+                    textStyle: Revamp.enabled
+                        ? UiType.caption.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          )
+                        : null,
+                  ),
+                ],
+              ),
             ),
           ],
         ],

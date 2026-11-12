@@ -5,6 +5,7 @@ import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
@@ -126,11 +127,20 @@ class ReplyItemGrpc extends StatelessWidget {
 
     Widget child = Padding(
       padding: Revamp.enabled
-          ? const .fromLTRB(14, 16, 10, 10)
+          ? const .fromLTRB(UiSpace.page, UiSpace.s16, UiSpace.page, UiSpace.s8)
           : const .fromLTRB(12, 14, 8, 5),
       child: _buildContent(context, colorScheme),
     );
-    if (needDivider && !Revamp.enabled) {
+    if (needDivider && Revamp.enabled) {
+      // from the text's left edge: the avatar's 36 and the 12 after it
+      child = Column(
+        mainAxisSize: .min,
+        children: [
+          child,
+          const RevampRowDivider(indent: UiSpace.page + 36 + UiSpace.s12),
+        ],
+      );
+    } else if (needDivider) {
       child = Column(
         mainAxisSize: .min,
         children: [
@@ -168,7 +178,7 @@ class ReplyItemGrpc extends StatelessWidget {
         children: [
           PendantAvatar(
             member.face,
-            size: Revamp.enabled ? 38 : 34,
+            size: Revamp.enabled ? 36 : 34,
             badgeSize: 14,
             vipStatus: member.vipStatus.toInt(),
             officialType: member.officialVerifyType.toInt(),
@@ -190,21 +200,25 @@ class ReplyItemGrpc extends StatelessWidget {
                         member.name,
                         maxLines: 1,
                         overflow: .ellipsis,
-                        style: TextStyle(
-                          color: (member.vipStatus > 0 && member.vipType == 2)
-                              ? colorScheme.vipColor
-                              : Revamp.enabled
-                              ? colorScheme.onSurface
-                              : colorScheme.outline,
-                          fontSize: Revamp.enabled ? 13.5 : 13,
-                          fontWeight: Revamp.enabled ? FontWeight.w600 : null,
-                        ),
+                        style: Revamp.enabled
+                            ? UiType.caption.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                fontWeight: UiType.label.fontWeight,
+                              )
+                            : TextStyle(
+                                color:
+                                    (member.vipStatus > 0 &&
+                                        member.vipType == 2)
+                                    ? colorScheme.vipColor
+                                    : colorScheme.outline,
+                                fontSize: 13,
+                              ),
                       ),
                     ),
                     BiliUtils.levelPicture(
                       member.level.toInt(),
                       isSeniorMember: member.isSeniorMember == 1,
-                      height: 11,
+                      height: Revamp.enabled ? 14 : 11,
                     ),
                     if (replyItem.mid == upMid)
                       const PBadge(
@@ -231,7 +245,12 @@ class ReplyItemGrpc extends StatelessWidget {
                 Text.rich(
                   maxLines: 1,
                   overflow: .ellipsis,
-                  style: TextStyle(fontSize: 11, color: colorScheme.outline),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Revamp.enabled
+                        ? colorScheme.onSurfaceVariant
+                        : colorScheme.outline,
+                  ),
                   TextSpan(
                     text: replyLevel == 0
                         ? DateFormatUtils.format(
@@ -350,7 +369,7 @@ class ReplyItemGrpc extends StatelessWidget {
           child: TextMore.rich(
             primary: colorScheme.primary,
             style: Revamp.enabled
-                ? const TextStyle(height: 1.6, fontSize: 15)
+                ? UiType.body
                 : const TextStyle(height: 1.75, fontSize: 14),
             maxLines: replyLevel == 1 ? replyLengthLimit : null,
             TextSpan(
@@ -486,9 +505,11 @@ class ReplyItemGrpc extends StatelessWidget {
   ) {
     final textStyle = TextStyle(
       height: 1,
-      fontSize: 12,
+      fontSize: Revamp.enabled ? 13 : 12,
       fontWeight: .normal,
-      color: colorScheme.outline,
+      color: Revamp.enabled
+          ? colorScheme.onSurfaceVariant
+          : colorScheme.outline,
     );
     const buttonStyle = ButtonStyle(
       visualDensity: .compact,
@@ -532,9 +553,11 @@ class ReplyItemGrpc extends StatelessWidget {
               mainAxisSize: .min,
               children: [
                 Icon(
-                  Icons.reply,
+                  Revamp.enabled ? Icons.reply_rounded : Icons.reply,
                   size: 18,
-                  color: colorScheme.outline.withValues(alpha: 0.8),
+                  color: Revamp.enabled
+                      ? colorScheme.onSurfaceVariant
+                      : colorScheme.outline.withValues(alpha: 0.8),
                 ),
                 Text('回复', style: textStyle),
               ],
@@ -629,13 +652,20 @@ class ReplyItemGrpc extends StatelessWidget {
                   onLongPress: showMore,
                   onSecondaryTap: PlatformUtils.isMobile ? null : showMore,
                   child: Padding(
-                    padding: padding,
+                    // the redesign: 12 in at the sides, the text 13/400
+                    padding: Revamp.enabled
+                        ? padding.copyWith(left: 12, right: 12)
+                        : padding,
                     child: TextEllipsis.rich(
-                      style: TextStyle(
-                        height: 1.6,
-                        fontSize: 14,
-                        color: colorScheme.onSurface.withValues(alpha: 0.85),
-                      ),
+                      style: Revamp.enabled
+                          ? UiType.caption.copyWith(color: colorScheme.onSurface)
+                          : TextStyle(
+                              height: 1.6,
+                              fontSize: 14,
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.85,
+                              ),
+                            ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 2,
                       TextSpan(
@@ -1017,20 +1047,22 @@ class ReplyItemGrpc extends StatelessWidget {
 
     return Padding(
       padding: .only(
-        bottom: MediaQuery.viewPaddingOf(context).bottom + 20,
+        bottom:
+            MediaQuery.viewPaddingOf(context).bottom +
+            (Revamp.enabled ? UiSpace.s8 : 20),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [
+        children: _sheetRows([
           InkWell(
             onTap: Get.back,
             borderRadius: Style.bottomSheetRadius,
             child: SizedBox(
-              height: 35,
+              height: Revamp.enabled ? 28 : 35,
               child: Center(
                 child: Container(
                   width: 32,
-                  height: 3,
+                  height: Revamp.enabled ? 4 : 3,
                   decoration: BoxDecoration(
                     color: colorScheme.outline,
                     borderRadius: const BorderRadius.all(Radius.circular(3)),
@@ -1150,12 +1182,14 @@ class ReplyItemGrpc extends StatelessWidget {
                   SmartDialog.showToast('删除失败, $res');
                 }
               },
+              key: _danger,
               minLeadingWidth: 0,
               leading: Icon(Icons.delete_outlined, color: errorColor, size: 19),
               title: Text('删除', style: style.copyWith(color: errorColor)),
             ),
           if (ownerMid == Int64.ZERO)
             ListTile(
+              key: _danger,
               onTap: () {
                 Get.back();
                 Pref.setBlackMid(item.mid.toInt());
@@ -1172,6 +1206,7 @@ class ReplyItemGrpc extends StatelessWidget {
             )
           else
             ListTile(
+              key: _danger,
               onTap: () {
                 Get.back();
 
@@ -1256,8 +1291,30 @@ class ReplyItemGrpc extends StatelessWidget {
               leading: const Icon(CustomIcons.shield_reply, size: 19),
               title: Text('检查评论', style: style),
             ),
-        ],
+        ]),
       ),
     );
+  }
+
+  static const _danger = ValueKey('danger');
+
+  /// The redesign's sheet: rows of 48, and what deletes, blocks or reports
+  /// last, set apart by a line; as it was where the redesign is off.
+  List<Widget> _sheetRows(List<Widget> rows) {
+    if (!Revamp.enabled) return rows;
+    final danger = rows.where((e) => e.key == _danger).toList();
+    Widget dense(Widget row) => ListTileTheme.merge(
+      minTileHeight: 48,
+      minVerticalPadding: 0,
+      child: row,
+    );
+    return [
+      for (final row in rows)
+        if (row.key != _danger) dense(row),
+      if (danger.isNotEmpty) ...[
+        const RevampRowDivider(indent: UiSpace.card),
+        ...danger.map(dense),
+      ],
+    ];
   }
 }

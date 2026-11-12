@@ -6,7 +6,6 @@ import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
-import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass.dart';
 import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show ReplyInfo;
@@ -210,7 +209,7 @@ class _CommentSheetState extends State<CommentSheet>
   }
 
   static const _headerHeight = 60.0;
-  static const _barHeight = 48.0;
+  static const _barHeight = 44.0;
 
   @override
   void initState() {
@@ -712,11 +711,13 @@ class _CommentSheetState extends State<CommentSheet>
           ListenableBuilder(
             listenable: _shown,
             builder: (context, child) => Positioned(
-              left: 12,
-              right: 12,
+              left: UiSpace.page,
+              right: UiSpace.page,
               // moved by layout, not a transform, so the lens follows it
               bottom:
-                  bottom + 10 - (1 - _progress) * (_barHeight + 30 + bottom),
+                  bottom +
+                  UiSpace.s8 -
+                  (1 - _progress) * (_barHeight + 30 + bottom),
               height: _barHeight,
               child: child!,
             ),
@@ -910,7 +911,7 @@ class _CommentSheetState extends State<CommentSheet>
         child: Column(
           children: [
             Container(
-              width: 36,
+              width: 32,
               height: 4,
               margin: const .only(top: 8),
               decoration: BoxDecoration(
@@ -1064,7 +1065,8 @@ typedef _Thread = ({
   String? replyTo,
 });
 
-/// 发条友善的评论: a capsule of liquid glass over the bottom of the sheet.
+/// 发条友善的评论: a solid capsule over the bottom of the sheet, the gray of a
+/// block in a block, the comments fading out above it.
 class _InputBar extends StatelessWidget {
   const _InputBar({required this.label, required this.onTap});
 
@@ -1074,8 +1076,6 @@ class _InputBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
-    final isDark = colorScheme.brightness == .dark;
-    const radius = Radius.circular(Revamp.fieldRadius);
     return Semantics(
       button: true,
       label: '发表评论',
@@ -1092,51 +1092,70 @@ class _InputBar extends StatelessWidget {
           // nothing was opened, e.g. replies are closed: forget the bar
           Future.microtask(() => PublishRoute.pendingMorph = null);
         },
-        // an input bar: a panel (UiGlass, G2)
-        child: CustomPaint(
-          painter: GlassShadowPainter.of(
-            radius: radius,
-            shadow: UiGlass.shadowIn(colorScheme, UiGlass.panelShadow),
-          ),
-          foregroundPainter: GlassRimPainter(
-            radius: radius,
-            opacity: 0,
-            isDark: isDark,
-            edge: UiGlass.edge(colorScheme),
-          ),
-          child: LiquidGlass(
-            blurSigma: UiGlass.panelBlur,
-            color: UiGlass.panel(colorScheme),
-            child: Padding(
-              padding: const .symmetric(horizontal: 18),
-              child: Row(
-                spacing: 10,
-                children: [
-                  Icon(
-                    Icons.edit_outlined,
-                    size: 20,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  Expanded(
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: .ellipsis,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+        child: Stack(
+          clipBehavior: .none,
+          children: [
+            // the comments scrolling here fade into the sheet's white: from
+            // 24 above the bar down past the bottom of the screen
+            Positioned(
+              left: -UiSpace.page,
+              right: -UiSpace.page,
+              top: -UiSpace.s24,
+              bottom: -100,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: .topCenter,
+                      end: .bottomCenter,
+                      stops: const [0, 0.3],
+                      colors: [
+                        UiGlass.panel(colorScheme).withValues(alpha: 0),
+                        UiGlass.panel(colorScheme),
+                      ],
                     ),
                   ),
-                  Icon(
-                    Icons.sentiment_satisfied_alt_outlined,
-                    size: 22,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: ShapeDecoration(
+                  color: colorScheme.surfaceContainerHigh,
+                  shape: StadiumBorder(side: UiGlass.side(colorScheme)),
+                ),
+                child: Padding(
+                  padding: const .symmetric(horizontal: 18),
+                  child: Row(
+                    spacing: 10,
+                    children: [
+                      Icon(
+                        Icons.edit_outlined,
+                        size: 20,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      Expanded(
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: .ellipsis,
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.sentiment_satisfied_alt_outlined,
+                        size: 22,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

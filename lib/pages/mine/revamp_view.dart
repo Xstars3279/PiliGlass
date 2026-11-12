@@ -34,14 +34,14 @@ extension _MineRevamp on _MediaPageState {
                   padding: .only(bottom: UiSpace.underDock(context)),
                   physics: const AlwaysScrollableScrollPhysics(),
                   children: [
-                    // who and their numbers in one card, like the account
-                    // card on top of the settings
-                    RevampGroup(
-                      child: Padding(
-                        padding: const .only(top: 18, bottom: 8),
-                        child: Column(
-                          children: [_buildProfile(), _buildStatRow()],
-                        ),
+                    // who and their numbers straight on the page
+                    Padding(
+                      padding: const .only(
+                        top: UiSpace.s8,
+                        bottom: UiSpace.s24,
+                      ),
+                      child: Column(
+                        children: [_buildProfile(), _buildStatRow()],
                       ),
                     ),
                     _MineMenu(
@@ -69,7 +69,7 @@ extension _MineRevamp on _MediaPageState {
       final userInfo = controller.userInfo.value;
       final levelInfo = userInfo.levelInfo;
       final isVip = userInfo.vipStatus != null && userInfo.vipStatus! > 0;
-      const size = 76.0;
+      const size = 64.0;
       return GestureDetector(
         behavior: .opaque,
         onTap: controller.onLogin,
@@ -81,25 +81,14 @@ extension _MineRevamp on _MediaPageState {
             ? null
             : () => controller.onLogin(true),
         child: Padding(
-          padding: const .symmetric(horizontal: 20),
+          padding: const .symmetric(horizontal: UiSpace.page),
           child: Row(
-            spacing: 16,
+            spacing: UiSpace.s16,
             children: [
               Stack(
                 clipBehavior: .none,
                 children: [
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      shape: .circle,
-                      border: Border.all(color: colorScheme.surface, width: 3),
-                      boxShadow: [
-                        BoxShadow(
-                          color: colorScheme.shadow.withValues(alpha: 0.12),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
+                  SizedBox(
                     child: userInfo.face != null
                         ? NetworkImgLayer(
                             src: userInfo.face,
@@ -134,17 +123,27 @@ extension _MineRevamp on _MediaPageState {
                   crossAxisAlignment: .start,
                   spacing: 6,
                   children: [
+                    // the name in the text's color, vip or not: the pink is
+                    // the badge's alone; all the width beside the avatar
+                    Text(
+                      userInfo.uname ?? '点击登录',
+                      maxLines: 1,
+                      overflow: .ellipsis,
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    // the level at the end of the coins and experience
                     Row(
-                      spacing: 8,
+                      spacing: UiSpace.s8,
                       children: [
                         Flexible(
                           child: Text(
-                            userInfo.uname ?? '点击登录',
+                            '硬币 ${userInfo.money?.toString() ?? '-'}  ·  '
+                            '经验 ${levelInfo?.currentExp ?? '-'}/${levelInfo?.nextExp ?? '-'}',
                             maxLines: 1,
                             overflow: .ellipsis,
-                            // the name in the text's color, vip or not:
-                            // the pink is the badge's alone
-                            style: theme.textTheme.titleLarge,
+                            style: UiType.caption.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                         BiliUtils.levelPicture(
@@ -154,23 +153,18 @@ extension _MineRevamp on _MediaPageState {
                         ),
                       ],
                     ),
-                    Text(
-                      '硬币 ${userInfo.money?.toString() ?? '-'}   ·   '
-                      '经验 ${levelInfo?.currentExp ?? '-'}/${levelInfo?.nextExp ?? '-'}',
-                      style: theme.textTheme.labelMedium!.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
+                    // one continuous bar, 4 high, round at the ends
                     ClipRRect(
-                      borderRadius: const .all(.circular(3)),
+                      borderRadius: const .all(.circular(2)),
                       child: LinearProgressIndicator(
-                        minHeight: 5,
+                        minHeight: 4,
                         value: levelInfo != null
                             ? levelInfo.currentExp! / levelInfo.nextExp!
                             : 0,
-                        backgroundColor: colorScheme.surfaceContainerHighest,
+                        backgroundColor: colorScheme.surfaceContainerHigh,
                         color: colorScheme.primary,
                         stopIndicatorColor: Colors.transparent,
+                        trackGap: 0,
                       ),
                     ),
                   ],
@@ -212,17 +206,10 @@ extension _MineRevamp on _MediaPageState {
         ),
       ),
     );
-    final rule = SizedBox(
-      height: 28,
-      child: VerticalDivider(
-        width: 1,
-        color: colorScheme.outline.withValues(alpha: 0.2),
-      ),
-    );
     return Obx(() {
       final stat0 = controller.userStat.value;
       return Padding(
-        padding: const .fromLTRB(8, 14, 8, 0),
+        padding: const .fromLTRB(UiSpace.s8, UiSpace.s16, UiSpace.s8, 0),
         child: Row(
           children: [
             stat(
@@ -230,9 +217,7 @@ extension _MineRevamp on _MediaPageState {
               '动态',
               () => controller.push('memberDynamics'),
             ),
-            rule,
             stat(stat0.following, '关注', () => controller.push('follow')),
-            rule,
             stat(stat0.follower, '粉丝', () => controller.push('fan')),
           ],
         ),
@@ -263,7 +248,14 @@ class _MineMenuState extends State<_MineMenu> {
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
-    final outline = ColorScheme.of(context).outline;
+    final outline = ColorScheme.of(context).onSurfaceVariant;
+    // each row ends in a 40 square holding its arrow, so the arrows line up
+    Widget end(Widget icon) =>
+        SizedBox.square(dimension: 40, child: Center(child: icon));
+    final countStyle = UiType.caption.copyWith(
+      color: outline,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
     VoidCallback? shortcut(String title) {
       for (final e in controller.list) {
         if (e.title == title) return e.onTap;
@@ -283,24 +275,22 @@ class _MineMenuState extends State<_MineMenu> {
       final tile = ListTile(
         leading: RevampIconTile(icon: Icon(icon)),
         title: Text(title),
+        contentPadding: const .only(left: UiSpace.card, right: UiSpace.s8),
         trailing: Row(
           mainAxisSize: .min,
-          spacing: 6,
+          spacing: UiSpace.s4,
           children: [
-            if (count != null)
-              Text(
-                '$count',
-                style: TextStyle(
-                  color: outline,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
+            if (count != null) Text('$count', style: countStyle),
             // only the arrow unfolds the preview; the rest of the row
             // opens the whole list
             if (expandable)
               IconButton(
                 tooltip: expanded ? '收起' : '展开',
-                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(
+                  width: 40,
+                  height: 40,
+                ),
                 onPressed: () => setState(
                   () => expanded ? _expanded.remove(tab) : _expanded.add(tab),
                 ),
@@ -314,12 +304,19 @@ class _MineMenuState extends State<_MineMenu> {
                   ),
                   child: Icon(
                     UiIcons.of(Icons.expand_more_rounded),
+                    size: 20,
                     color: outline,
                   ),
                 ),
               )
             else
-              Icon(UiIcons.of(Icons.chevron_right_rounded), color: outline),
+              end(
+                Icon(
+                  UiIcons.of(Icons.chevron_right_rounded),
+                  size: 20,
+                  color: outline,
+                ),
+              ),
           ],
         ),
         onTap: onOpen,
@@ -393,8 +390,15 @@ class _MineMenuState extends State<_MineMenu> {
           controller.laterCtr?.loadingState.value;
           controller.subCtr?.loadingState.value;
           return RevampGroup(
+            // 16 to the group of 设置 and 关于
+            margin: const .fromLTRB(
+              UiSpace.page,
+              0,
+              UiSpace.page,
+              UiSpace.s16,
+            ),
             child: Column(
-              children: [
+              children: revampDivided([
                 row(
                   icon: Icons.download_rounded,
                   title: '离线缓存',
@@ -402,13 +406,13 @@ class _MineMenuState extends State<_MineMenu> {
                 ),
                 // only the cards chosen in the settings, in their order
                 for (final tab in controller.mineTabs) section(tab),
-              ],
+              ]),
             ),
           );
         }),
         RevampGroup(
           child: Column(
-            children: [
+            children: revampDivided([
               row(
                 icon: Icons.settings_rounded,
                 title: '设置',
@@ -417,23 +421,27 @@ class _MineMenuState extends State<_MineMenu> {
               ListTile(
                 leading: const RevampIconTile(icon: Icon(Icons.info_rounded)),
                 title: const Text('关于 PiliGlass'),
+                contentPadding: const .only(
+                  left: UiSpace.card,
+                  right: UiSpace.s8,
+                ),
                 trailing: Row(
                   mainAxisSize: .min,
-                  spacing: 6,
+                  spacing: UiSpace.s4,
                   children: [
-                    Text(
-                      BuildConfig.versionName,
-                      style: TextStyle(color: outline),
-                    ),
-                    Icon(
-                      UiIcons.of(Icons.chevron_right_rounded),
-                      color: outline,
+                    Text(BuildConfig.versionName, style: countStyle),
+                    end(
+                      Icon(
+                        UiIcons.of(Icons.chevron_right_rounded),
+                        size: 20,
+                        color: outline,
+                      ),
                     ),
                   ],
                 ),
                 onTap: () => Get.to(() => const AboutPage()),
               ),
-            ],
+            ]),
           ),
         ),
       ],

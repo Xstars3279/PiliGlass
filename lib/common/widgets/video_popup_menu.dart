@@ -1,3 +1,6 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_icons.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/http/user.dart';
 import 'package:PiliPlus/http/video.dart';
@@ -47,7 +50,10 @@ class VideoPopupMenu extends StatelessWidget {
         size: iconSize,
       ),
       position: PopupMenuPosition.under,
-      itemBuilder: (context) =>
+      constraints: Revamp.enabled
+          ? const BoxConstraints(minWidth: 180, maxWidth: 280)
+          : null,
+      itemBuilder: (context) => _items(
           [
                 if (videoItem.bvid?.isNotEmpty == true) ...[
                   _VideoCustomAction(
@@ -320,21 +326,93 @@ class VideoPopupMenu extends StatelessWidget {
                       : const Icon(MdiIcons.incognito, size: 16),
                   MineController.onChangeAnonymity,
                 ),
-              ]
-              .map(
-                (e) => PopupMenuItem(
-                  height: menuItemHeight,
-                  onTap: e.onTap,
-                  child: Row(
-                    children: [
-                      e.icon,
-                      const SizedBox(width: 6),
-                      Text(e.title, style: const TextStyle(fontSize: 13)),
-                    ],
-                  ),
-                ),
-              )
-              .toList(),
+              ]),
     );
+  }
+
+  List<PopupMenuEntry<Object?>> _items(List<_VideoCustomAction> actions) {
+    if (!Revamp.enabled) {
+      return actions
+          .map(
+            (e) => PopupMenuItem(
+              height: menuItemHeight,
+              onTap: e.onTap,
+              child: Row(
+                children: [
+                  e.icon,
+                  const SizedBox(width: 6),
+                  Text(e.title, style: const TextStyle(fontSize: 13)),
+                ],
+              ),
+            ),
+          )
+          .toList();
+    }
+    // the redesign: the BV number a small line on top that copies it, the
+    // actions in rows of 48, 拉黑 last and in red, each set apart by a line
+    final bvid = videoItem.bvid;
+    final head = actions.where((e) => e.title == bvid).firstOrNull;
+    final danger = actions.where((e) => e.title.startsWith('拉黑')).toList();
+    final rest = actions
+        .where((e) => !identical(e, head) && !danger.contains(e))
+        .toList();
+    PopupMenuItem<Object?> row(_VideoCustomAction e, {bool isDanger = false}) =>
+        PopupMenuItem(
+          height: 48,
+          onTap: e.onTap,
+          padding: const EdgeInsets.symmetric(horizontal: UiSpace.card),
+          child: Builder(
+            builder: (context) {
+              final colorScheme = ColorScheme.of(context);
+              final color = isDanger
+                  ? colorScheme.error
+                  : colorScheme.onSurfaceVariant;
+              return Row(
+                spacing: UiSpace.iconText,
+                children: [
+                  IconTheme.merge(
+                    data: IconThemeData(size: 24, color: color),
+                    child: e.icon is Icon
+                        ? Icon(UiIcons.of((e.icon as Icon).icon!))
+                        : e.icon,
+                  ),
+                  Expanded(
+                    child: Text(
+                      e.title,
+                      maxLines: 1,
+                      overflow: .ellipsis,
+                      style: UiType.body.copyWith(
+                        color: isDanger ? colorScheme.error : null,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+    return [
+      if (head != null) ...[
+        PopupMenuItem(
+          height: 36,
+          onTap: head.onTap,
+          padding: const EdgeInsets.symmetric(horizontal: UiSpace.card),
+          child: Builder(
+            builder: (context) => Text(
+              head.title,
+              style: UiType.caption.copyWith(
+                color: ColorScheme.of(context).onSurfaceVariant,
+              ),
+            ),
+          ),
+        ),
+        const PopupMenuDivider(height: 1),
+      ],
+      ...rest.map(row),
+      if (danger.isNotEmpty) ...[
+        const PopupMenuDivider(height: 1),
+        ...danger.map((e) => row(e, isDanger: true)),
+      ],
+    ];
   }
 }

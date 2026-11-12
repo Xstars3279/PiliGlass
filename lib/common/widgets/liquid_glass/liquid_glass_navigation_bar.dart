@@ -50,7 +50,10 @@ const _kBarPadding = 4.0;
 // the selected tab's pill, 8 inside the bar above and below
 const _kPillHeight = 48.0;
 const _kTabWidth = 82.0;
-const _kPressedScale = 78 / 56;
+// pressed, the pill swells to 78 high as it always did, whatever its height
+// at rest; and as wide as it always grew
+const _kPressedScaleX = 78 / 56;
+const _kPressedScaleY = 78 / _kPillHeight;
 // dock: the bar and the search button side by side
 const _kDockGap = UiSpace.s8;
 const _kDockEdge = 16.0;
@@ -288,8 +291,8 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     _tracker = VelocityTracker.withKind(event.kind)
       ..addPosition(event.timeStamp, event.localPosition);
     _press.animateTo(1);
-    _scaleX.animateTo(_kPressedScale);
-    _scaleY.animateTo(_kPressedScale);
+    _scaleX.animateTo(_kPressedScaleX);
+    _scaleY.animateTo(_kPressedScaleY);
     _pressedIndex = _indexAt(_positionAt(event.localPosition.dx));
     _travelTo(_pressedIndex);
   }
