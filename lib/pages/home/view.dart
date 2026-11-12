@@ -117,9 +117,9 @@ class _HomePageState extends CommonPageState<HomePage>
           ),
         ),
       ),
-      // the feed fades out behind the tabs: the page's color at the top,
-      // nothing 24 below them
-      if (_homeController.tabs.length > 1)
+      // the feed fades out behind the tabs when solid: the page's color at
+      // the top, nothing 24 below them; transparent glass shows the feed
+      if (_homeController.tabs.length > 1 && !UiGlass.clear)
         Positioned(
           top: 0,
           left: 0,

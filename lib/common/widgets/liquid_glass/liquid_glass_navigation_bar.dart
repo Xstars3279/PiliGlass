@@ -877,31 +877,32 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
         },
       ),
     );
-    // the content fades out behind the dock, from 40 above it to the
-    // bottom of the screen, so no half line of text shows by its edges
+    // the content fades out behind the dock when solid, so no half line of
+    // text shows by its edges; transparent glass lets the content show
     return Stack(
       clipBehavior: .none,
       children: [
-        Positioned(
-          left: 0,
-          right: 0,
-          top: -40,
-          bottom: 0,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: .topCenter,
-                  end: .bottomCenter,
-                  colors: [
-                    colorScheme.surface.withValues(alpha: 0),
-                    colorScheme.surface.withValues(alpha: 0.9),
-                  ],
+        if (!UiGlass.clear)
+          Positioned(
+            left: 0,
+            right: 0,
+            top: -40,
+            bottom: 0,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: .topCenter,
+                    end: .bottomCenter,
+                    colors: [
+                      colorScheme.surface.withValues(alpha: 0),
+                      colorScheme.surface.withValues(alpha: 0.9),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
         dock,
       ],
     );

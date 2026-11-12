@@ -1121,7 +1121,9 @@ class _InputBar extends StatelessWidget {
             Positioned.fill(
               child: DecoratedBox(
                 decoration: ShapeDecoration(
-                  color: colorScheme.surfaceContainerHigh,
+                  color: colorScheme.surfaceContainerHigh.withValues(
+                    alpha: UiGlass.panelAlpha,
+                  ),
                   shape: StadiumBorder(side: UiGlass.side(colorScheme)),
                 ),
                 child: Padding(

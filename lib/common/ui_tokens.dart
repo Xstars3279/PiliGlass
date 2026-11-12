@@ -179,18 +179,24 @@ abstract final class UiGlass {
   /// the colors behind the shell made more vivid where it shows them
   static double get saturation => clear ? 1.5 : 1;
 
-  /// the shell: solid, 90% or 80%
-  static double get shellAlpha => switch (level) {
-    UiGlassLevel.none => 1,
-    UiGlassLevel.standard => 0.9,
-    UiGlassLevel.extreme => 0.8,
+  /// The unified alpha value across shell and panel floating surfaces.
+  /// none: 1.0 (纯白不透明)
+  /// standard: 0.90
+  /// extreme: 0.75 (75% 透明度)
+  static double get alpha => switch (level) {
+    UiGlassLevel.none => 1.0,
+    UiGlassLevel.standard => 0.90,
+    UiGlassLevel.extreme => 0.75,
   };
+
+  /// the shell: solid, 90% or 75%
+  static double get shellAlpha => alpha;
   static double get shellBlur => clear ? 6 : 0;
   static Color shell(ColorScheme colorScheme) =>
       colorScheme.surfaceContainerLow.withValues(alpha: shellAlpha);
 
-  /// a panel: solid, or 95% with a weak blur
-  static double get panelAlpha => clear ? 0.95 : 1;
+  /// a panel: solid, 90% or 75%
+  static double get panelAlpha => alpha;
   static double get panelBlur => clear ? 4 : 0;
   static Color panel(ColorScheme colorScheme) =>
       colorScheme.surfaceContainerLow.withValues(alpha: panelAlpha);
