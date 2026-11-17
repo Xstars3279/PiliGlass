@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:material_color_utilities/material_color_utilities.dart';
@@ -89,13 +90,20 @@ abstract final class CoverPalette {
 
   /// The seed turned into a background tint: soft and light in a light
   /// theme, deep and dim in a dark one, never loud.
+  ///
+  /// The redesign halves the color's chroma first: the tint marks the page,
+  /// it is not meant to be read as a color of its own (6.1 of the plan).
   static Color ambient(int seed, Brightness brightness) {
     final hct = Hct.fromInt(seed);
     final dark = brightness == .dark;
+    final chroma = dark ? 28.0 : 36.0;
     return Color(
       Hct.from(
         hct.hue,
-        math.min(hct.chroma, dark ? 28 : 36),
+        Revamp.enabled ? math.min(hct.chroma, chroma) * 0.5 : math.min(
+          hct.chroma,
+          chroma,
+        ),
         dark ? 20 : 90,
       ).toInt(),
     );

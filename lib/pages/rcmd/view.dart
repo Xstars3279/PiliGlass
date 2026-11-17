@@ -64,9 +64,10 @@ class _RcmdPageState extends State<RcmdPage>
     maxCrossAxisExtent: Pref.recommendCardWidth,
     childAspectRatio: Style.aspectRatio,
     // text below the cover: 8, two title lines, 4 and the UP row, and no
-    // more
+    // more; the row can carry a badge 20 high, so 74 rather than the 70 the
+    // bare lines need, or the two-line cards overflow by a pixel
     mainAxisExtent: MediaQuery.textScalerOf(context).scale(
-      Revamp.enabled ? 70 : 76,
+      Revamp.enabled ? 74 : 76,
     ),
   );
 

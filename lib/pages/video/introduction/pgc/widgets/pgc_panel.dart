@@ -2,6 +2,7 @@ import 'dart:async' show StreamSubscription;
 import 'dart:math';
 
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/models_new/pgc/pgc_info_model/episode.dart';
 import 'package:PiliPlus/models_new/pgc/pgc_info_model/new_ep.dart';
@@ -59,7 +60,8 @@ class _PgcPanelState extends State<PgcPanel> {
     cid = widget.cid!;
     _updateIndex();
     listViewScrollCtr = ScrollController(
-      initialScrollOffset: currentIndex * 150.0,
+      // 140 + 8 in the redesign, 150 before it
+      initialScrollOffset: currentIndex * (Revamp.enabled ? 148.0 : 150.0),
     );
 
     vipStatus = Pref.userInfoCache?.vipStatus != 1;
@@ -159,15 +161,21 @@ class _PgcPanelState extends State<PgcPanel> {
   Widget _buildItem(ColorScheme theme, bool isPugv, int index) {
     final item = widget.pages[index];
     final hasLongTitle = item.longTitle?.isNotEmpty == true;
-    final color = index == currentIndex ? theme.primary : theme.onSurface;
+    final isCurr = index == currentIndex;
+    final color = Revamp.enabled
+        ? (isCurr ? theme.onSecondaryContainer : theme.onSurface)
+        : (isCurr ? theme.primary : theme.onSurface);
     return Container(
-      width: 150,
-      height: 60,
+      // 140 by 56 in the redesign, the chosen one tonal (6.7)
+      width: Revamp.enabled ? 140 : 150,
+      height: Revamp.enabled ? 56 : 60,
       margin: index != widget.pages.length - 1
-          ? const EdgeInsets.only(right: 10)
+          ? EdgeInsets.only(right: Revamp.enabled ? UiSpace.s8 : 10)
           : null,
       child: Material(
-        color: Revamp.tile(theme),
+        color: Revamp.enabled
+            ? (isCurr ? theme.secondaryContainer : theme.surfaceContainerLow)
+            : Revamp.tile(theme),
         shape: Revamp.tileShape,
         child: InkWell(
           customBorder: Revamp.tileShape,
@@ -178,7 +186,10 @@ class _PgcPanelState extends State<PgcPanel> {
             widget.onChangeEpisode(item);
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+            padding: EdgeInsets.symmetric(
+              vertical: Revamp.enabled ? UiSpace.s8 : 8,
+              horizontal: Revamp.enabled ? UiSpace.s12 : 10,
+            ),
             child: Column(
               spacing: 3,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,7 +201,7 @@ class _PgcPanelState extends State<PgcPanel> {
                         maxLines: hasLongTitle ? 1 : 2,
                         TextSpan(
                           children: [
-                            if (index == currentIndex)
+                            if (index == currentIndex && !Revamp.enabled)
                               WidgetSpan(
                                 alignment: PlaceholderAlignment.middle,
                                 child: Padding(
@@ -206,10 +217,15 @@ class _PgcPanelState extends State<PgcPanel> {
                               ),
                             TextSpan(
                               text: item.title ?? '第${index + 1}话',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: color,
-                              ),
+                              style: Revamp.enabled
+                                  ? UiType.caption.copyWith(
+                                      fontSize: 13,
+                                      color: color,
+                                    )
+                                  : TextStyle(
+                                      fontSize: 13,
+                                      color: color,
+                                    ),
                             ),
                           ],
                         ),
@@ -220,7 +236,7 @@ class _PgcPanelState extends State<PgcPanel> {
                       if (item.badge == '会员')
                         SvgPicture.asset(
                           Assets.vipIcon,
-                          height: 16,
+                          height: Revamp.enabled ? 16 : 16,
                           semanticsLabel: "大会员",
                         )
                       else
@@ -243,7 +259,7 @@ class _PgcPanelState extends State<PgcPanel> {
                     isPugv ? item.title! : item.longTitle!,
                     maxLines: 1,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 12,
                       color: color,
                     ),
                     overflow: TextOverflow.ellipsis,

@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:PiliPlus/common/glass_features.dart';
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/custom_arc.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
@@ -51,8 +53,14 @@ class ActionItem extends StatelessWidget {
       hold: animation,
       child: Icon(
         selectStatus ? selectIcon!.icon! : icon.icon,
-        size: 22,
-        color: selectStatus ? primary : icon.color ?? colorScheme.outline,
+        // the redesign's 24 in the detail page's action row, see ActionGrid
+        size: Revamp.enabled && expand ? 24 : 22,
+        color: selectStatus
+            ? primary
+            : icon.color ??
+                  (Revamp.enabled
+                      ? colorScheme.onSurfaceVariant
+                      : colorScheme.outline),
         semanticLabel: semanticsLabel,
       ),
     );
@@ -91,7 +99,9 @@ class ActionItem extends StatelessWidget {
           onTapCancel: _isThumbsUp ? onCancelTriple : null,
           child: expand
               ? Column(
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
+                  spacing: Revamp.enabled ? UiSpace.s4 : 0,
                   children: [child, _buildText(theme)],
                 )
               : child,
@@ -106,12 +116,20 @@ class ActionItem extends StatelessWidget {
     final child = Text(
       hasText ? text! : '-',
       key: hasText ? ValueKey(text!) : null,
-      style: TextStyle(
-        color: selectStatus
-            ? theme.colorScheme.primary
-            : theme.colorScheme.outline,
-        fontSize: theme.textTheme.labelSmall!.fontSize,
-      ),
+      style: Revamp.enabled
+          // 11 / 500 in the gray of secondary text, the accent only while
+          // the action is on
+          ? UiType.label.copyWith(
+              color: selectStatus
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
+            )
+          : TextStyle(
+              color: selectStatus
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outline,
+              fontSize: theme.textTheme.labelSmall!.fontSize,
+            ),
     );
     if (hasText) {
       return AnimatedSwitcher(

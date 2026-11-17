@@ -1190,36 +1190,41 @@ class _CommentPreviewCardState extends State<CommentPreviewCard> {
     final colorScheme = ColorScheme.of(context);
     final muted = colorScheme.onSurfaceVariant;
     return Padding(
-      padding: const .fromLTRB(12, 12, 12, 0),
+      padding: const .fromLTRB(UiSpace.page, UiSpace.s12, UiSpace.page, 0),
       child: Material(
-        color: Revamp.tile(colorScheme),
+        // a white block on the gray page, not a block in a block (6.5)
+        color: colorScheme.surfaceContainerLow,
         shape: Revamp.tileShape,
         clipBehavior: .antiAlias,
         child: InkWell(
           onTap: () => CommentSheet.open(_replyCtr),
           child: Padding(
-            padding: const .fromLTRB(16, 12, 12, 14),
+            padding: const .all(UiSpace.card),
             child: Column(
               crossAxisAlignment: .start,
-              spacing: 10,
+              spacing: UiSpace.s8,
               children: [
                 Row(
                   children: [
                     Text('评论', style: UiType.title),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: UiSpace.s8),
                     Obx(() {
                       final count = _replyCtr.count.value;
                       return Text(
                         count == -1 ? '' : NumUtils.numFormat(count),
-                        style: TextStyle(
-                          fontSize: 13,
+                        style: UiType.caption.copyWith(
                           color: muted,
                           fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       );
                     }),
                     const Spacer(),
-                    Icon(Icons.unfold_more_rounded, size: 20, color: muted),
+                    // the sheet rises from below: one arrow up
+                    Icon(
+                      Icons.keyboard_arrow_up_rounded,
+                      size: 20,
+                      color: muted,
+                    ),
                   ],
                 ),
                 Obx(
@@ -1241,27 +1246,27 @@ class _CommentPreviewCardState extends State<CommentPreviewCard> {
 
   Widget _topComment(ReplyInfo reply, ColorScheme colorScheme) => Row(
     crossAxisAlignment: .start,
-    spacing: 10,
+    spacing: UiSpace.s8,
     children: [
       NetworkImgLayer(
         src: reply.member.face,
         type: .avatar,
-        width: 26,
-        height: 26,
+        width: 24,
+        height: 24,
       ),
       Expanded(
         child: Text(
           reply.content.message,
-          maxLines: 2,
+          maxLines: 1,
           overflow: .ellipsis,
-          style: const TextStyle(fontSize: 14, height: 1.5),
+          style: UiType.caption,
         ),
       ),
     ],
   );
 
   Widget _note(String text, Color color) =>
-      Text(text, style: TextStyle(fontSize: 14, color: color));
+      Text(text, style: UiType.caption.copyWith(color: color));
 
   Widget _placeholder(ColorScheme colorScheme) {
     Widget line(double widthFactor) => FractionallySizedBox(

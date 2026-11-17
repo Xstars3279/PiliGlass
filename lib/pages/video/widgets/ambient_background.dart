@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/glass_features.dart';
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/cover_palette.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
@@ -94,13 +95,26 @@ class AmbientBackground extends StatelessWidget {
             cover: cover,
             builder: (context, tint, _) {
               if (tint == null) return const SizedBox.shrink();
+              final colorScheme = ColorScheme.of(context);
+              // the redesign: a 12% wash over the page (20% in the dark),
+              // not a gradient of the color itself (6.1)
+              final wash = Revamp.enabled
+                  ? Color.alphaBlend(
+                      tint.withValues(
+                        alpha: colorScheme.brightness == Brightness.dark
+                            ? 0.2
+                            : 0.12,
+                      ),
+                      colorScheme.surface,
+                    )
+                  : tint;
               // fade to the same hue, not to grey
               return DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: .topCenter,
                     end: .bottomCenter,
-                    colors: [tint, tint.withValues(alpha: 0)],
+                    colors: [wash, wash.withValues(alpha: 0)],
                   ),
                 ),
               );

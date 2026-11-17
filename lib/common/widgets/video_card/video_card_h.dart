@@ -282,56 +282,83 @@ class VideoCardH extends StatelessWidget {
                 overflow: .ellipsis,
               ),
             ),
-          Text(
-            "$pubdate${videoItem.owner.name}",
-            maxLines: 1,
-            style: Revamp.enabled
-                ? UiType.caption.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    overflow: .clip,
-                  )
-                : TextStyle(
-                    fontSize: 12,
-                    height: 1,
-                    color: theme.colorScheme.outline,
-                    overflow: .clip,
-                  ),
-          ),
-          if (videoItem.isLive != true) ...[
-            if (!Revamp.enabled) const SizedBox(height: 3),
-            // the figures' line ends where the cover does; room for 更多
-            Padding(
-              padding: .only(right: Revamp.enabled ? 28 : 0),
-              child: Row(
-                spacing: Revamp.enabled ? UiSpace.s12 : 8,
+          if (Revamp.enabled) ...[
+            // three lines: the title, the UP, then the figures and the date
+            // together (6.6, 9.1)
+            Text(
+              videoItem.isLive == true
+                  ? "$pubdate${videoItem.owner.name}"
+                  : videoItem.owner.name ?? '',
+              maxLines: 1,
+              style: UiType.caption.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                overflow: .clip,
+              ),
+            ),
+            if (videoItem.isLive != true)
+              Padding(
+                // room for 更多
+                padding: const .only(right: 28),
+                child: Row(
+                  spacing: UiSpace.s12,
+                  children: [
+                    StatWidget(
+                      type: .play,
+                      value: videoItem.stat.view,
+                      color: theme.colorScheme.onSurfaceVariant,
+                      textStyle: UiType.caption.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    StatWidget(
+                      type: .danmaku,
+                      value: videoItem.stat.danmu,
+                      color: theme.colorScheme.onSurfaceVariant,
+                      textStyle: UiType.caption.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Flexible(
+                      child: Text(
+                        pubdate.trim(),
+                        maxLines: 1,
+                        overflow: .ellipsis,
+                        style: UiType.caption.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ] else ...[
+            Text(
+              "$pubdate${videoItem.owner.name}",
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1,
+                color: theme.colorScheme.outline,
+                overflow: .clip,
+              ),
+            ),
+            if (videoItem.isLive != true) ...[
+              const SizedBox(height: 3),
+              Row(
+                spacing: 8,
                 children: [
                   StatWidget(
                     type: .play,
                     value: videoItem.stat.view,
-                    color: Revamp.enabled
-                        ? theme.colorScheme.onSurfaceVariant
-                        : null,
-                    textStyle: Revamp.enabled
-                        ? UiType.caption.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          )
-                        : null,
                   ),
                   StatWidget(
                     type: .danmaku,
                     value: videoItem.stat.danmu,
-                    color: Revamp.enabled
-                        ? theme.colorScheme.onSurfaceVariant
-                        : null,
-                    textStyle: Revamp.enabled
-                        ? UiType.caption.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          )
-                        : null,
                   ),
                 ],
               ),
-            ),
+            ],
           ],
         ],
       ),

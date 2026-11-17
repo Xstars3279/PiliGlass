@@ -2,6 +2,7 @@ import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/animated_height.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
@@ -412,14 +413,19 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
       if (isSelectable) {
         return SelectionText.rich(
           textSpan,
-          style: const TextStyle(fontSize: 16),
+          style: Revamp.enabled
+              ? UiType.title.copyWith(color: colorScheme.onSurface)
+              : const TextStyle(fontSize: 16),
         );
       }
       return Text.rich(
         textSpan,
         maxLines: isExpand ? null : 2,
         overflow: isExpand ? null : .ellipsis,
-        style: const TextStyle(fontSize: 16),
+        // 17 / 600 in the redesign, the title of the page (6.3)
+        style: Revamp.enabled
+            ? UiType.title.copyWith(color: colorScheme.onSurface)
+            : const TextStyle(fontSize: 16),
       );
     }
 
@@ -437,7 +443,14 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
           onPressed: () => introController.actionRelationMod(context),
           style: TextButton.styleFrom(
             tapTargetSize: .shrinkWrap,
-            visualDensity: const VisualDensity(vertical: -2.8),
+            // 32 high with 16 at each side in the redesign (6.3)
+            visualDensity: Revamp.enabled
+                ? VisualDensity.standard
+                : const VisualDensity(vertical: -2.8),
+            minimumSize: Revamp.enabled ? const Size(0, 32) : null,
+            padding: Revamp.enabled
+                ? const .symmetric(horizontal: UiSpace.s16)
+                : null,
             foregroundColor:
                 Revamp.followFg(colorScheme, attr != 0) ??
                 (attr != 0
@@ -458,7 +471,9 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
               -10 => '特别关注',
               _ => ' 关注 ',
             },
-            style: const TextStyle(fontSize: 13),
+            style: Revamp.enabled
+                ? UiType.caption.copyWith(fontWeight: FontWeight.w500)
+                : const TextStyle(fontSize: 13),
           ),
         );
       },
@@ -472,9 +487,11 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
     VideoStat? stat,
   ) {
     return SizedBox(
-      height: 48,
+      // 56 high, the five split evenly: one of the page's heaviest rows made
+      // light, see 6.4 of the plan
+      height: 56,
       child: Row(
-        crossAxisAlignment: .start,
+        crossAxisAlignment: .center,
         children: [
           Obx(
             () => ActionItem(
@@ -909,14 +926,13 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
     child: Obx(
       () {
         final userStat = introController.userStat.value;
-        final isVip = (userStat.card?.vip?.status ?? 0) > 0;
         return Row(
-          spacing: 10,
+          spacing: Revamp.enabled ? UiSpace.iconText : 10,
           mainAxisSize: .min,
           children: [
             PendantAvatar(
               userStat.card?.face,
-              size: 35,
+              size: Revamp.enabled ? 36 : 35,
               badgeSize: 14,
               vipStatus: userStat.card?.vip?.status,
               officialType: userStat.card?.official?.type,
@@ -928,16 +944,24 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                   userStat.card?.name ?? "",
                   maxLines: 1,
                   overflow: .ellipsis,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isVip && userStat.card?.vip?.type == 2
-                        ? colorScheme.vipColor
-                        : null,
-                  ),
+                  // the pink is the badge's alone; a name is text (2.1)
+                  style: Revamp.enabled
+                      ? UiType.bodyStrong.copyWith(color: colorScheme.onSurface)
+                      : TextStyle(
+                          fontSize: 13,
+                          color: (userStat.card?.vip?.status ?? 0) > 0 &&
+                                  userStat.card?.vip?.type == 2
+                              ? colorScheme.vipColor
+                              : null,
+                        ),
                 ),
                 Text(
                   '${NumUtils.numFormat(userStat.follower)}粉丝    ${'${NumUtils.numFormat(userStat.archiveCount)}视频'}',
-                  style: TextStyle(fontSize: 12, color: colorScheme.outline),
+                  style: Revamp.enabled
+                      ? UiType.caption.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        )
+                      : TextStyle(fontSize: 12, color: colorScheme.outline),
                 ),
               ],
             ),
@@ -948,38 +972,41 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
   );
 
   Widget _buildInfo(VideoStat? stat, int? pubdate) {
+    final caption = Revamp.enabled
+        ? UiType.caption.copyWith(color: colorScheme.onSurfaceVariant)
+        : TextStyle(fontSize: 12, color: colorScheme.outline);
+    final muted = Revamp.enabled
+        ? colorScheme.onSurfaceVariant
+        : colorScheme.outline;
     return Row(
-      spacing: 10,
+      spacing: Revamp.enabled ? UiSpace.iconText : 10,
       children: [
         StatWidget(
           type: .play,
           value: stat?.view,
-          color: colorScheme.outline,
+          color: muted,
         ),
         StatWidget(
           type: .danmaku,
           value: stat?.danmaku,
-          color: colorScheme.outline,
+          color: muted,
         ),
         Text(
           DateFormatUtils.format(pubdate),
-          style: TextStyle(
-            fontSize: 12,
-            color: colorScheme.outline,
-          ),
+          style: caption,
         ),
         if (MineController.anonymity.value)
           Icon(
             MdiIcons.incognito,
             size: 15,
-            color: colorScheme.outline,
+            color: muted,
             semanticLabel: '无痕',
           ),
         if (introController.isShowOnlineTotal)
           Obx(
             () => Text(
               '${introController.total.value}人在看',
-              style: TextStyle(fontSize: 12, color: colorScheme.outline),
+              style: caption,
             ),
           ),
       ],

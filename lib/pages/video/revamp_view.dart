@@ -37,38 +37,46 @@ extension _VideoRevamp on _VideoDetailPageVState {
   }
 
   /// In place of a tab bar with just 简介: a field to send a danmaku, as
-  /// in the official app, and the switch to show them.
+  /// in the official app, and the switch to show them (6.2).
   Widget _danmakuBar() {
     final ctr = videoDetailController.plPlayerController;
+    const capsule = StadiumBorder();
     return SizedBox(
-      height: 48,
+      height: 36 + UiSpace.s8 * 2,
       child: Padding(
-        padding: const .fromLTRB(12, 6, 8, 6),
+        padding: const .symmetric(
+          horizontal: UiSpace.page,
+          vertical: UiSpace.s8,
+        ),
         child: Row(
-          spacing: 6,
+          spacing: UiSpace.s8,
           children: [
             Expanded(
               child: Material(
-                color: Revamp.tile(colorScheme),
-                shape: const StadiumBorder(),
+                // the same white as a field straight on the page
+                color: Revamp.onPage(colorScheme),
+                shape: capsule,
                 clipBehavior: .antiAlias,
                 child: InkWell(
                   onTap: videoDetailController.showShootDanmakuSheet,
                   child: Padding(
-                    padding: const .symmetric(horizontal: 14),
+                    padding: const .symmetric(horizontal: UiSpace.s12),
                     child: Row(
-                      spacing: 8,
+                      spacing: UiSpace.s8,
                       children: [
                         Icon(
                           Icons.edit_outlined,
                           size: 17,
                           color: colorScheme.onSurfaceVariant,
                         ),
-                        Text(
-                          '发个友善的弹幕见证当下',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: colorScheme.onSurfaceVariant,
+                        Expanded(
+                          child: Text(
+                            '发个友善的弹幕见证当下',
+                            maxLines: 1,
+                            overflow: .ellipsis,
+                            style: UiType.caption.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ],
@@ -83,16 +91,19 @@ extension _VideoRevamp on _VideoDetailPageVState {
                 tooltip: '${on ? '关闭' : '开启'}弹幕',
                 onPressed: ctr.toggleDanmaku,
                 style: IconButton.styleFrom(
-                  backgroundColor: on
-                      ? colorScheme.secondaryContainer
-                      : Revamp.tile(colorScheme),
+                  // a 36 round of the field's own white; the icon alone
+                  // carries the state
+                  backgroundColor: Revamp.onPage(colorScheme),
+                  fixedSize: const Size.square(36),
+                  minimumSize: const Size.square(36),
+                  padding: EdgeInsets.zero,
                 ),
                 icon: Icon(
                   on ? CustomIcons.dm_on : CustomIcons.dm_off,
-                  size: 21,
+                  size: 20,
                   color: on
-                      ? colorScheme.onSecondaryContainer
-                      : colorScheme.outline,
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
                 ),
               );
             }),

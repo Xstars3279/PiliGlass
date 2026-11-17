@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' show max;
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/fav.dart';
@@ -50,7 +51,8 @@ class PgcIntroController extends CommonIntroController {
   ScrollController seasonController(int index) {
     if (_seasonController != null) return _seasonController!;
     return _seasonController = ScrollController(
-      initialScrollOffset: index * 150,
+      // the redesign's chips are as wide as their text, so no fixed step
+      initialScrollOffset: Revamp.enabled ? 0 : index * 150,
     );
   }
 

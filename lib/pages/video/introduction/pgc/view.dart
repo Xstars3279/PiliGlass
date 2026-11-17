@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
@@ -75,12 +76,34 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 10,
+            spacing: Revamp.enabled ? UiSpace.s12 : 10,
             children: [
               _buildCover(item),
               Expanded(child: _buildInfoPanel(isPortrait, item)),
             ],
           ),
+          // below the block, two lines of it, the whole of it in the dialog
+          if (Revamp.enabled &&
+              introController.isPgc &&
+              (item.evaluate?.isNotEmpty ?? false))
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => widget.showIntroDetail(
+                item,
+                introController.videoTags.value,
+              ),
+              child: Padding(
+                padding: const .only(top: UiSpace.s12),
+                child: Text(
+                  '简介：${item.evaluate}',
+                  maxLines: 2,
+                  overflow: .ellipsis,
+                  style: UiType.caption.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
           const SizedBox(height: 6),
           // 点赞收藏转发 布局样式2
           if (introController.isPgc) actionGrid(item.stat!, introController),
@@ -119,11 +142,12 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
       }
     }
     return SliverPadding(
-      padding: const .fromLTRB(
+      padding: .fromLTRB(
         Style.safeSpace,
         Style.safeSpace,
         Style.safeSpace,
-        Style.safeSpace + 50,
+        // 24 to the comment card, which brings 12 of its own (6.7)
+        Revamp.enabled ? UiSpace.s12 : Style.safeSpace + 50,
       ),
       sliver: sliver,
     );
@@ -156,6 +180,9 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
   }
 
   Widget _buildCover(PgcInfoModel item) {
+    // 96 wide, 3:4, rounded in the redesign (6.7)
+    final width = Revamp.enabled ? 96.0 : 115.0;
+    final height = Revamp.enabled ? 128.0 : 153.0;
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -166,9 +193,12 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
           child: fromHero(
             tag: item.cover!,
             child: NetworkImgLayer(
-              width: 115,
-              height: 153,
+              width: width,
+              height: height,
               src: item.cover!,
+              borderRadius: Revamp.enabled
+                  ? const .all(.circular(UiRadius.medium))
+                  : BorderRadius.zero,
             ),
           ),
         ),
@@ -176,14 +206,14 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
           PBadge(
             text: '评分 ${item.rating!.score!}',
             top: null,
-            right: 6,
-            bottom: 6,
+            right: Revamp.enabled ? UiSpace.s8 : 6,
+            bottom: Revamp.enabled ? UiSpace.s8 : 6,
             left: null,
           ),
         if (!introController.isPgc)
           Positioned(
-            right: 6,
-            bottom: 6,
+            right: Revamp.enabled ? UiSpace.s8 : 6,
+            bottom: Revamp.enabled ? UiSpace.s8 : 6,
             child: Obx(() {
               final isFav = introController.isFav.value;
               return iconButton(
@@ -216,17 +246,23 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
           return FilledButton.tonal(
             style: FilledButton.styleFrom(
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 10,
+              padding: EdgeInsets.symmetric(
+                horizontal: Revamp.enabled ? UiSpace.s16 : 20,
+                vertical: Revamp.enabled ? 0 : 10,
               ),
-              visualDensity: VisualDensity.compact,
+              minimumSize: Revamp.enabled ? const Size(0, 32) : null,
+              visualDensity: Revamp.enabled
+                  ? VisualDensity.standard
+                  : VisualDensity.compact,
               foregroundColor:
                   Revamp.followFg(colorScheme, isFollowed) ??
                   (isFollowed ? colorScheme.outline : null),
               backgroundColor:
                   Revamp.followBg(colorScheme, isFollowed) ??
                   (isFollowed ? colorScheme.onInverseSurface : null),
+              textStyle: Revamp.enabled
+                  ? UiType.caption.copyWith(fontWeight: FontWeight.w500)
+                  : null,
             ),
             onPressed: followStatus == -1
                 ? null
@@ -258,25 +294,22 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
           );
         },
       );
-      Widget title() => Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 20,
-        children: [
-          Expanded(
-            child: Text(
-              item.title!,
-              style: const TextStyle(fontSize: 16),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          subBtn(),
-        ],
+      // the redesign: the title takes the whole width beside the poster,
+      // the button drops below it (6.7)
+      Widget title() => Text(
+        item.title!,
+        style: Revamp.enabled
+            ? UiType.title
+            : const TextStyle(fontSize: 16),
+        maxLines: Revamp.enabled ? 2 : 1,
+        overflow: TextOverflow.ellipsis,
       );
       List<Widget> desc() => [
         Text(
           item.newEp!.desc!,
-          style: TextStyle(fontSize: 12, color: colorScheme.outline),
+          style: Revamp.enabled
+              ? UiType.caption.copyWith(color: colorScheme.onSurfaceVariant)
+              : TextStyle(fontSize: 12, color: colorScheme.outline),
         ),
         Text.rich(
           TextSpan(
@@ -288,18 +321,64 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
               ),
             ],
           ),
-          style: TextStyle(fontSize: 12, color: colorScheme.outline),
+          style: Revamp.enabled
+              ? UiType.caption.copyWith(color: colorScheme.onSurfaceVariant)
+              : TextStyle(fontSize: 12, color: colorScheme.outline),
         ),
       ];
       Widget stat() => Wrap(
-        spacing: 6,
+        spacing: Revamp.enabled ? UiSpace.s12 : 6,
         runSpacing: 2,
         children: [
-          StatWidget(type: .play, value: item.stat!.view),
-          StatWidget(type: .danmaku, value: item.stat!.danmaku),
-          if (!isPortrait) ...desc(),
+          StatWidget(
+            type: .play,
+            value: item.stat!.view,
+            color: Revamp.enabled ? colorScheme.onSurfaceVariant : null,
+          ),
+          StatWidget(
+            type: .danmaku,
+            value: item.stat!.danmaku,
+            color: Revamp.enabled ? colorScheme.onSurfaceVariant : null,
+          ),
+          if (!isPortrait && !Revamp.enabled) ...desc(),
         ],
       );
+      // 全13话 · 日本 · 2012, on one line under the figures
+      Widget meta() {
+        final year = RegExp(r'\d{4}').firstMatch(item.publish?.pubTimeShow ?? '');
+        final parts = [
+          item.newEp?.desc,
+          if (item.areas?.isNotEmpty == true) item.areas!.first.name,
+          year?.group(0),
+        ].whereType<String>().where((e) => e.isNotEmpty);
+        return Text(
+          parts.join(' · '),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: UiType.caption.copyWith(color: colorScheme.onSurfaceVariant),
+        );
+      }
+
+      if (Revamp.enabled) {
+        return GestureDetector(
+          onTap: () => widget.showIntroDetail(
+            item,
+            introController.videoTags.value,
+          ),
+          behavior: HitTestBehavior.opaque,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: UiSpace.s4,
+            children: [
+              title(),
+              stat(),
+              meta(),
+              const SizedBox(height: UiSpace.s4),
+              subBtn(),
+            ],
+          ),
+        );
+      }
       return GestureDetector(
         onTap: () => widget.showIntroDetail(
           item,
@@ -403,9 +482,10 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
 
   Widget actionGrid(PgcStat stat, PgcIntroController introController) {
     return SizedBox(
-      height: 48,
+      // the same 56 as the UGC page, four items this time (6.4)
+      height: 56,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Obx(
             () => ActionItem(

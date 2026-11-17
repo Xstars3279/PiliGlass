@@ -126,10 +126,11 @@ class VideoCardV extends StatelessWidget {
             ),
           ),
           // 更多: a 20 icon on a 40 tap target, centered 10 in from the
-          // card's right edge
+          // card's right edge, its box reaching just into the gap between
+          // the columns rather than over the next card
           if (videoItem.goto == 'av')
             Positioned(
-              right: -10,
+              right: -UiSpace.gridColumn,
               bottom: -10,
               width: 40,
               height: 40,
