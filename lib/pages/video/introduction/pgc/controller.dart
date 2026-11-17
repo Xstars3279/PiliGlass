@@ -51,8 +51,9 @@ class PgcIntroController extends CommonIntroController {
   ScrollController seasonController(int index) {
     if (_seasonController != null) return _seasonController!;
     return _seasonController = ScrollController(
-      // the redesign's chips are as wide as their text, so no fixed step
-      initialScrollOffset: Revamp.enabled ? 0 : index * 150,
+      // the redesign's chips are as wide as their text: about 96 each, near
+      // enough to bring the chosen one into view
+      initialScrollOffset: Revamp.enabled ? index * 96.0 : index * 150,
     );
   }
 
