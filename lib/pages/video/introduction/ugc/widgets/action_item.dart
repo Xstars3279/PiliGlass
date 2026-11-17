@@ -53,8 +53,8 @@ class ActionItem extends StatelessWidget {
       hold: animation,
       child: Icon(
         selectStatus ? selectIcon!.icon! : icon.icon,
-        // the redesign's 24 in the detail page's action row, see ActionGrid
-        size: Revamp.enabled && expand ? 24 : 22,
+        // 24 in the redesign, on the player and in the detail page's row
+        size: Revamp.enabled ? 24 : 22,
         color: selectStatus
             ? primary
             : icon.color ??
@@ -104,7 +104,8 @@ class ActionItem extends StatelessWidget {
                   spacing: Revamp.enabled ? UiSpace.s4 : 0,
                   children: [child, _buildText(theme)],
                 )
-              : child,
+              // on the player it sits in a 48 box: center it
+              : Center(child: child),
         ),
       ),
     );

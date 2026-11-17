@@ -380,6 +380,42 @@ class HeaderControlState extends State<HeaderControl>
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 14),
               children: [
+                // what left the full screen's top and bottom rows, here at
+                // the top of ⋯ (7.1)
+                if (Revamp.enabled && isFullScreen) ...[
+                  ListTile(
+                    dense: true,
+                    onTap: () {
+                      Get.back();
+                      plPlayerController.onCloseAll();
+                    },
+                    leading: const Icon(Icons.home_outlined, size: 20),
+                    title: const Text('回到主页', style: titleStyle),
+                  ),
+                  ListTile(
+                    dense: true,
+                    onTap: () {
+                      Get.back();
+                      introController.actionShareVideo(context);
+                    },
+                    leading: const Icon(Icons.share_outlined, size: 20),
+                    title: const Text('分享', style: titleStyle),
+                  ),
+                  if (PlatformUtils.isMobile)
+                    ListTile(
+                      dense: true,
+                      onTap: () {
+                        Get.back();
+                        plPlayerController.enterPip();
+                      },
+                      leading: const Icon(
+                        Icons.picture_in_picture_outlined,
+                        size: 20,
+                      ),
+                      title: const Text('画中画', style: titleStyle),
+                    ),
+                  const Divider(height: 16),
+                ],
                 ListTile(
                   dense: true,
                   onTap: () {
@@ -1659,11 +1695,16 @@ class HeaderControlState extends State<HeaderControl>
 
   late final isFileSource = videoDetailCtr.isFileSource;
 
-  static const btnWidth = 42.0;
-  static const btnHeight = 34.0;
-  static final btnStyle = Revamp.enabled
+  // 48 square in the redesign, the tap target the plan asks for (7.2); the
+  // circles stay off the full screen video, where the scrim carries them
+  static final btnWidth = Revamp.enabled ? 48.0 : 42.0;
+  static final btnHeight = Revamp.enabled ? 48.0 : 34.0;
+  static final _baseBtnStyle = Revamp.enabled
       ? Revamp.overlayButtonStyle
       : const ButtonStyle(padding: WidgetStatePropertyAll(.zero));
+  ButtonStyle get btnStyle => Revamp.enabled && isFullScreen
+      ? Revamp.playerButtonStyle
+      : _baseBtnStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -1744,17 +1785,19 @@ class HeaderControlState extends State<HeaderControl>
                   child: IconButton(
                     tooltip: '返回',
                     style: btnStyle,
-                    icon: const Icon(
+                    icon: Icon(
                       FontAwesomeIcons.arrowLeft,
-                      size: 15,
+                      size: Revamp.enabled && isFullScreen ? 24 : 15,
                       color: Colors.white,
                     ),
                     onPressed: () =>
                         plPlayerController.onPopInvokedWithResult(false, null),
                   ),
                 ),
+                // in the redesign's full screen 回到主页 is in the ⋯ menu
                 if (!plPlayerController.isDesktopPip &&
-                    (!isFullScreen || !isPortrait))
+                    (!isFullScreen || !isPortrait) &&
+                    !(Revamp.enabled && isFullScreen))
                   SizedBox(
                     width: btnWidth,
                     height: btnHeight,
@@ -1946,9 +1989,10 @@ class HeaderControlState extends State<HeaderControl>
                       ),
                     ),
                   ),
-                if ((Platform.isAndroid && PiliAndroidHelper.isPipAvailable) ||
-                    (Platform.isIOS && IOSPipHelper.isAvailable) ||
-                    (PlatformUtils.isDesktop && !isFullScreen))
+                if (((Platform.isAndroid && PiliAndroidHelper.isPipAvailable) ||
+                        (Platform.isIOS && IOSPipHelper.isAvailable) ||
+                        (PlatformUtils.isDesktop && !isFullScreen)) &&
+                    !(Revamp.enabled && isFullScreen))
                   SizedBox(
                     width: btnWidth,
                     height: btnHeight,
@@ -1969,6 +2013,80 @@ class HeaderControlState extends State<HeaderControl>
                       ),
                     ),
                   ),
+                // the redesign: the three actions on the top row, beside the
+                // date and the ⋯, and nothing else up here (7.1)
+                if (Revamp.enabled && isFullScreen && showFSActionItem) ...[
+                  SizedBox(
+                    width: btnWidth,
+                    height: btnHeight,
+                    child: Obx(
+                      () => ActionItem(
+                        expand: false,
+                        icon: const Icon(
+                          FontAwesomeIcons.thumbsUp,
+                          color: Colors.white,
+                        ),
+                        selectIcon: const Icon(
+                          FontAwesomeIcons.solidThumbsUp,
+                        ),
+                        selectStatus: introController.hasLike.value,
+                        semanticsLabel: '点赞',
+                        animation: introController.tripleAnimation,
+                        onStartTriple: () {
+                          plPlayerController.tripling = true;
+                          introController.onStartTriple();
+                        },
+                        onCancelTriple: ([bool isTapUp = false]) {
+                          plPlayerController
+                            ..tripling = false
+                            ..hideTaskControls();
+                          introController.onCancelTriple(isTapUp);
+                        },
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: btnWidth,
+                    height: btnHeight,
+                    child: Obx(
+                      () => ActionItem(
+                        expand: false,
+                        animation: introController.tripleAnimation,
+                        icon: const Icon(
+                          FontAwesomeIcons.b,
+                          color: Colors.white,
+                        ),
+                        selectIcon: const Icon(FontAwesomeIcons.b),
+                        onTap: introController.actionCoinVideo,
+                        selectStatus: introController.hasCoin,
+                        semanticsLabel: '投币',
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: btnWidth,
+                    height: btnHeight,
+                    child: Obx(
+                      () => ActionItem(
+                        expand: false,
+                        animation: introController.tripleAnimation,
+                        icon: const Icon(
+                          FontAwesomeIcons.star,
+                          color: Colors.white,
+                        ),
+                        selectIcon: const Icon(FontAwesomeIcons.solidStar),
+                        onTap: () =>
+                            introController.showFavBottomSheet(context),
+                        onLongPress: () => introController.showFavBottomSheet(
+                          context,
+                          isLongPress: true,
+                        ),
+                        selectStatus: introController.hasFav.value,
+                        semanticsLabel: '收藏',
+                      ),
+                    ),
+                  ),
+                ],
                 SizedBox(
                   width: btnWidth,
                   height: btnHeight,
@@ -1976,9 +2094,9 @@ class HeaderControlState extends State<HeaderControl>
                     tooltip: "更多设置",
                     style: btnStyle,
                     onPressed: showSettingSheet,
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.more_vert_outlined,
-                      size: 19,
+                      size: Revamp.enabled && isFullScreen ? 24 : 19,
                       color: Colors.white,
                     ),
                   ),
@@ -1987,7 +2105,8 @@ class HeaderControlState extends State<HeaderControl>
             ),
             title: title,
           ),
-          if (showFSActionItem)
+          // the redesign has them on the top row instead
+          if (showFSActionItem && !(Revamp.enabled && isFullScreen))
             Row(
               mainAxisAlignment: .end,
               crossAxisAlignment: .start,

@@ -37,43 +37,46 @@ class RevampDanmakuBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const white = Colors.white;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Row(
+    return Row(
         spacing: 6,
         children: [
           Expanded(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: DecoratedBox(
-                decoration: Revamp.overlayCapsuleDecoration,
-                child: Material(
-                  type: MaterialType.transparency,
-                  shape: const StadiumBorder(),
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: onSend,
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      child: Row(
-                        spacing: 8,
-                        children: [
-                          Icon(Icons.edit_outlined, size: 16, color: white),
-                          Flexible(
-                            child: Text(
-                              '发个友善的弹幕见证当下',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xCCFFFFFF),
+              child: SizedBox(
+                // 36 high on a white 16% capsule, the only filled thing at
+                // the bottom of the full screen (7.2)
+                height: 36,
+                child: DecoratedBox(
+                  decoration: const ShapeDecoration(
+                    color: Color(0x29FFFFFF),
+                    shape: StadiumBorder(),
+                  ),
+                  child: Material(
+                    type: MaterialType.transparency,
+                    shape: const StadiumBorder(),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: onSend,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 14),
+                        child: Row(
+                          spacing: 8,
+                          children: [
+                            Icon(Icons.edit_outlined, size: 16, color: white),
+                            Flexible(
+                              child: Text(
+                                '发个友善的弹幕见证当下',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xB3FFFFFF),
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -85,23 +88,22 @@ class RevampDanmakuBar extends StatelessWidget {
             final on = controller.enableShowDanmaku.value;
             return IconButton(
               tooltip: '${on ? '关闭' : '开启'}弹幕',
-              style: Revamp.overlayButtonStyle,
+              style: Revamp.playerButtonStyle,
               onPressed: controller.toggleDanmaku,
               icon: Icon(
                 on ? CustomIcons.dm_on : CustomIcons.dm_off,
-                size: 19,
+                size: 24,
                 color: white,
               ),
             );
           }),
           IconButton(
             tooltip: '弹幕设置',
-            style: Revamp.overlayButtonStyle,
+            style: Revamp.playerButtonStyle,
             onPressed: onSettings,
-            icon: const Icon(CustomIcons.dm_settings, size: 19, color: white),
+            icon: const Icon(CustomIcons.dm_settings, size: 24, color: white),
           ),
         ],
-      ),
     );
   }
 }

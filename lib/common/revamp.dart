@@ -142,6 +142,17 @@ abstract final class Revamp {
     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
   );
 
+  /// A control on the full screen video: no round behind it, a 48 tap
+  /// target, and the scrim above and below carries it instead (7.2).
+  static const playerButtonStyle = ButtonStyle(
+    padding: WidgetStatePropertyAll(EdgeInsets.zero),
+    backgroundColor: WidgetStatePropertyAll(Colors.transparent),
+    shape: WidgetStatePropertyAll(CircleBorder()),
+    fixedSize: WidgetStatePropertyAll(Size.square(48)),
+    minimumSize: WidgetStatePropertyAll(Size.zero),
+    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+  );
+
   /// the smoked round of [overlayButtonStyle], for controls that are not
   /// buttons of their own
   static const overlayRoundDecoration = ShapeDecoration(

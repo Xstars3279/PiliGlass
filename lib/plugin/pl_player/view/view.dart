@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 
 import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -894,6 +895,41 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     };
 
     final isNotFileSource = !plPlayerController.isFileSource;
+
+    // The redesign's full screen is one row: play, the danmaku field and
+    // its two switches, then subtitles, speed, quality and the way out.
+    // Everything else lives in the ⋯ menu (7.1).
+    if (Revamp.enabled &&
+        isFullScreen &&
+        isNotFileSource &&
+        !plPlayerController.isLive) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: UiSpace.s16,
+          vertical: UiSpace.s8,
+        ),
+        child: Row(
+          spacing: UiSpace.s8,
+          children: [
+            progressWidget(.playOrPause),
+            Expanded(
+              child: RevampDanmakuBar(
+                controller: plPlayerController,
+                onSend: videoDetailController.showShootDanmakuSheet,
+                onSettings: () =>
+                    (videoDetailController.headerCtrKey.currentState
+                            as HeaderControlState?)
+                        ?.showSetDanmaku(),
+              ),
+            ),
+            progressWidget(.subtitle),
+            progressWidget(.speed),
+            progressWidget(.qa),
+            progressWidget(.fullscreen),
+          ],
+        ),
+      );
+    }
 
     final flag =
         isFullScreen || plPlayerController.isDesktopPip || maxWidth >= 500;
