@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -49,12 +50,22 @@ class AppBarAni extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // the redesign's scrims: 60% at the top, 70% at the bottom (7.2)
+    final gradient = Revamp.enabled
+        ? LinearGradient(
+            begin: isTop ? Alignment.bottomCenter : Alignment.topCenter,
+            end: isTop ? Alignment.topCenter : Alignment.bottomCenter,
+            colors: <Color>[
+              Colors.transparent,
+              isTop ? const Color(0x99000000) : const Color(0xB3000000),
+            ],
+            tileMode: TileMode.mirror,
+          )
+        : (isTop ? _topDecoration : _bottomDecoration);
     return SlideTransition(
       position: controller.drive(isTop ? _topPos : _bottomPos),
       child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: isTop ? _topDecoration : _bottomDecoration,
-        ),
+        decoration: BoxDecoration(gradient: gradient),
         child: removeSafeArea
             ? child
             : ViewSafeArea(

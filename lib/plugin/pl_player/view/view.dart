@@ -497,7 +497,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             tooltip: '超分辨率',
             requestFocus: false,
             initialValue: type,
-            color: Colors.black.withValues(alpha: 0.8),
+            color: Revamp.enabled
+              ? Revamp.playerMenuColor
+              : Colors.black.withValues(alpha: 0.8),
+          shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
+          constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
             itemBuilder: (context) {
               return SuperResolutionType.values
                   .map(
@@ -607,7 +611,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             tooltip: '画面比例',
             requestFocus: false,
             initialValue: fit,
-            color: Colors.black.withValues(alpha: 0.8),
+            color: Revamp.enabled
+              ? Revamp.playerMenuColor
+              : Colors.black.withValues(alpha: 0.8),
+          shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
+          constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
             itemBuilder: (context) {
               return VideoFitType.values
                   .map(
@@ -647,7 +655,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               requestFocus: false,
               initialValue: videoDetailController.currLang.value,
               onSelected: videoDetailController.setLanguage,
-              color: Colors.black.withValues(alpha: 0.8),
+              color: Revamp.enabled
+              ? Revamp.playerMenuColor
+              : Colors.black.withValues(alpha: 0.8),
+          shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
+          constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
               itemBuilder: (context) => [
                 const PopupMenuItem<String>(
                   height: 35,
@@ -692,7 +704,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               tooltip: '字幕',
               requestFocus: false,
               initialValue: val,
-              color: Colors.black.withValues(alpha: 0.8),
+              color: Revamp.enabled
+              ? Revamp.playerMenuColor
+              : Colors.black.withValues(alpha: 0.8),
+          shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
+          constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
               itemBuilder: (context) {
                 return [
                   PopupMenuItem<int>(
@@ -749,7 +765,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           tooltip: '倍速',
           requestFocus: false,
           initialValue: plPlayerController.playbackSpeed,
-          color: Colors.black.withValues(alpha: 0.8),
+          color: Revamp.enabled
+              ? Revamp.playerMenuColor
+              : Colors.black.withValues(alpha: 0.8),
+          shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
+          constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
           itemBuilder: (context) {
             return plPlayerController.speedList
                 .map(
@@ -794,7 +814,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             tooltip: '画质',
             requestFocus: false,
             initialValue: currentVideoQa.code,
-            color: Colors.black.withValues(alpha: 0.8),
+            color: Revamp.enabled
+              ? Revamp.playerMenuColor
+              : Colors.black.withValues(alpha: 0.8),
+          shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
+          constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
             itemBuilder: (context) {
               return List.generate(
                 videoFormat.length,
@@ -871,14 +895,16 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
     final isNotFileSource = !plPlayerController.isFileSource;
 
+    final flag =
+        isFullScreen || plPlayerController.isDesktopPip || maxWidth >= 500;
+    // the figures have moved onto the progress bar at the ends (7.1)
+    final timeOnBar = Revamp.enabled && flag;
     List<BottomControlType> userSpecifyItemLeft = [
       .playOrPause,
-      .time,
+      if (!timeOnBar) .time,
       if (!isNotFileSource || anySeason) ...[.pre, .next],
     ];
 
-    final flag =
-        isFullScreen || plPlayerController.isDesktopPip || maxWidth >= 500;
     final List<BottomControlType> userSpecifyItemRight = [
       if (isNotFileSource && plPlayerController.showDmChart) .dmChart,
       if (plPlayerController.isAnim) .superResolution,

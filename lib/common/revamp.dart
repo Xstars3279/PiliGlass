@@ -80,6 +80,14 @@ abstract final class Revamp {
   /// corner radius of a menu
   static const double menuRadius = UiRadius.large;
 
+  /// the menus over the video: black 72%, so the picture still shows a
+  /// little through them, and 120 wide (7.3)
+  static const playerMenuColor = Color(0xB8000000);
+  static const playerMenuConstraints = BoxConstraints(
+    minWidth: 120,
+    maxWidth: 120,
+  );
+
   /// corner radius of a cover across a card, and of a thumbnail beside a
   /// card's text
   static const double coverRadius = UiRadius.medium;
@@ -152,23 +160,12 @@ abstract final class Revamp {
     shape: StadiumBorder(),
   );
 
-  /// A label over the video, e.g. 1.0X or 1080P, on a capsule of the same
-  /// smoked glass as [overlayButtonStyle]; upstream's bare text if off.
-  static Widget overlayChip(Widget label) => enabled
-      ? Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 3),
-          child: DecoratedBox(
-            decoration: overlayCapsuleDecoration,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              child: label,
-            ),
-          ),
-        )
-      : Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: label,
-        );
+  /// A label over the video, e.g. 1.0X or 1080P: plain white text, no
+  /// capsule or outline behind it (7.2); upstream's bare text if off.
+  static Widget overlayChip(Widget label) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 8),
+    child: label,
+  );
 }
 
 /// A rounded group of rows, the way the redesign sets off a section.
