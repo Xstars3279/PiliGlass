@@ -187,6 +187,7 @@ class HeaderControl extends StatefulWidget {
     required this.controller,
     required this.videoDetailCtr,
     required this.heroTag,
+    this.onEpisodes,
     super.key,
   });
 
@@ -194,6 +195,9 @@ class HeaderControl extends StatefulWidget {
   final PlPlayerController controller;
   final VideoDetailController videoDetailCtr;
   final String heroTag;
+
+  /// opens 选集, which the redesign's full screen carries in ⋯
+  final VoidCallback? onEpisodes;
 
   @override
   State<HeaderControl> createState() => HeaderControlState();
@@ -416,6 +420,17 @@ class HeaderControlState extends State<HeaderControl>
                       title: const Text('画中画', style: titleStyle),
                     ),
                   // what the full screen's bottom row no longer carries
+                  if (widget.onEpisodes case final onEpisodes?)
+                    ListTile(
+                      dense: true,
+                      onTap: () {
+                        Get.back();
+                        onEpisodes();
+                      },
+                      leading: const Icon(Icons.video_library_outlined,
+                          size: 20),
+                      title: const Text('选集', style: titleStyle),
+                    ),
                   if (videoDetailCtr.languages.value case final langs?
                       when langs.isNotEmpty)
                     PopupListTile<String>(
