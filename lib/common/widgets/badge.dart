@@ -141,6 +141,11 @@ class PBadge extends StatelessWidget {
             ? (colorScheme.errorContainer, colorScheme.onErrorContainer)
             : (colorScheme.error, colorScheme.onError),
       PBadgeType.free => (colorScheme.freeColor, Colors.white),
+      // the one badge that keeps a color of its own
+      _ when text == '大会员' || text == '会员' => (
+        colorScheme.vipColor,
+        Colors.white,
+      ),
       _ when isStack => (const Color(0x80000000), Colors.white),
       PBadgeType.gray => (const Color(0x80000000), Colors.white),
       _ => (colorScheme.surfaceContainerHigh, colorScheme.onSurfaceVariant),

@@ -149,7 +149,7 @@ extension _SearchRevamp on _SearchPageState {
               textInputAction: TextInputAction.search,
               onChanged: _searchController.onChange,
               onSubmitted: (_) => _searchController.submit(),
-              style: const TextStyle(fontSize: 16),
+              style: UiType.body,
               decoration: InputDecoration(
                 isCollapsed: true,
                 hintText: _searchController.hintText ?? '搜索视频、番剧、UP 主',

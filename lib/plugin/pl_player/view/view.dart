@@ -507,8 +507,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               return SuperResolutionType.values
                   .map(
                     (type) => PopupMenuItem<SuperResolutionType>(
-                      height: 35,
-                      padding: const EdgeInsets.only(left: 30),
+                      height: 48,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       value: type,
                       onTap: () => plPlayerController.setShader(type),
                       child: Text(
@@ -621,8 +621,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               return VideoFitType.values
                   .map(
                     (boxFit) => PopupMenuItem<VideoFitType>(
-                      height: 35,
-                      padding: const EdgeInsets.only(left: 30),
+                      height: 48,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       value: boxFit,
                       onTap: () => plPlayerController.toggleVideoFit(boxFit),
                       child: Text(
@@ -663,7 +663,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
               itemBuilder: (context) => [
                 const PopupMenuItem<String>(
-                  height: 35,
+                  height: 48,
                   value: '',
                   child: Text(
                     "关闭翻译",
@@ -672,7 +672,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 ),
                 ...list.map(
                   (e) => PopupMenuItem<String>(
-                    height: 35,
+                    height: 48,
                     value: e.lang,
                     child: Text(
                       e.title!,
@@ -714,7 +714,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 return [
                   PopupMenuItem<int>(
                     value: 0,
-                    height: 35,
+                    height: 48,
                     onTap: () => videoDetailController.setSubtitle(0),
                     child: const Text(
                       "关闭字幕",
@@ -727,7 +727,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                   ...videoDetailController.subtitles.mapIndexed((i, e) {
                     return PopupMenuItem<int>(
                       value: i + 1,
-                      height: 35,
+                      height: 48,
                       onTap: () => videoDetailController.setSubtitle(i + 1),
                       child: Text(
                         e.lanDoc ?? e.lan,
@@ -775,8 +775,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             return plPlayerController.speedList
                 .map(
                   (double speed) => PopupMenuItem<double>(
-                    height: 35,
-                    padding: const EdgeInsets.only(left: 30),
+                    height: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     value: speed,
                     onTap: () => plPlayerController.setPlaybackSpeed(speed),
                     child: Text(
@@ -828,7 +828,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                   final enabled = availableQa.contains(item.quality);
                   return PopupMenuItem<int>(
                     enabled: enabled,
-                    height: 35,
+                    height: 48,
                     padding: const EdgeInsets.only(left: 15, right: 10),
                     value: item.quality,
                     onTap: () async {

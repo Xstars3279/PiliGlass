@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
@@ -80,9 +81,8 @@ class RevampPosterCard extends StatelessWidget {
                           subtitle!,
                           maxLines: 1,
                           overflow: .ellipsis,
-                          style: TextStyle(
-                            fontSize: theme.textTheme.labelMedium!.fontSize,
-                            color: theme.colorScheme.outline,
+                          style: UiType.caption.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                     ],
@@ -134,10 +134,9 @@ class RevampPosterCard extends StatelessWidget {
                 label!,
                 maxLines: 1,
                 overflow: .ellipsis,
-                style: const TextStyle(
+                style: UiType.label.copyWith(
                   color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: .w600,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
