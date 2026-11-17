@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:PiliPlus/pages/dynamics_repost/view.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
@@ -25,16 +26,19 @@ class ActionPanel extends StatelessWidget {
     final like = moduleStat.like!;
     final btnStyle = TextButton.styleFrom(
       tapTargetSize: .padded,
-      // narrower in the redesign's pills, so 4 digits fit on one line
+      // the redesign: no pill behind them, 48 high, the icon 20 and the
+      // count 13/400 in the gray of secondary text (5.3)
       padding: EdgeInsets.symmetric(horizontal: Revamp.enabled ? 8 : 15),
+      minimumSize: Revamp.enabled ? const Size(0, 48) : null,
       foregroundColor: outline,
-      // the redesign: gray pills in the white card, like the intro's blocks
-      backgroundColor: Revamp.enabled ? Revamp.tile(theme.colorScheme) : null,
+      textStyle: Revamp.enabled
+          ? UiType.caption.copyWith(color: outline)
+          : null,
       shape: Revamp.enabled ? const StadiumBorder() : null,
     );
     return Padding(
       padding: Revamp.enabled
-          ? const .fromLTRB(12, 0, 12, 10)
+          ? const .fromLTRB(UiSpace.card, 0, UiSpace.card, 10)
           : EdgeInsets.zero,
       child: Row(
       spacing: Revamp.enabled ? 8 : 0,
@@ -63,7 +67,7 @@ class ActionPanel extends StatelessWidget {
                 ),
                 icon: Icon(
                   FontAwesomeIcons.shareFromSquare,
-                  size: 16,
+                  size: Revamp.enabled ? 20 : 16,
                   color: outline,
                   semanticLabel: "转发",
                 ),
@@ -86,7 +90,7 @@ class ActionPanel extends StatelessWidget {
             ),
             icon: Icon(
               FontAwesomeIcons.comment,
-              size: 16,
+              size: Revamp.enabled ? 20 : 16,
               color: outline,
               semanticLabel: "评论",
             ),
@@ -113,7 +117,7 @@ class ActionPanel extends StatelessWidget {
               }
               final likeIcon = Icon(
                 icon,
-                size: 16,
+                size: Revamp.enabled ? 20 : 16,
                 color: color,
                 semanticLabel: label,
               );

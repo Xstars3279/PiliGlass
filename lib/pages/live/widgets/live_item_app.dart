@@ -1,4 +1,6 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/http/live.dart';
@@ -30,6 +32,113 @@ class LiveCardVApp extends StatelessWidget {
       title: item.title,
       cover: showFirstFrame ? item.systemCover : item.cover,
     );
+    // the redesign draws a live room as it does a video: no box, the cover
+    // alone, its corners rounded (4.2)
+    if (Revamp.enabled) {
+      return Revamp.pressable(
+        Material(
+          type: .transparency,
+          child: InkWell(
+            onTap: () => PageUtils.toLiveRoom(item.roomid),
+            onLongPress: onLongPress,
+            onSecondaryTap: PlatformUtils.isMobile ? null : onLongPress,
+            borderRadius: const .all(.circular(Revamp.coverRadius)),
+            child: Column(
+              crossAxisAlignment: .start,
+              children: [
+                AspectRatio(
+                  aspectRatio: Style.aspectRatio,
+                  child: LayoutBuilder(
+                    builder: (context, boxConstraints) => Revamp.clip(
+                      radius: const .all(.circular(Revamp.coverRadius)),
+                      child: Stack(
+                        fit: .expand,
+                        children: [
+                          NetworkImgLayer(
+                            src: showFirstFrame ? item.systemCover : item.cover,
+                            width: boxConstraints.maxWidth,
+                            height: boxConstraints.maxHeight,
+                            borderRadius: BorderRadius.zero,
+                          ),
+                          // the lower 40% darkened, the figures on it
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            height: boxConstraints.maxHeight * 0.4,
+                            child: const DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: .topCenter,
+                                  end: .bottomCenter,
+                                  colors: [
+                                    Color(0x00000000),
+                                    Color(0x99000000),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            left: UiSpace.s8,
+                            right: UiSpace.s8,
+                            bottom: UiSpace.s8,
+                            child: Row(
+                              children: [
+                                Text(
+                                  item.areaName.toString(),
+                                  style: UiType.label.copyWith(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const Spacer(),
+                                if (item.watchedShow?.textLarge
+                                    case final textLarge?)
+                                  Text(
+                                    textLarge,
+                                    style: UiType.label.copyWith(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const .fromLTRB(2, UiSpace.s8, 2, 0),
+                    child: Column(
+                      crossAxisAlignment: .start,
+                      children: [
+                        Text(
+                          item.title.toString(),
+                          maxLines: 2,
+                          overflow: .ellipsis,
+                          style: UiType.bodyStrong.copyWith(height: 1.35),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          item.uname.toString(),
+                          maxLines: 1,
+                          overflow: .ellipsis,
+                          style: UiType.caption.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     return Stack(
       children: [
         Card(

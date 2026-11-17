@@ -1,7 +1,7 @@
 import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/revamp.dart';
-import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -15,10 +15,13 @@ class CustomToast extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
-    // the redesign: a capsule of the dock's glass that pops in on a spring
+    // the redesign: a solid capsule in the inverse surface, 36 high, that
+    // pops in on a spring; never glass (11.5)
     if (Revamp.enabled && GlassFeatures.toast) {
       return Padding(
-        padding: .only(bottom: MediaQuery.viewPaddingOf(context).bottom + 30),
+        padding: .only(
+          bottom: MediaQuery.viewPaddingOf(context).bottom + UiSpace.s24,
+        ),
         child: TweenAnimationBuilder<double>(
           tween: Tween(begin: 0, end: 1),
           duration: const Duration(milliseconds: 460),
@@ -28,15 +31,21 @@ class CustomToast extends StatelessWidget {
           ),
           builder: (context, t, child) =>
               Transform.scale(scale: 0.8 + 0.2 * t, child: child),
-          child: GlassCapsule(
-            refraction: true,
-            padding: const .symmetric(horizontal: 18, vertical: 11),
+          child: Container(
+            height: 36,
+            padding: const .symmetric(horizontal: UiSpace.s16),
+            alignment: Alignment.center,
+            decoration: ShapeDecoration(
+              color: colorScheme.inverseSurface,
+              shape: const StadiumBorder(),
+            ),
             child: Text(
               msg,
-              style: TextStyle(
-                fontSize: 13.5,
+              maxLines: 1,
+              overflow: .ellipsis,
+              style: UiType.label.copyWith(
                 fontWeight: FontWeight.w500,
-                color: colorScheme.onSurface,
+                color: colorScheme.onInverseSurface,
               ),
             ),
           ),

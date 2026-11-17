@@ -87,31 +87,30 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
   Widget upPanelPart(ColorScheme colorScheme) {
     final isTop = upPanelPosition == .top;
     final needBg = upPanelPosition.index > 2;
-    // the redesign sets the strip above the posts off as a group
-    if (Revamp.enabled && (isTop || !needBg)) {
-      return RevampGroup(
-        // below the floating tabs
-        margin: isTop
-            ? const .fromLTRB(12, _barHeight, 12, 4)
-            : upPanelPosition == .leftFixed
-            ? const .only(left: 8, top: _barHeight)
-            : const .only(right: 8, top: _barHeight),
-        child: SizedBox(
-          width: isTop ? null : 64,
-          height: isTop ? 84 : null,
-          child: NotificationListener<ScrollEndNotification>(
-            onNotification: (notification) {
-              final metrics = notification.metrics;
-              if (metrics.pixels >= metrics.maxScrollExtent - 300) {
-                _dynamicsController.onLoadMore();
-              }
-              return false;
-            },
-            child: Obx(
-              () => _buildUpPanel(_dynamicsController.loadingState.value),
-            ),
+    // the strip above the posts is a group; the rail beside them is not a
+    // card at all, just avatars on the page (5.1)
+    if (Revamp.enabled) {
+      final body = SizedBox(
+        width: isTop ? null : 64,
+        height: isTop ? 84 : null,
+        child: NotificationListener<ScrollEndNotification>(
+          onNotification: (notification) {
+            final metrics = notification.metrics;
+            if (metrics.pixels >= metrics.maxScrollExtent - 300) {
+              _dynamicsController.onLoadMore();
+            }
+            return false;
+          },
+          child: Obx(
+            () => _buildUpPanel(_dynamicsController.loadingState.value),
           ),
         ),
+      );
+      if (!isTop) return body;
+      return RevampGroup(
+        // below the floating tabs
+        margin: const .fromLTRB(12, _barHeight, 12, 4),
+        child: body,
       );
     }
     return Material(

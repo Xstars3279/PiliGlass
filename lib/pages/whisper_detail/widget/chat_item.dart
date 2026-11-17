@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/emote_tooltip.dart';
 import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
@@ -62,9 +64,16 @@ class ChatItem extends StatelessWidget {
     // }
 
     late final ThemeData theme = Theme.of(context);
-    late final Color textColor = isOwner
-        ? theme.colorScheme.onSecondaryContainer
-        : theme.colorScheme.onSurface;
+    // the redesign's bubbles: mine on the accent, theirs on white, 24 round
+    // with the corner by the sender at 8, 8 of padding above and below (9.3)
+    final revamp = Revamp.enabled;
+    late final Color textColor = revamp
+        ? (isOwner
+              ? theme.colorScheme.onPrimary
+              : theme.colorScheme.onSurface)
+        : (isOwner
+              ? theme.colorScheme.onSecondaryContainer
+              : theme.colorScheme.onSurface);
     late final dynamic content = jsonDecode(item.content);
 
     Widget child = messageContent(
@@ -87,28 +96,40 @@ class ChatItem extends StatelessWidget {
         mainAxisAlignment: isOwner ? .end : .start,
         children: [
           Container(
-            constraints: const BoxConstraints(maxWidth: 300.0),
+            constraints: BoxConstraints(
+              // 72% of the screen at most, as the plan asks
+              maxWidth: revamp
+                  ? MediaQuery.sizeOf(context).width * 0.72
+                  : 300.0,
+            ),
             decoration: BoxDecoration(
-              color: isOwner
-                  ? theme.colorScheme.secondaryContainer
-                  : theme.colorScheme.onInverseSurface,
+              color: revamp
+                  ? (isOwner
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.surfaceContainerLow)
+                  : (isOwner
+                        ? theme.colorScheme.secondaryContainer
+                        : theme.colorScheme.onInverseSurface),
               borderRadius: isOwner
-                  ? const .only(
-                      topLeft: .circular(16),
-                      topRight: .circular(16),
-                      bottomLeft: .circular(16),
-                      bottomRight: .circular(6),
+                  ? BorderRadius.only(
+                      topLeft: Radius.circular(revamp ? 24 : 16),
+                      topRight: Radius.circular(revamp ? 24 : 16),
+                      bottomLeft: Radius.circular(revamp ? 24 : 16),
+                      bottomRight: Radius.circular(revamp ? 8 : 6),
                     )
-                  : const .only(
-                      topLeft: .circular(16),
-                      topRight: .circular(16),
-                      bottomLeft: .circular(6),
-                      bottomRight: .circular(16),
+                  : BorderRadius.only(
+                      topLeft: Radius.circular(revamp ? 24 : 16),
+                      topRight: Radius.circular(revamp ? 24 : 16),
+                      bottomLeft: Radius.circular(revamp ? 8 : 6),
+                      bottomRight: Radius.circular(revamp ? 24 : 16),
                     ),
             ),
             padding: isPic
                 ? const .only(top: 8, bottom: 6, left: 8, right: 8)
-                : const .only(top: 8, bottom: 6, left: 12, right: 12),
+                : EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: revamp ? 8 : 7,
+                  ),
             child: Column(
               crossAxisAlignment: isOwner ? .end : .start,
               children: [
@@ -144,11 +165,16 @@ class ChatItem extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 6, bottom: 18),
+          padding: EdgeInsets.only(top: 6, bottom: Revamp.enabled ? 12 : 18),
           child: Text(
             DateFormatUtils.chatFormat(item.timestamp.toInt()),
             textAlign: TextAlign.center,
-            style: TextStyle(color: theme.colorScheme.outline),
+            style: Revamp.enabled
+                ? UiType.label.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  )
+                : TextStyle(color: theme.colorScheme.outline),
           ),
         ),
         GestureDetector(

@@ -160,10 +160,10 @@ class _UpPanelState extends State<UpPanel> {
       );
     } else {
       avatar = Padding(
-        padding: const .symmetric(horizontal: 4),
+        padding: EdgeInsets.symmetric(horizontal: Revamp.enabled ? 0 : 4),
         child: NetworkImgLayer(
-          width: 38,
-          height: 38,
+          width: Revamp.enabled ? 44 : 38,
+          height: Revamp.enabled ? 44 : 38,
           src: item.face,
           type: .avatar,
         ),
@@ -186,42 +186,45 @@ class _UpPanelState extends State<UpPanel> {
           ],
         );
       } else if (Revamp.enabled) {
-        // a ring, as on stories: the chosen one in the primary color, one
-        // with something new in a gradient
+        // the chosen UP gets a 2 wide accent ring; one with something new a
+        // dot at the avatar's top right. No story gradients (5.1)
         final chosen = currentMid == item.mid;
         final fresh = item.hasUpdate ?? false;
-        if (chosen || fresh) {
-          avatar = Container(
-            padding: const .all(2.5),
-            decoration: BoxDecoration(
-              shape: .circle,
-              color: chosen ? theme.colorScheme.primary : null,
-              gradient: chosen
-                  ? null
-                  : LinearGradient(
-                      begin: .topLeft,
-                      end: .bottomRight,
-                      colors: [
-                        theme.colorScheme.primary,
-                        theme.colorScheme.tertiary,
-                      ],
-                    ),
-            ),
-            child: Container(
-              padding: const .all(2),
+        avatar = Stack(
+          clipBehavior: .none,
+          children: [
+            Container(
+              padding: EdgeInsets.all(chosen ? 2 : 0),
               decoration: BoxDecoration(
                 shape: .circle,
-                color: theme.colorScheme.surfaceContainerLow,
+                color: chosen ? theme.colorScheme.primary : null,
               ),
               child: NetworkImgLayer(
-                width: 34,
-                height: 34,
+                width: Revamp.enabled ? 44 : 38,
+                height: Revamp.enabled ? 44 : 38,
                 src: item.face,
                 type: .avatar,
               ),
             ),
-          );
-        }
+            if (fresh)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: .circle,
+                    color: theme.colorScheme.primary,
+                    border: Border.all(
+                      color: theme.colorScheme.surface,
+                      width: 1.5,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
       } else if (item.hasUpdate ?? false) {
         avatar = Stack(
           clipBehavior: .none,
@@ -241,8 +244,8 @@ class _UpPanelState extends State<UpPanel> {
     }
 
     return SizedBox(
-      height: 76,
-      width: isTop ? 70 : null,
+      height: Revamp.enabled ? 84 : 76,
+      width: isTop ? (Revamp.enabled ? 64 : 70) : null,
       child: Revamp.pressable(
         InkWell(
           customBorder: Revamp.enabled ? Revamp.tileShape : null,
@@ -268,17 +271,20 @@ class _UpPanelState extends State<UpPanel> {
               children: [
                 avatar,
                 Padding(
-                  padding: const .symmetric(horizontal: 4),
+                  padding: const .symmetric(horizontal: 2),
                   child: Text(
                     isTop ? '${item.uname}\n' : item.uname!,
-                    maxLines: 2,
+                    maxLines: Revamp.enabled ? 1 : 2,
+                    overflow: .ellipsis,
                     textAlign: .center,
                     style: TextStyle(
                       color: currentMid == item.mid
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.outline,
+                          ? (Revamp.enabled
+                                ? theme.colorScheme.onSurface
+                                : theme.colorScheme.primary)
+                          : theme.colorScheme.onSurfaceVariant,
                       height: 1.1,
-                      fontSize: 12.5,
+                      fontSize: Revamp.enabled ? 11 : 12.5,
                     ),
                   ),
                 ),

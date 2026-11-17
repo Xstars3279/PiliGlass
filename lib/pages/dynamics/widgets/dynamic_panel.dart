@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/motion/appear_in.dart';
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/avatars.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -90,7 +91,13 @@ class DynamicPanel extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+              // 16 inside the white block in the redesign (5.2)
+              padding: EdgeInsets.fromLTRB(
+                Revamp.enabled ? UiSpace.card : 12,
+                Revamp.enabled ? UiSpace.card : 12,
+                Revamp.enabled ? UiSpace.card : 12,
+                Revamp.enabled ? UiSpace.s8 : 6,
+              ),
               child: authorWidget,
             ),
             if (item.modules.moduleDispute case final moduleDispute?)
@@ -133,7 +140,13 @@ class DynamicPanel extends StatelessWidget {
     // the redesign sets each post apart as a group, not with a gray band
     if (Revamp.enabled && !isDetail) {
       return Padding(
-        padding: const .fromLTRB(12, 0, 12, 12),
+        // 8 between the posts, 16 at each side
+        padding: EdgeInsets.fromLTRB(
+          UiSpace.page,
+          0,
+          UiSpace.page,
+          UiSpace.s8,
+        ),
         child: Material(
           color: theme.colorScheme.surfaceContainerLow,
           borderRadius: const .all(.circular(Revamp.groupRadius)),

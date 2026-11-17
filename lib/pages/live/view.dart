@@ -96,41 +96,74 @@ class _LivePageState extends State<LivePage>
                       child: SizedBox(
                         // 10+14*textScaler
                         height: 10.0 + textScaler.scale(14),
-                        child: Obx(() {
-                          final areaIndex = controller.areaIndex.value;
-                          return ListView.separated(
-                            scrollDirection: .horizontal,
-                            padding: const .only(right: 8),
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(width: 12),
-                            itemBuilder: (context, index) {
-                              final isFirst = index == 0;
-                              late final item = list[index - 1];
-                              final isCurr = index == areaIndex;
-                              return SearchText(
-                                fontSize: 14,
-                                height: 1,
-                                padding: const .symmetric(
-                                  horizontal: 8,
-                                  vertical: 5,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: Obx(() {
+                                final areaIndex = controller.areaIndex.value;
+                                return ListView.separated(
+                                  scrollDirection: .horizontal,
+                                  padding: const .only(right: 8),
+                                  physics: const AlwaysScrollableScrollPhysics(),
+                                  separatorBuilder: (_, _) =>
+                                      const SizedBox(width: 12),
+                                  itemBuilder: (context, index) {
+                                    final isFirst = index == 0;
+                                    late final item = list[index - 1];
+                                    final isCurr = index == areaIndex;
+                                    return SearchText(
+                                      fontSize: 14,
+                                      height: 1,
+                                      padding: const .symmetric(
+                                        horizontal: 8,
+                                        vertical: 5,
+                                      ),
+                                      text: isFirst ? '推荐' : item.title!,
+                                      bgColor: isCurr
+                                          ? theme
+                                                .colorScheme
+                                                .secondaryContainer
+                                          : Colors.transparent,
+                                      textColor: isCurr
+                                          ? theme
+                                                .colorScheme
+                                                .onSecondaryContainer
+                                          : null,
+                                      onTap: (_) => controller.onSelectArea(
+                                        index,
+                                        isFirst ? null : item,
+                                      ),
+                                    );
+                                  },
+                                  itemCount: list.length + 1,
+                                );
+                              }),
+                            ),
+                            // the last tag fades out instead of being cut by
+                            // the three round buttons (4.2)
+                            if (Revamp.enabled)
+                              Positioned(
+                                top: 0,
+                                bottom: 0,
+                                right: 0,
+                                width: UiSpace.s24,
+                                child: IgnorePointer(
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          theme.colorScheme.surface.withValues(
+                                            alpha: 0,
+                                          ),
+                                          theme.colorScheme.surface,
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                text: isFirst ? '推荐' : item.title!,
-                                bgColor: isCurr
-                                    ? theme.colorScheme.secondaryContainer
-                                    : Colors.transparent,
-                                textColor: isCurr
-                                    ? theme.colorScheme.onSecondaryContainer
-                                    : null,
-                                onTap: (_) => controller.onSelectArea(
-                                  index,
-                                  isFirst ? null : item,
-                                ),
-                              );
-                            },
-                            itemCount: list.length + 1,
-                          );
-                        }),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                     iconButton(
@@ -267,6 +300,8 @@ class _LivePageState extends State<LivePage>
 
   List<Widget> _buildFollowList(ThemeData theme, LiveCardList item) {
     final totalCount = item.cardData?.myIdolV1?.extraInfo?.totalCount ?? 0;
+    // nobody live: no row at all (4.2)
+    if (Revamp.enabled && totalCount == 0) return const [];
     return [
       SliverToBoxAdapter(
         child: Padding(
