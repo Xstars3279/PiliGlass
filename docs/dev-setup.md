@@ -32,6 +32,27 @@
 
 调试模式（Debug）为了支持热重载，跑的是解释执行，**动画会明显卡**，这是正常的。判断流畅度要用 **Profile** 模式运行（Run 下拉菜单里选，或命令行 `flutter run --profile`），或者让我编 release 版。
 
+## 装到手机上（dev 包，带账号）
+
+日常看效果用 `com.example.piliplus.dev`，这个包里有登录态，覆盖安装不会丢数据：
+
+```powershell
+# 1. 临时打开 dev 开关（会改 applicationId、用 debug 签名、应用名叫 PiliGlass dev）
+Add-Content android\gradle.properties "dev=true"
+
+# 2. 只编 arm64，快很多
+flutter build apk --release --target-platform android-arm64
+
+# 3. 还原开关，避免把 dev=true 提交进去
+#    把 gradle.properties 最后一行 dev=true 删掉
+
+# 4. 手机上确认过「USB 安装」弹窗被拒时，走 root 安装
+adb push build\app\outputs\flutter-apk\app-release.apk /data/local/tmp/pg-dev.apk
+adb shell "su -c 'pm install -r /data/local/tmp/pg-dev.apk'"
+```
+
+`adb root` 在零售版系统上不可用，root 安装要走 `su -c 'pm install ...'`。
+
 ## 用 Git 保护自己
 
 改之前先提交一次，改坏了随时可以回去：
