@@ -40,6 +40,7 @@ class ChatItem extends StatelessWidget {
     required this.onLongPress,
     required this.onSecondaryTapUp,
     required this.isOwner,
+    this.previousTimestamp,
   });
 
   final Msg item;
@@ -47,6 +48,10 @@ class ChatItem extends StatelessWidget {
   final VoidCallback onLongPress;
   final GestureTapUpCallback? onSecondaryTapUp;
   final bool isOwner;
+
+  /// The message before it, in seconds: the time is shown once a minute, not
+  /// on every bubble (9.3)
+  final int? previousTimestamp;
 
   // 消息来源
   // enum MsgSource {
@@ -162,12 +167,27 @@ class ChatItem extends StatelessWidget {
       );
     }
 
+    // the time once a minute: the previous bubble carries the same one
+    final timestamp = item.timestamp.toInt();
+    final previous = previousTimestamp;
+    final showTime =
+        previous == null || (timestamp ~/ 60) != (previous ~/ 60);
+
+    if (!showTime) {
+      return GestureDetector(
+        behavior: .opaque,
+        onLongPress: onLongPress,
+        onSecondaryTapUp: onSecondaryTapUp,
+        child: child,
+      );
+    }
+
     return Column(
       children: [
         Padding(
           padding: EdgeInsets.only(top: 6, bottom: Revamp.enabled ? 12 : 18),
           child: Text(
-            DateFormatUtils.chatFormat(item.timestamp.toInt()),
+            DateFormatUtils.chatFormat(timestamp),
             textAlign: TextAlign.center,
             style: Revamp.enabled
                 ? UiType.label.copyWith(

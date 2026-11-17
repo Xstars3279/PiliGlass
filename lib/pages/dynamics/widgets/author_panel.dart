@@ -1,7 +1,9 @@
 import 'dart:math';
 
 import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/dialog/report.dart';
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
@@ -74,10 +76,12 @@ class AuthorPanel extends StatelessWidget {
     if (pubTime != null) {
       pubTs = Text(
         '$pubTime${moduleAuthor.pubAction != null ? ' ${moduleAuthor.pubAction}' : ''}',
-        style: TextStyle(
-          color: theme.colorScheme.outline,
-          fontSize: theme.textTheme.labelSmall!.fontSize,
-        ),
+        style: Revamp.enabled
+            ? UiType.caption.copyWith(color: theme.colorScheme.onSurfaceVariant)
+            : TextStyle(
+                color: theme.colorScheme.outline,
+                fontSize: theme.textTheme.labelSmall!.fontSize,
+              ),
       );
       if (moduleAuthor.badgeText case final badgeText?) {
         pubTs = Row(
@@ -111,13 +115,15 @@ class AuthorPanel extends StatelessWidget {
               maxLines: 1,
               overflow: .ellipsis,
               style: TextStyle(
-                color:
-                    moduleAuthor.vip != null &&
+                // the pink is the badge's alone (2.1)
+                color: !Revamp.enabled &&
+                        moduleAuthor.vip != null &&
                         moduleAuthor.vip!.status > 0 &&
                         moduleAuthor.vip!.type == 2
                     ? theme.colorScheme.vipColor
                     : theme.colorScheme.onSurface,
                 fontSize: theme.textTheme.titleSmall!.fontSize,
+                fontWeight: Revamp.enabled ? FontWeight.w500 : null,
               ),
             ),
             ?pubTs,

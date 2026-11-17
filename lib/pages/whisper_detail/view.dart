@@ -198,6 +198,9 @@ class _WhisperDetailPageState
                               _showMenu(e.globalPosition, index, item, isOwner)
                         : null,
                     isOwner: isOwner,
+                    previousTimestamp: index > 0
+                        ? response[index - 1].timestamp.toInt()
+                        : null,
                   );
                 },
                 separatorBuilder: (context, index) =>

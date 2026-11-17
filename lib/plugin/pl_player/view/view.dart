@@ -779,11 +779,21 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     value: speed,
                     onTap: () => plPlayerController.setPlaybackSpeed(speed),
-                    child: Text(
-                      "${speed}X",
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
-                      semanticsLabel: "$speed倍速",
-                    ),
+                    child: Revamp.enabled
+                        ? Revamp.playerMenuItem(
+                            ColorScheme.of(context),
+                            label: "${speed}X",
+                            selected:
+                                speed == plPlayerController.playbackSpeed,
+                          )
+                        : Text(
+                            "${speed}X",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                            ),
+                            semanticsLabel: "$speed倍速",
+                          ),
                   ),
                 )
                 .toList();
@@ -854,15 +864,26 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                         );
                       }
                     },
-                    child: Text(
-                      item.newDesc ?? item.quality.toString(),
-                      style: enabled
-                          ? const TextStyle(color: Colors.white, fontSize: 13)
-                          : const TextStyle(
-                              color: Color(0x62FFFFFF),
-                              fontSize: 13,
-                            ),
-                    ),
+                    child: Revamp.enabled
+                        ? Revamp.playerMenuItem(
+                            ColorScheme.of(context),
+                            label:
+                                item.newDesc ?? item.quality.toString(),
+                            selected: currentVideoQa.code == item.quality,
+                            enabled: enabled,
+                          )
+                        : Text(
+                            item.newDesc ?? item.quality.toString(),
+                            style: enabled
+                                ? const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                  )
+                                : const TextStyle(
+                                    color: Color(0x62FFFFFF),
+                                    fontSize: 13,
+                                  ),
+                          ),
                   );
                 },
               );

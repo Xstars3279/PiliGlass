@@ -88,6 +88,42 @@ abstract final class Revamp {
     maxWidth: 120,
   );
 
+  /// One row of a menu over the video: 15 / 400 white; the chosen one 600 in
+  /// the accent on a white 12% block, inset 8 (7.3).
+  static Widget playerMenuItem(
+    ColorScheme colorScheme, {
+    required String label,
+    required bool selected,
+    bool enabled = true,
+  }) => Container(
+    height: 40,
+    margin: const EdgeInsets.symmetric(horizontal: UiSpace.s8),
+    padding: const EdgeInsets.symmetric(horizontal: UiSpace.s8),
+    alignment: Alignment.centerLeft,
+    decoration: selected
+        ? ShapeDecoration(
+            color: Colors.white.withValues(alpha: 0.12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(UiRadius.small),
+            ),
+          )
+        : null,
+    child: Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        fontSize: 15,
+        fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+        color: !enabled
+            ? const Color(0x62FFFFFF)
+            : selected
+            ? colorScheme.primary
+            : Colors.white,
+      ),
+    ),
+  );
+
   /// corner radius of a cover across a card, and of a thumbnail beside a
   /// card's text
   static const double coverRadius = UiRadius.medium;

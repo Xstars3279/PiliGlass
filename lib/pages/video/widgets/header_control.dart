@@ -6,6 +6,7 @@ import 'dart:typed_data' show Uint8List;
 import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/plugin/pl_player/models/video_fit_type.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/dialog/report.dart';
@@ -414,6 +415,73 @@ class HeaderControlState extends State<HeaderControl>
                       ),
                       title: const Text('画中画', style: titleStyle),
                     ),
+                  // what the full screen's bottom row no longer carries
+                  if (videoDetailCtr.languages.value case final langs?
+                      when langs.isNotEmpty)
+                    PopupListTile<String>(
+                      dense: true,
+                      leading: const Icon(Icons.translate, size: 20),
+                      title: const Text('翻译', style: titleStyle),
+                      titleStyle: theme.textTheme.bodyLarge,
+                      value: () {
+                        final value = videoDetailCtr.currLang.value ?? '';
+                        return (value, value.isEmpty ? '不翻译' : value);
+                      },
+                      itemBuilder: (_) => [
+                        const PopupMenuItem(value: '', child: Text('不翻译')),
+                        for (final item in langs)
+                          if (item.lang case final lang?)
+                            PopupMenuItem(
+                              value: lang,
+                              child: Text(item.title ?? lang),
+                            ),
+                      ],
+                      onSelected: (value, setState) {
+                        videoDetailCtr.setLanguage(value);
+                        setState();
+                      },
+                      descPosType: .subtitle,
+                      descStyle: subTitleStyle,
+                    ),
+                  PopupListTile<VideoFitType>(
+                    dense: true,
+                    leading: const Icon(Icons.aspect_ratio, size: 20),
+                    title: const Text('画面比例', style: titleStyle),
+                    titleStyle: theme.textTheme.bodyLarge,
+                    value: () {
+                      final value = plPlayerController.videoFit.value;
+                      return (value, value.desc);
+                    },
+                    itemBuilder: (_) => VideoFitType.values
+                        .map(
+                          (e) => PopupMenuItem<VideoFitType>(
+                            value: e,
+                            child: Text(e.desc),
+                          ),
+                        )
+                        .toList(),
+                    onSelected: (value, setState) {
+                      plPlayerController.toggleVideoFit(value);
+                      setState();
+                    },
+                    descPosType: .subtitle,
+                    descStyle: subTitleStyle,
+                  ),
+                  Obx(
+                    () => SwitchListTile(
+                      dense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                      ),
+                      secondary: const Icon(Icons.show_chart, size: 20),
+                      title: const Text('高能进度条', style: titleStyle),
+                      value: videoDetailCtr.showDmTrendChart.value,
+                      onChanged: (value) {
+                        Get.back();
+                        videoDetailCtr.showDmTrendChart.value = value;
+                      },
+                    ),
+                  ),
                   const Divider(height: 16),
                 ],
                 ListTile(
