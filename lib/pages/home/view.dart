@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/ui_icons.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
@@ -160,6 +161,9 @@ class _HomePageState extends CommonPageState<HomePage>
         child: Row(
           spacing: 8,
           children: [
+            // the account's face at the left, on the same glass as the tabs:
+            // a tap goes to 我的, as the avatar on the old top bar did
+            _homeAvatar(),
             if (_homeController.tabs.length > 1)
               Expanded(
                 child: GlassTabBar(
@@ -198,6 +202,46 @@ class _HomePageState extends CommonPageState<HomePage>
       ),
     );
   }
+
+  /// The account's face at the top left of the feed, on the same glass as
+  /// the tabs and the bell, 32 round in a 44 block; a tap goes to 我的.
+  Widget _homeAvatar() => Semantics(
+    label: '我的',
+    button: true,
+    child: GlassCapsule(
+      refraction: true,
+      padding: EdgeInsets.zero,
+      child: SizedBox.square(
+        dimension: GlassTabBar.height,
+        child: Center(
+          child: Obx(() {
+            final account = _mainController.accountService;
+            final face = account.isLogin.value ? account.face.value : null;
+            return GestureDetector(
+              behavior: .opaque,
+              onTap: _mainController.toMinePage,
+              child: SizedBox.square(
+                dimension: 32,
+                child: ClipOval(
+                  child: face == null || face.isEmpty
+                      ? Image.asset(
+                          Assets.avatarPlaceHolder,
+                          fit: BoxFit.cover,
+                        )
+                      : NetworkImgLayer(
+                          type: .avatar,
+                          width: 32,
+                          height: 32,
+                          src: face,
+                        ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ),
+    ),
+  );
 
   Widget customAppBar() {
     const padding = EdgeInsets.fromLTRB(14, 6, 14, 0);

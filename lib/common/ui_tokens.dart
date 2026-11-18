@@ -165,9 +165,14 @@ enum UiGlassLevel {
 abstract final class UiGlass {
   static const String key = 'glassLevel';
 
-  /// read once, like the other features: a restart applies a change
+  /// read once, like the other features: a restart applies a change.
+  /// 极致 is where the redesign starts.
   static final UiGlassLevel level =
-      UiGlassLevel.values[(GStorage.setting.get(key, defaultValue: 0) as int)
+      UiGlassLevel.values[(GStorage.setting.get(
+                key,
+                defaultValue: UiGlassLevel.extreme.index,
+              )
+              as int)
           .clamp(0, UiGlassLevel.values.length - 1)];
 
   /// anything showing through at all
