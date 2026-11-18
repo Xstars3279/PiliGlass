@@ -1,6 +1,7 @@
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/ui_icons.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/centered_glass_tabs.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
@@ -150,8 +151,8 @@ class _HomePageState extends CommonPageState<HomePage>
 
   /// One row of text tabs; the selected one sits on a raised pill.
   /// Used when search lives in the bottom dock, so the top bar is just this.
-  /// With a single tab only the messages button is left, floating over
-  /// the feed at the right.
+  /// The tabs are centred between the account's face and the bell; a page
+  /// with a single tab still gets a capsule around it.
   Widget _glassTabBar() {
     return Padding(
       // the main page already pads the body below the status bar
@@ -164,20 +165,20 @@ class _HomePageState extends CommonPageState<HomePage>
             // the account's face at the left, on the same glass as the tabs:
             // a tap goes to 我的, as the avatar on the old top bar did
             _homeAvatar(),
-            if (_homeController.tabs.length > 1)
-              Expanded(
-                child: GlassTabBar(
-                  controller: _homeController.tabController,
-                  labels: _homeController.tabs.map((e) => e.label).toList(),
-                  onTap: (_) {
-                    if (!_homeController.tabController.indexIsChanging) {
-                      _homeController.animateToTop();
-                    }
-                  },
-                ),
-              )
-            else
-              const Spacer(),
+            Expanded(
+              // the row keeps to what it holds and sits in the middle of
+              // the room between the avatar and the bell; a page with a
+              // single tab gets a small capsule with that one tab in it
+              child: CenteredGlassTabs(
+                controller: _homeController.tabController,
+                labels: _homeController.tabs.map((e) => e.label).toList(),
+                onTap: (_) {
+                  if (!_homeController.tabController.indexIsChanging) {
+                    _homeController.animateToTop();
+                  }
+                },
+              ),
+            ),
             // on a wide screen the messages are on the rail's glass block,
             // unless the window is too short for them there
             Obx(
@@ -219,7 +220,14 @@ class _HomePageState extends CommonPageState<HomePage>
             final face = account.isLogin.value ? account.face.value : null;
             return GestureDetector(
               behavior: .opaque,
-              onTap: _mainController.toMinePage,
+              // signed in it goes to 我的, signed out it asks to sign in
+              onTap: () {
+                if (account.isLogin.value) {
+                  _mainController.toMinePage();
+                } else {
+                  Get.toNamed('/loginPage');
+                }
+              },
               child: SizedBox.square(
                 dimension: 32,
                 child: ClipOval(

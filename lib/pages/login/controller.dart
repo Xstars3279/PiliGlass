@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:PiliPlus/common/dial_prefix.dart';
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/radio_widget.dart';
 import 'package:PiliPlus/http/init.dart';
@@ -646,132 +648,220 @@ class LoginPageController extends GetxController
       context: parentContext,
       builder: (context) {
         final colorScheme = ColorScheme.of(context);
+        void toggleQuick() {
+          quickSelect = !quickSelect;
+          (context as Element).markNeedsBuild();
+        }
+
+        Future<void> toLogin() async {
+          Get.back();
+          await Get.toNamed('/loginPage');
+          if (parentContext.mounted) {
+            switchAccountDialog(parentContext);
+          }
+        }
+
+        void apply() {
+          Get.back();
+          for (final type in AccountType.values) {
+            final index = type.index;
+            final account = quickSelect
+                ? selectAccount.first
+                : selectAccount[index];
+            if (account != Accounts.accountMode[index]) {
+              Accounts.set(type, account);
+            }
+          }
+        }
+
+        // 15 / 500, the quiet ones onSurfaceVariant, 确定 in the accent (11.4)
+        Widget action(
+          String label,
+          VoidCallback onPressed, {
+          bool accent = false,
+        }) => TextButton(
+          style: TextButton.styleFrom(
+            textStyle: UiType.bodyStrong,
+            foregroundColor: accent
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
+            minimumSize: const Size(0, 44),
+            padding: const EdgeInsets.symmetric(horizontal: UiSpace.s8),
+          ),
+          onPressed: onPressed,
+          child: Text(label),
+        );
+
         return AlertDialog(
-          title: Row(
-            crossAxisAlignment: .start,
-            children: [
-              Text.rich(
-                style: const TextStyle(height: 1.5),
-                TextSpan(
+          title: Revamp.enabled
+              ? Text('账号切换', style: UiType.title)
+              : Row(
+                  crossAxisAlignment: .start,
                   children: [
-                    const TextSpan(text: '账号切换'),
-                    TextSpan(
-                      text: '\nmid为0时使用匿名',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: colorScheme.outline,
+                    Text.rich(
+                      style: const TextStyle(height: 1.5),
+                      TextSpan(
+                        children: [
+                          const TextSpan(text: '账号切换'),
+                          TextSpan(
+                            text: '\nmid为0时使用匿名',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: colorScheme.outline,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        visualDensity: .compact,
+                        tapTargetSize: .shrinkWrap,
+                      ),
+                      onPressed: toggleQuick,
+                      child: Text(quickSelect ? '详细' : '快速'),
+                    ),
+                    IconButton(
+                      visualDensity: .compact,
+                      tooltip: '登录',
+                      onPressed: toLogin,
+                      iconSize: 18,
+                      icon: Icon(
+                        Icons.login_outlined,
+                        color: colorScheme.secondary,
                       ),
                     ),
                   ],
                 ),
-              ),
-              const Spacer(),
-              TextButton(
-                style: TextButton.styleFrom(
-                  visualDensity: .compact,
-                  tapTargetSize: .shrinkWrap,
-                ),
-                onPressed: () {
-                  quickSelect = !quickSelect;
-                  (context as Element).markNeedsBuild();
-                },
-                child: Text(quickSelect ? '详细' : '快速'),
-              ),
-              IconButton(
-                visualDensity: .compact,
-                tooltip: '登录',
-                onPressed: () async {
-                  Get.back();
-                  await Get.toNamed('/loginPage');
-                  if (parentContext.mounted) {
-                    switchAccountDialog(parentContext);
-                  }
-                },
-                iconSize: 18,
-                icon: Icon(Icons.login_outlined, color: colorScheme.secondary),
-              ),
-            ],
-          ),
-          titlePadding: const .only(left: 22, top: 16, right: 22, bottom: 3),
-          contentPadding: const .symmetric(vertical: 5),
-          actionsPadding: const .only(left: 16, right: 16, bottom: 10),
+          titlePadding: Revamp.enabled
+              ? const .fromLTRB(
+                  UiSpace.s24,
+                  UiSpace.s24,
+                  UiSpace.s24,
+                  UiSpace.s8,
+                )
+              : const .only(left: 22, top: 16, right: 22, bottom: 3),
+          contentPadding: Revamp.enabled
+              ? const .symmetric(horizontal: UiSpace.s24)
+              : const .symmetric(vertical: 5),
+          actionsPadding: Revamp.enabled
+              ? const .fromLTRB(
+                  UiSpace.s12,
+                  UiSpace.s8,
+                  UiSpace.s12,
+                  UiSpace.s12,
+                )
+              : const .only(left: 16, right: 16, bottom: 10),
+          // 屏宽减 64, up to 360 (11.4)
+          insetPadding: Revamp.enabled
+              ? const .symmetric(horizontal: UiSpace.s32, vertical: UiSpace.s24)
+              : null,
+          constraints: Revamp.enabled
+              ? const BoxConstraints(maxWidth: 360)
+              : null,
           content: SingleChildScrollView(
             child: AnimatedSize(
               curve: Curves.easeIn,
               alignment: .topCenter,
               duration: const Duration(milliseconds: 200),
-              child: quickSelect
-                  ? Builder(
-                      builder: (context) => RadioGroup<Account>(
-                        groupValue: selectAccount[0],
-                        onChanged: (v) {
-                          selectAccount.fillRange(0, selectAccount.length, v);
-                          (context as Element).markNeedsBuild();
-                        },
-                        child: Column(
+              child: Column(
+                mainAxisSize: .min,
+                crossAxisAlignment: .start,
+                children: [
+                  if (Revamp.enabled) ...[
+                    Text(
+                      'mid为0时使用匿名',
+                      style: UiType.caption.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: UiSpace.s8),
+                  ],
+                  quickSelect
+                      ? Builder(
+                          builder: (context) => RadioGroup<Account>(
+                            groupValue: selectAccount[0],
+                            onChanged: (v) {
+                              selectAccount.fillRange(
+                                0,
+                                selectAccount.length,
+                                v,
+                              );
+                              (context as Element).markNeedsBuild();
+                            },
+                            child: Column(
+                              crossAxisAlignment: .start,
+                              children: options.entries
+                                  .map(
+                                    (entry) => RadioWidget<Account>(
+                                      value: entry.key,
+                                      title: entry.value,
+                                      mainAxisSize: .max,
+                                      padding: PlatformUtils.isDesktop
+                                          ? const .only(left: 12)
+                                          : const .only(
+                                              left: 12,
+                                              top: 2,
+                                              bottom: 2,
+                                            ),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                          ),
+                        )
+                      : Column(
                           crossAxisAlignment: .start,
-                          children: options.entries
+                          children: AccountType.values
                               .map(
-                                (entry) => RadioWidget<Account>(
-                                  value: entry.key,
-                                  title: entry.value,
-                                  mainAxisSize: .max,
-                                  padding: PlatformUtils.isDesktop
-                                      ? const .only(left: 12)
-                                      : const .only(
-                                          left: 12,
-                                          top: 2,
-                                          bottom: 2,
-                                        ),
+                                (e) => Builder(
+                                  builder: (context) => RadioGroup<Account>(
+                                    groupValue: selectAccount[e.index],
+                                    onChanged: (v) {
+                                      selectAccount[e.index] = v!;
+                                      (context as Element).markNeedsBuild();
+                                    },
+                                    child: WrapRadioOptionsGroup<Account>(
+                                      groupTitle: e.title,
+                                      options: options,
+                                    ),
+                                  ),
                                 ),
                               )
                               .toList(),
                         ),
-                      ),
-                    )
-                  : Column(
-                      crossAxisAlignment: .start,
-                      children: AccountType.values
-                          .map(
-                            (e) => Builder(
-                              builder: (context) => RadioGroup<Account>(
-                                groupValue: selectAccount[e.index],
-                                onChanged: (v) {
-                                  selectAccount[e.index] = v!;
-                                  (context as Element).markNeedsBuild();
-                                },
-                                child: WrapRadioOptionsGroup<Account>(
-                                  groupTitle: e.title,
-                                  options: options,
-                                ),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
+                ],
+              ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: Get.back,
-              child: Text('取消', style: TextStyle(color: colorScheme.outline)),
-            ),
-            TextButton(
-              onPressed: () {
-                Get.back();
-                for (final type in AccountType.values) {
-                  final index = type.index;
-                  final account = quickSelect
-                      ? selectAccount.first
-                      : selectAccount[index];
-                  if (account != Accounts.accountMode[index]) {
-                    Accounts.set(type, account);
-                  }
-                }
-              },
-              child: const Text('确定'),
-            ),
-          ],
+          // the title row is just the title: 详细 and the way to the login
+          // page sit at the left of the button row (11.4)
+          actions: Revamp.enabled
+              ? [
+                  Row(
+                    children: [
+                      action(quickSelect ? '详细' : '快速', toggleQuick),
+                      action('登录', toLogin),
+                      const Spacer(),
+                      action('取消', Get.back),
+                      action('确定', apply, accent: true),
+                    ],
+                  ),
+                ]
+              : [
+                  TextButton(
+                    onPressed: Get.back,
+                    child: Text(
+                      '取消',
+                      style: TextStyle(color: colorScheme.outline),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: apply,
+                    child: const Text('确定'),
+                  ),
+                ],
         );
       },
     );

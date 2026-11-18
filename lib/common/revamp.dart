@@ -88,6 +88,10 @@ abstract final class Revamp {
     maxWidth: 120,
   );
 
+  /// How tall a menu over the video is with [count] rows: the rows of 48 and
+  /// the 8 above and below them.
+  static double playerMenuHeight(int count) => count * 48 + UiSpace.s16;
+
   /// One row of a menu over the video: 15 / 400 white; the chosen one 600 in
   /// the accent on a white 12% block, inset 8 (7.3).
   static Widget playerMenuItem(
@@ -96,7 +100,7 @@ abstract final class Revamp {
     required bool selected,
     bool enabled = true,
   }) => Container(
-    height: 40,
+    height: 48,
     margin: const EdgeInsets.symmetric(horizontal: UiSpace.s8),
     padding: const EdgeInsets.symmetric(horizontal: UiSpace.s8),
     alignment: Alignment.centerLeft,

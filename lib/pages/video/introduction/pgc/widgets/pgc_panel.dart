@@ -84,6 +84,15 @@ class _PgcPanelState extends State<PgcPanel> {
     super.dispose();
   }
 
+  /// The upstream label: how far the show has gone, or 查看全部.
+  String _epLabel() {
+    final newEp = widget.newEp;
+    if (newEp?.desc?.contains('连载') == true) {
+      return '连载中，更新至${Utils.isStringNumeric(newEp!.title!) ? '第${newEp.title}话' : '${newEp.title}'}';
+    }
+    return newEp?.desc ?? '查看全部';
+  }
+
   void scrollToIndex() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       listViewScrollCtr.animateTo(
@@ -130,9 +139,9 @@ class _PgcPanelState extends State<PgcPanel> {
                     cid,
                   ),
                   child: Text(
-                    widget.newEp?.desc?.contains('连载') == true
-                        ? '连载中，更新至${Utils.isStringNumeric(widget.newEp!.title!) ? '第${widget.newEp!.title}话' : '${widget.newEp!.title}'}'
-                        : widget.newEp?.desc ?? '查看全部',
+                    // 已完结 / 连载中 is on the info block above (6.7), so
+                    // the button only points at the list
+                    Revamp.enabled ? '查看全部' : _epLabel(),
                     style: const TextStyle(fontSize: 13),
                   ),
                 ),

@@ -18,6 +18,7 @@ import 'package:PiliPlus/common/widgets/gesture/player_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/pair.dart';
 import 'package:PiliPlus/common/widgets/player_bar.dart';
+import 'package:PiliPlus/common/widgets/player_menu.dart';
 import 'package:PiliPlus/common/widgets/progress_bar/audio_video_progress_bar.dart';
 import 'package:PiliPlus/common/widgets/progress_bar/segment_progress_bar.dart';
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
@@ -89,6 +90,11 @@ import 'package:media_kit_video/media_kit_video.dart';
 import 'package:screen_brightness_platform_interface/screen_brightness_platform_interface.dart';
 
 part 'widgets.dart';
+
+/// How far the subtitle steps up while the controls are on screen: clear of
+/// the progress row and the one row of buttons under it (7.2).
+const double _subtitleLiftFullScreen = 96;
+const double _subtitleLiftPortrait = 82;
 
 class PLVideoPlayer extends StatefulWidget {
   const PLVideoPlayer({
@@ -499,10 +505,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             requestFocus: false,
             initialValue: type,
             color: Revamp.enabled
-              ? Revamp.playerMenuColor
-              : Colors.black.withValues(alpha: 0.8),
-          shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
-          constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
+                ? Revamp.playerMenuColor
+                : Colors.black.withValues(alpha: 0.8),
+            shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
+            constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
             itemBuilder: (context) {
               return SuperResolutionType.values
                   .map(
@@ -613,10 +619,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             requestFocus: false,
             initialValue: fit,
             color: Revamp.enabled
-              ? Revamp.playerMenuColor
-              : Colors.black.withValues(alpha: 0.8),
-          shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
-          constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
+                ? Revamp.playerMenuColor
+                : Colors.black.withValues(alpha: 0.8),
+            shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
+            constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
             itemBuilder: (context) {
               return VideoFitType.values
                   .map(
@@ -657,10 +663,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               initialValue: videoDetailController.currLang.value,
               onSelected: videoDetailController.setLanguage,
               color: Revamp.enabled
-              ? Revamp.playerMenuColor
-              : Colors.black.withValues(alpha: 0.8),
-          shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
-          constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
+                  ? Revamp.playerMenuColor
+                  : Colors.black.withValues(alpha: 0.8),
+              shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
+              constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
               itemBuilder: (context) => [
                 const PopupMenuItem<String>(
                   height: 48,
@@ -706,10 +712,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               requestFocus: false,
               initialValue: val,
               color: Revamp.enabled
-              ? Revamp.playerMenuColor
-              : Colors.black.withValues(alpha: 0.8),
-          shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
-          constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
+                  ? Revamp.playerMenuColor
+                  : Colors.black.withValues(alpha: 0.8),
+              shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
+              constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
               itemBuilder: (context) {
                 return [
                   PopupMenuItem<int>(
@@ -762,50 +768,61 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
       /// 播放速度
       BottomControlType.speed => Obx(
-        () => PopupMenuButton<double>(
-          tooltip: '倍速',
-          requestFocus: false,
-          initialValue: plPlayerController.playbackSpeed,
-          color: Revamp.enabled
-              ? Revamp.playerMenuColor
-              : Colors.black.withValues(alpha: 0.8),
-          shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
-          constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
-          itemBuilder: (context) {
-            return plPlayerController.speedList
-                .map(
-                  (double speed) => PopupMenuItem<double>(
-                    height: 48,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    value: speed,
-                    onTap: () => plPlayerController.setPlaybackSpeed(speed),
-                    child: Revamp.enabled
-                        ? Revamp.playerMenuItem(
-                            ColorScheme.of(context),
-                            label: "${speed}X",
-                            selected:
-                                speed == plPlayerController.playbackSpeed,
-                          )
-                        : Text(
-                            "${speed}X",
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                            ),
-                            semanticsLabel: "$speed倍速",
-                          ),
-                  ),
-                )
-                .toList();
-          },
-          child: Revamp.overlayChip(
+        () {
+          final speedList = plPlayerController.speedList;
+          final chip = Revamp.overlayChip(
             Text(
               "${plPlayerController.playbackSpeed}X",
-              style: const TextStyle(color: Colors.white, fontSize: 13),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
               semanticsLabel: "${plPlayerController.playbackSpeed}倍速",
             ),
-          ),
-        ),
+          );
+          if (Revamp.enabled) {
+            // the redesign's own menu, opening above the button (7.3)
+            return PlayerMenuButton(
+              buildRows: () => [
+                for (final speed in speedList)
+                  PlayerMenuRow(
+                    label: "${speed}X",
+                    selected: speed == plPlayerController.playbackSpeed,
+                    onTap: () => plPlayerController.setPlaybackSpeed(speed),
+                  ),
+              ],
+              child: chip,
+            );
+          }
+          return PopupMenuButton<double>(
+            tooltip: '倍速',
+            requestFocus: false,
+            initialValue: plPlayerController.playbackSpeed,
+            color: Colors.black.withValues(alpha: 0.8),
+            itemBuilder: (context) {
+              return speedList
+                  .map(
+                    (double speed) => PopupMenuItem<double>(
+                      height: 48,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      value: speed,
+                      onTap: () => plPlayerController.setPlaybackSpeed(speed),
+                      child: Text(
+                        "${speed}X",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
+                        semanticsLabel: "$speed倍速",
+                      ),
+                    ),
+                  )
+                  .toList();
+            },
+            child: chip,
+          );
+        },
       ),
 
       BottomControlType.qa => Obx(
@@ -821,15 +838,57 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           }
           final videoFormat = videoInfo.supportFormats!;
           final availableQa = videoInfo.dash!.video!.availableVideoQualities;
+          final chip = Revamp.overlayChip(
+            Text(
+              currentVideoQa.shortDesc,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          );
+          if (Revamp.enabled) {
+            return PlayerMenuButton(
+              buildRows: () => [
+                for (final item in videoFormat)
+                  PlayerMenuRow(
+                    label: item.newDesc ?? item.quality.toString(),
+                    selected: currentVideoQa.code == item.quality,
+                    enabled: availableQa.contains(item.quality),
+                    onTap: () async {
+                      if (currentVideoQa.code == item.quality) {
+                        return;
+                      }
+                      final int quality = item.quality!;
+                      final newQa = VideoQuality.fromCode(quality);
+                      videoDetailController
+                        ..plPlayerController.cacheVideoQa = newQa.code
+                        ..currentVideoQa.value = newQa
+                        ..updatePlayer();
+
+                      SmartDialog.showToast("画质已变为：${newQa.desc}");
+
+                      // update
+                      if (!plPlayerController.tempPlayerConf) {
+                        GStorage.setting.put(
+                          await ConnectivityUtils.isWiFi
+                              ? SettingBoxKey.defaultVideoQa
+                              : SettingBoxKey.defaultVideoQaCellular,
+                          quality,
+                        );
+                      }
+                    },
+                  ),
+              ],
+              child: chip,
+            );
+          }
           return PopupMenuButton<int>(
             tooltip: '画质',
             requestFocus: false,
             initialValue: currentVideoQa.code,
-            color: Revamp.enabled
-              ? Revamp.playerMenuColor
-              : Colors.black.withValues(alpha: 0.8),
-          shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
-          constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
+            color: Colors.black.withValues(alpha: 0.8),
             itemBuilder: (context) {
               return List.generate(
                 videoFormat.length,
@@ -864,36 +923,23 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                         );
                       }
                     },
-                    child: Revamp.enabled
-                        ? Revamp.playerMenuItem(
-                            ColorScheme.of(context),
-                            label:
-                                item.newDesc ?? item.quality.toString(),
-                            selected: currentVideoQa.code == item.quality,
-                            enabled: enabled,
-                          )
-                        : Text(
-                            item.newDesc ?? item.quality.toString(),
-                            style: enabled
-                                ? const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                  )
-                                : const TextStyle(
-                                    color: Color(0x62FFFFFF),
-                                    fontSize: 13,
-                                  ),
-                          ),
+                    child: Text(
+                      item.newDesc ?? item.quality.toString(),
+                      style: enabled
+                          ? const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                            )
+                          : const TextStyle(
+                              color: Color(0x62FFFFFF),
+                              fontSize: 13,
+                            ),
+                    ),
                   );
                 },
               );
             },
-            child: Revamp.overlayChip(
-              Text(
-                currentVideoQa.shortDesc,
-                style: const TextStyle(color: Colors.white, fontSize: 13),
-              ),
-            ),
+            child: chip,
           );
         },
       ),
@@ -1457,14 +1503,31 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           Positioned.fill(
             child: IgnorePointer(
               ignoring: !plPlayerController.enableDragSubtitle,
-              child: Obx(
-                () => SubtitleView(
-                  controller: videoController,
-                  configuration: plPlayerController.subtitleConfig.value,
-                  enableDragSubtitle: plPlayerController.enableDragSubtitle,
-                  onUpdatePadding: plPlayerController.onUpdatePadding,
-                ),
-              ),
+              child: Obx(() {
+                // with the controls on screen the subtitle steps up above
+                // them, and drops back when they fade; in a short window it
+                // steps up less, so the picture keeps most of its height (7.2)
+                final lift =
+                    Revamp.enabled && plPlayerController.showControls.value
+                    ? math.min(
+                        isFullScreen
+                            ? _subtitleLiftFullScreen
+                            : _subtitleLiftPortrait,
+                        maxHeight * 0.45,
+                      )
+                    : 0.0;
+                return AnimatedPadding(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  padding: EdgeInsets.only(bottom: lift),
+                  child: SubtitleView(
+                    controller: videoController,
+                    configuration: plPlayerController.subtitleConfig.value,
+                    enableDragSubtitle: plPlayerController.enableDragSubtitle,
+                    onUpdatePadding: plPlayerController.onUpdatePadding,
+                  ),
+                );
+              }),
             ),
           ),
 

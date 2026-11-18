@@ -1,4 +1,6 @@
 // 内容
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/image_grid/image_grid_view.dart';
@@ -51,7 +53,18 @@ Widget content(
                 'name': topic.name!,
               },
             ),
-            child: Text.rich(
+            // the redesign writes it as a plain # 话题, no icon block (5.2)
+            child: Revamp.enabled
+                ? Text(
+                    '# ${topic.name}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: UiType.caption.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: theme.colorScheme.primary,
+                    ),
+                  )
+                : Text.rich(
               TextSpan(
                 children: [
                   WidgetSpan(
