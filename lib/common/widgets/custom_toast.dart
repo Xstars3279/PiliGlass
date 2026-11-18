@@ -34,18 +34,24 @@ class CustomToast extends StatelessWidget {
           child: Container(
             height: 36,
             padding: const .symmetric(horizontal: UiSpace.s16),
-            alignment: Alignment.center,
             decoration: ShapeDecoration(
               color: colorScheme.inverseSurface,
               shape: const StadiumBorder(),
             ),
-            child: Text(
-              msg,
-              maxLines: 1,
-              overflow: .ellipsis,
-              style: UiType.label.copyWith(
-                fontWeight: FontWeight.w500,
-                color: colorScheme.onInverseSurface,
+            // widthFactor 1, not Container's alignment: that one wraps the
+            // child in an Align that takes the whole width the toast host
+            // offers, and the capsule came out as a strip across the screen
+            child: Align(
+              alignment: Alignment.center,
+              widthFactor: 1,
+              child: Text(
+                msg,
+                maxLines: 1,
+                overflow: .ellipsis,
+                style: UiType.label.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: colorScheme.onInverseSurface,
+                ),
               ),
             ),
           ),
