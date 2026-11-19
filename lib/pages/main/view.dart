@@ -8,6 +8,7 @@ import 'package:PiliPlus/common/ui_icons.dart';
 import 'package:PiliPlus/common/widgets/floating_navigation_bar.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/fade_blur.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass_navigation_bar.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass_navigation_rail.dart';
 import 'package:PiliPlus/common/widgets/main_layout.dart';
@@ -164,6 +165,9 @@ class _MainAppState extends PopScopeState<MainApp>
   /// the dock shrunk to a circle, see [DockScrollWatcher]
   final _dockMinimized = false.obs;
 
+  /// how far the blur behind the dock eases out above it
+  static const _dockBlurFade = 36.0;
+
   /// The dock as a rail on the left, for wide screens: icons at rest, the
   /// labels when held, search and 发布动态 below. See [LiquidGlassNavigationRail].
   Widget _glassRail() => Obx(() {
@@ -228,39 +232,60 @@ class _MainAppState extends PopScopeState<MainApp>
           final hint = home != null && home.enableSearchWord
               ? home.defaultSearch.value
               : null;
-          return LiquidGlassNavigationBar(
-            onDestinationSelected: (index) {
-              _dockMinimized.value = false;
-              _mainController.setIndex(index);
-            },
-            selectedIndex: _mainController.selectedIndex.value,
-            // on 动态 the round button posts, where the page had its +
-            action:
-                _mainController.navigationBars[_mainController
-                        .selectedIndex
-                        .value] ==
-                    NavigationBarType.dynamics
-                ? LiquidGlassDockAction(
-                    icon: Icons.add_rounded,
-                    label: '发布动态',
-                    onTap: () => CreateDynPanel.onCreateDyn(context),
-                  )
-                : null,
-            minimized: minimized,
-            searchHint: hint,
-            onSearch: () => Get.toNamed(
-              '/search',
-              parameters: hint?.isNotEmpty == true ? {'hintText': hint!} : null,
-            ),
-            destinations: _mainController.navigationBars
-                .map(
-                  (e) => LiquidGlassNavigationDestination(
-                    label: e.label,
-                    icon: _buildIcon(type: e),
-                    selectedIcon: _buildIcon(type: e, selected: true),
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // the feed blurs under the dock and eases out above it; the
+              // dock sits further from the edge than the top bar, so its
+              // fade reaches further into the page
+              const SizedBox(
+                height: _dockBlurFade,
+                width: double.infinity,
+                child: IgnorePointer(
+                  child: FadeBlur(
+                    sigma: 10,
+                    fade: _dockBlurFade,
+                    fromTop: false,
                   ),
-                )
-                .toList(),
+                ),
+              ),
+              LiquidGlassNavigationBar(
+                onDestinationSelected: (index) {
+                  _dockMinimized.value = false;
+                  _mainController.setIndex(index);
+                },
+                selectedIndex: _mainController.selectedIndex.value,
+                // on 动态 the round button posts, where the page had its +
+                action:
+                    _mainController.navigationBars[_mainController
+                            .selectedIndex
+                            .value] ==
+                        NavigationBarType.dynamics
+                    ? LiquidGlassDockAction(
+                        icon: Icons.add_rounded,
+                        label: '发布动态',
+                        onTap: () => CreateDynPanel.onCreateDyn(context),
+                      )
+                    : null,
+                minimized: minimized,
+                searchHint: hint,
+                onSearch: () => Get.toNamed(
+                  '/search',
+                  parameters: hint?.isNotEmpty == true
+                      ? {'hintText': hint!}
+                      : null,
+                ),
+                destinations: _mainController.navigationBars
+                    .map(
+                      (e) => LiquidGlassNavigationDestination(
+                        label: e.label,
+                        icon: _buildIcon(type: e),
+                        selectedIcon: _buildIcon(type: e, selected: true),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
           );
         });
       } else if (_mainController.floatingNavBar) {

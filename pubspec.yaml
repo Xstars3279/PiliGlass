@@ -276,6 +276,7 @@ flutter:
 
   shaders:
     - shaders/liquid_glass_lens.frag
+    - shaders/fade_blur.frag
 
   fonts:
     - family: digital_id_num

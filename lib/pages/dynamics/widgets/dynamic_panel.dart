@@ -140,11 +140,12 @@ class DynamicPanel extends StatelessWidget {
     // the redesign sets each post apart as a group, not with a gray band
     if (Revamp.enabled && !isDetail) {
       return Padding(
-        // 8 between the posts, 16 at each side
-        padding: EdgeInsets.fromLTRB(
-          UiSpace.page,
+        // 8 between the posts and at each side, so the posts keep as much
+        // room as the rail on the left leaves
+        padding: const EdgeInsets.fromLTRB(
+          UiSpace.s8,
           0,
-          UiSpace.page,
+          UiSpace.s8,
           UiSpace.s8,
         ),
         child: Material(

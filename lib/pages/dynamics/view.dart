@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/centered_glass_tabs.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/fade_blur.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
@@ -90,6 +91,9 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
   /// the room the floating tabs take, as on the home page
   static const _barHeight = GlassTabBar.extent;
 
+  /// how far the blur behind the bar eases out below it
+  static const _blurFade = 16.0;
+
   Widget upPanelPart(ColorScheme colorScheme) {
     final isTop = upPanelPosition == .top;
     final needBg = upPanelPosition.index > 2;
@@ -97,7 +101,7 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
     // card at all, just avatars on the page (5.1)
     if (Revamp.enabled) {
       final body = SizedBox(
-        width: isTop ? null : 56,
+        width: isTop ? null : 48,
         height: isTop ? 68 : null,
         child: NotificationListener<ScrollEndNotification>(
           onNotification: (notification) {
@@ -207,7 +211,11 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
       case .leftFixed:
         child = Row(
           children: [
-            upPanelPart(colorScheme),
+            // the same room on the rail's left as between it and the posts
+            Padding(
+              padding: const .only(left: 8),
+              child: upPanelPart(colorScheme),
+            ),
             Expanded(child: child),
           ],
         );
@@ -216,7 +224,10 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
         child = Row(
           children: [
             Expanded(child: child),
-            upPanelPart(colorScheme),
+            Padding(
+              padding: const .only(right: 8),
+              child: upPanelPart(colorScheme),
+            ),
           ],
         );
         actions = _createDynamicBtn(colorScheme);
@@ -248,9 +259,30 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: Revamp.enabled,
       appBar: PreferredSize(
-        preferredSize: .fromHeight(Revamp.enabled ? _barHeight : 50),
+        preferredSize: .fromHeight(
+          Revamp.enabled ? _barHeight + _blurFade : 50,
+        ),
         child: Revamp.enabled
-            ? _glassTabs(leading, actions)
+            ? Stack(
+                children: [
+                  // the feed blurs under the tabs and eases out below them
+                  const Positioned.fill(
+                    child: IgnorePointer(
+                      child: FadeBlur(
+                        sigma: 10,
+                        hold: _barHeight - 12,
+                        fade: _blurFade + 12,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: _glassTabs(leading, actions),
+                  ),
+                ],
+              )
             : Row(
                 children: [
                   ?leading,
