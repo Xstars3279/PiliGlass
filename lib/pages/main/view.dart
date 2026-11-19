@@ -4,8 +4,8 @@ import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/motion/spring_slide.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
-import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/ui_icons.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/floating_navigation_bar.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -166,7 +166,7 @@ class _MainAppState extends PopScopeState<MainApp>
   /// the dock shrunk to a circle, see [DockScrollWatcher]
   final _dockMinimized = false.obs;
 
-  /// from the screen's bottom to the dock's middle line: its gap and half its height
+  /// from the screen's bottom to the dock's middle: its gap and half its height
   static const _dockMiddle = UiSpace.dockGap + UiSpace.dock / 2;
 
   /// The dock as a rail on the left, for wide screens: icons at rest, the
@@ -233,48 +233,39 @@ class _MainAppState extends PopScopeState<MainApp>
           final hint = home != null && home.enableSearchWord
               ? home.defaultSearch.value
               : null;
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // the haze fades out at the dock's middle line
-              const GlassFade(height: _dockMiddle, fromTop: false),
-              LiquidGlassNavigationBar(
-                onDestinationSelected: (index) {
-                  _dockMinimized.value = false;
-                  _mainController.setIndex(index);
-                },
-                selectedIndex: _mainController.selectedIndex.value,
-                // on 动态 the round button posts, where the page had its +
-                action:
-                    _mainController.navigationBars[_mainController
-                            .selectedIndex
-                            .value] ==
-                        NavigationBarType.dynamics
-                    ? LiquidGlassDockAction(
-                        icon: Icons.add_rounded,
-                        label: '发布动态',
-                        onTap: () => CreateDynPanel.onCreateDyn(context),
-                      )
-                    : null,
-                minimized: minimized,
-                searchHint: hint,
-                onSearch: () => Get.toNamed(
-                  '/search',
-                  parameters: hint?.isNotEmpty == true
-                      ? {'hintText': hint!}
-                      : null,
-                ),
-                destinations: _mainController.navigationBars
-                    .map(
-                      (e) => LiquidGlassNavigationDestination(
-                        label: e.label,
-                        icon: _buildIcon(type: e),
-                        selectedIcon: _buildIcon(type: e, selected: true),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ],
+          return LiquidGlassNavigationBar(
+            onDestinationSelected: (index) {
+              _dockMinimized.value = false;
+              _mainController.setIndex(index);
+            },
+            selectedIndex: _mainController.selectedIndex.value,
+            // on 动态 the round button posts, where the page had its +
+            action:
+                _mainController.navigationBars[_mainController
+                        .selectedIndex
+                        .value] ==
+                    NavigationBarType.dynamics
+                ? LiquidGlassDockAction(
+                    icon: Icons.add_rounded,
+                    label: '发布动态',
+                    onTap: () => CreateDynPanel.onCreateDyn(context),
+                  )
+                : null,
+            minimized: minimized,
+            searchHint: hint,
+            onSearch: () => Get.toNamed(
+              '/search',
+              parameters: hint?.isNotEmpty == true ? {'hintText': hint!} : null,
+            ),
+            destinations: _mainController.navigationBars
+                .map(
+                  (e) => LiquidGlassNavigationDestination(
+                    label: e.label,
+                    icon: _buildIcon(type: e),
+                    selectedIcon: _buildIcon(type: e, selected: true),
+                  ),
+                )
+                .toList(),
           );
         });
       } else if (_mainController.floatingNavBar) {
@@ -505,6 +496,25 @@ class _MainAppState extends PopScopeState<MainApp>
         child: _sideBar(),
       );
       padding = .only(top: _padding.top, right: _padding.right);
+    }
+
+    // a white haze under the dock, from the screen's bottom up to its middle
+    // line; it is part of the body, so the dock paints over it and its glass
+    // blurs the haze rather than the feed
+    if (_mainController.useBottomNav &&
+        _mainController.dockSearch &&
+        _mainController.navigationBars.length > 1) {
+      child = Stack(
+        children: [
+          Positioned.fill(child: child),
+          const Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: GlassFade(height: _dockMiddle, fromTop: false),
+          ),
+        ],
+      );
     }
 
     child = MainLayout(
