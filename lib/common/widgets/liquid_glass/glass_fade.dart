@@ -15,6 +15,12 @@ class GlassFade extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    // the feed fades into the page: white in the light theme, the page's own
+    // background in the dark, so the haze never stays white there
+    final color = theme.brightness == Brightness.dark
+        ? theme.scaffoldBackgroundColor
+        : Colors.white;
     return IgnorePointer(
       child: SizedBox(
         height: height,
@@ -25,8 +31,8 @@ class GlassFade extends StatelessWidget {
               begin: fromTop ? Alignment.topCenter : Alignment.bottomCenter,
               end: fromTop ? Alignment.bottomCenter : Alignment.topCenter,
               colors: [
-                Colors.white.withValues(alpha: _alpha),
-                Colors.white.withValues(alpha: 0),
+                color.withValues(alpha: _alpha),
+                color.withValues(alpha: 0),
               ],
             ),
           ),
