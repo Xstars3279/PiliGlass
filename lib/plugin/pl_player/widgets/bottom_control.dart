@@ -59,13 +59,13 @@ class BottomControl extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: Revamp.enabled && isFullScreen ? UiSpace.s24 : 10,
-        vertical: 12,
+        vertical: 8,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(10, 0, 10, 7),
+            padding: const EdgeInsets.fromLTRB(10, 0, 10, 6),
             child: Obx(
               () => Offstage(
                 offstage: !controller.showControls.value,

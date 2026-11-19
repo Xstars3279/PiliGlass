@@ -377,13 +377,18 @@ class HeaderControlState extends State<HeaderControl>
         final theme = Theme.of(context);
 
         return Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),
           child: Material(
             clipBehavior: Clip.hardEdge,
             color: theme.colorScheme.surface,
             borderRadius: const BorderRadius.all(Radius.circular(12)),
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 14),
+            child: ListTileTheme(
+              // a tighter list than elsewhere: 40 a row, not the usual 48
+              data: ListTileTheme.of(context).copyWith(
+                visualDensity: const VisualDensity(vertical: -2),
+              ),
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
                 // what left the full screen's top and bottom rows, here at
                 // the top of ⋯ (7.1)
@@ -918,6 +923,7 @@ class HeaderControlState extends State<HeaderControl>
                   title: const Text('举报', style: titleStyle),
                 ),
               ],
+              ),
             ),
           ),
         );
@@ -1778,10 +1784,10 @@ class HeaderControlState extends State<HeaderControl>
 
   late final isFileSource = videoDetailCtr.isFileSource;
 
-  // 48 square in the redesign, the tap target the plan asks for (7.2); the
-  // circles stay off the full screen video, where the scrim carries them
-  static final btnWidth = Revamp.enabled ? 48.0 : 42.0;
-  static final btnHeight = Revamp.enabled ? 48.0 : 34.0;
+  // 40 in the redesign: under the plan's 48 tap target, as this page can
+  // afford it, the icons are 24 and the scrim carries them
+  static final btnWidth = Revamp.enabled ? 40.0 : 42.0;
+  static final btnHeight = Revamp.enabled ? 40.0 : 34.0;
   static final _baseBtnStyle = Revamp.enabled
       ? Revamp.overlayButtonStyle
       : const ButtonStyle(padding: WidgetStatePropertyAll(.zero));

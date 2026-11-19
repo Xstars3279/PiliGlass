@@ -973,7 +973,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       return Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: UiSpace.s16,
-          vertical: UiSpace.s8,
+          vertical: 4,
         ),
         child: Row(
           spacing: UiSpace.s8,
