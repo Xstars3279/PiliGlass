@@ -143,7 +143,15 @@ class _HomePageState extends CommonPageState<HomePage>
             ),
           ),
         ),
-      Positioned(top: 0, left: 0, right: 0, child: tabBar),
+      // its own layer: when the feed scrolls under it, Impeller sometimes
+      // paints the freshly scrolled strip over the glass otherwise, leaving a
+      // sharp rectangle of feed inside the capsules
+      Positioned(
+        top: 0,
+        left: 0,
+        right: 0,
+        child: RepaintBoundary(child: tabBar),
+      ),
     ],
   );
 

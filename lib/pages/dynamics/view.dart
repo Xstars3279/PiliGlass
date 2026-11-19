@@ -97,8 +97,8 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
     // card at all, just avatars on the page (5.1)
     if (Revamp.enabled) {
       final body = SizedBox(
-        width: isTop ? null : 64,
-        height: isTop ? 84 : null,
+        width: isTop ? null : 56,
+        height: isTop ? 68 : null,
         child: NotificationListener<ScrollEndNotification>(
           onNotification: (notification) {
             final metrics = notification.metrics;

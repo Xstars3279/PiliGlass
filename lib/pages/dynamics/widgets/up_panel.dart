@@ -44,6 +44,14 @@ class _UpPanelState extends State<UpPanel> {
       physics: const AlwaysScrollableScrollPhysics(),
       controller: controller.scrollController,
       slivers: [
+        if (!isTop)
+          SliverToBoxAdapter(
+            child: SizedBox(
+              // the rail starts below the floating tabs, as the posts do,
+              // and scrolls away under them
+              height: RevampTopInset.of(context),
+            ),
+          ),
         SliverToBoxAdapter(
           child: InkWell(
             onTap: () => setState(() {
@@ -151,9 +159,9 @@ class _UpPanelState extends State<UpPanel> {
           color: Color(0xFF5CB67B),
         ),
         child: Image.asset(
-          width: 38,
-          height: 38,
-          cacheWidth: 38.cacheSize(context),
+          width: 40,
+          height: 40,
+          cacheWidth: 40.cacheSize(context),
           Assets.logo2,
           color: Colors.white,
         ),
@@ -162,8 +170,8 @@ class _UpPanelState extends State<UpPanel> {
       avatar = Padding(
         padding: EdgeInsets.symmetric(horizontal: Revamp.enabled ? 0 : 4),
         child: NetworkImgLayer(
-          width: Revamp.enabled ? 44 : 38,
-          height: Revamp.enabled ? 44 : 38,
+          width: Revamp.enabled ? 40 : 38,
+          height: Revamp.enabled ? 40 : 38,
           src: item.face,
           type: .avatar,
         ),
@@ -200,8 +208,8 @@ class _UpPanelState extends State<UpPanel> {
                 color: chosen ? theme.colorScheme.primary : null,
               ),
               child: NetworkImgLayer(
-                width: Revamp.enabled ? 44 : 38,
-                height: Revamp.enabled ? 44 : 38,
+                width: Revamp.enabled ? 40 : 38,
+                height: Revamp.enabled ? 40 : 38,
                 src: item.face,
                 type: .avatar,
               ),
@@ -244,8 +252,8 @@ class _UpPanelState extends State<UpPanel> {
     }
 
     return SizedBox(
-      height: Revamp.enabled ? 84 : 76,
-      width: isTop ? (Revamp.enabled ? 64 : 70) : null,
+      height: Revamp.enabled ? 68 : 76,
+      width: isTop ? (Revamp.enabled ? 56 : 70) : null,
       child: Revamp.pressable(
         InkWell(
           customBorder: Revamp.enabled ? Revamp.tileShape : null,
@@ -265,7 +273,7 @@ class _UpPanelState extends State<UpPanel> {
           child: Opacity(
             opacity: isCurrent ? 1 : 0.6,
             child: Column(
-              spacing: 4,
+              spacing: 2,
               mainAxisSize: .min,
               mainAxisAlignment: .center,
               children: [
