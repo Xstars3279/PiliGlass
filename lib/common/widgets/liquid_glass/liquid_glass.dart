@@ -167,9 +167,6 @@ class RenderLiquidGlass extends RenderProxyBox {
     markNeedsPaint();
   }
 
-  final _clipHandle = LayerHandle<ClipRRectLayer>();
-  final _backdropHandle = LayerHandle<BackdropFilterLayer>();
-
   @override
   bool get alwaysNeedsCompositing => true;
 
@@ -235,40 +232,35 @@ class RenderLiquidGlass extends RenderProxyBox {
       Offset.zero & size,
       Radius.circular(_effectiveRadius),
     );
-    _clipHandle.layer = context.pushClipRRect(
-      needsCompositing,
+    // Both layers are made anew for each paint rather than carried over from
+    // the last one: a reused clip or backdrop layer could leave part of the
+    // glass unfiltered, e.g. a strip at its left end that stayed sharp.
+    context.pushClipRRect(needsCompositing, offset, Offset.zero & size, rrect, (
+      context,
       offset,
-      Offset.zero & size,
-      rrect,
-      (context, offset) {
-        void paintContent(PaintingContext context, Offset offset) {
-          if (_color case final color?) {
-            context.canvas.drawRRect(
-              rrect.shift(offset),
-              Paint()..color = color,
-            );
-          }
-          super.paint(context, offset);
+    ) {
+      void paintContent(PaintingContext context, Offset offset) {
+        if (_color case final color?) {
+          context.canvas.drawRRect(rrect.shift(offset), Paint()..color = color);
         }
+        super.paint(context, offset);
+      }
 
-        final filter = _buildFilter();
-        if (filter == null) {
-          _backdropHandle.layer = null;
-          paintContent(context, offset);
-          return;
-        }
-        final layer = (_backdropHandle.layer ??= BackdropFilterLayer())
-          ..filter = filter;
-        context.pushLayer(layer, paintContent, offset);
-      },
-      oldLayer: _clipHandle.layer,
-    );
+      final filter = _buildFilter();
+      if (filter == null) {
+        paintContent(context, offset);
+        return;
+      }
+      context.pushLayer(
+        BackdropFilterLayer(filter: filter),
+        paintContent,
+        offset,
+      );
+    });
   }
 
   @override
   void dispose() {
-    _clipHandle.layer = null;
-    _backdropHandle.layer = null;
     _shader?.dispose();
     super.dispose();
   }

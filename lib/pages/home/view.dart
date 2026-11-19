@@ -106,53 +106,59 @@ class _HomePageState extends CommonPageState<HomePage>
 
   /// The feed fills the page and runs on under the tabs, which float on
   /// glass at the top.
-  Widget _floatingTabs(Widget tabBar) => Stack(
-    children: [
-      Positioned.fill(
-        child: RevampTopInset(
-          // with a single tab no bar floats there
-          inset: _homeController.tabs.length > 1 ? _floatingTabsHeight : 6,
-          child: onBuild(
-            tabBarView(
-              controller: _homeController.tabController,
-              children: _homeController.tabs.map((e) => e.page).toList(),
-            ),
-          ),
-        ),
-      ),
-      // the feed fades out behind the tabs when solid: the page's color at
-      // the top, nothing 24 below them; transparent glass shows the feed
-      if (_homeController.tabs.length > 1 && !UiGlass.clear)
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          height: _floatingTabsHeight + UiSpace.s24,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: .topCenter,
-                  end: .bottomCenter,
-                  colors: [
-                    _colorScheme.surface,
-                    _colorScheme.surface.withValues(alpha: 0),
-                  ],
-                ),
+  ///
+  /// The bar is the page's appBar, not a layer of the body's stack: with the
+  /// feed in the same layer, the glass beside it lost its blur in a strip at
+  /// its left end while the feed scrolled. 动态 keeps its bar on the appBar
+  /// too, and never loses it.
+  Widget _floatingTabs(Widget tabBar) => Scaffold(
+    primary: false,
+    resizeToAvoidBottomInset: false,
+    backgroundColor: Colors.transparent,
+    extendBodyBehindAppBar: true,
+    appBar: PreferredSize(
+      preferredSize: const Size.fromHeight(_floatingTabsHeight),
+      child: tabBar,
+    ),
+    body: Stack(
+      children: [
+        Positioned.fill(
+          child: RevampTopInset(
+            // with a single tab no bar floats there
+            inset: _homeController.tabs.length > 1 ? _floatingTabsHeight : 6,
+            child: onBuild(
+              tabBarView(
+                controller: _homeController.tabController,
+                children: _homeController.tabs.map((e) => e.page).toList(),
               ),
             ),
           ),
         ),
-      // its own layer: when the feed scrolls under it, Impeller sometimes
-      // paints the freshly scrolled strip over the glass otherwise, leaving a
-      // sharp rectangle of feed inside the capsules
-      Positioned(
-        top: 0,
-        left: 0,
-        right: 0,
-        child: RepaintBoundary(child: tabBar),
-      ),
-    ],
+        // the feed fades out behind the tabs when solid: the page's color at
+        // the top, nothing 24 below them; transparent glass shows the feed
+        if (_homeController.tabs.length > 1 && !UiGlass.clear)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: _floatingTabsHeight + UiSpace.s24,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: .topCenter,
+                    end: .bottomCenter,
+                    colors: [
+                      _colorScheme.surface,
+                      _colorScheme.surface.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    ),
   );
 
   /// the room the floating tabs take: their bar and its margins
