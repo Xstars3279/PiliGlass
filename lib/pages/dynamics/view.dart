@@ -1,8 +1,9 @@
 import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/centered_glass_tabs.dart';
-import 'package:PiliPlus/common/widgets/liquid_glass/fade_blur.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_fade.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/dynamic/dynamics_type.dart';
@@ -91,8 +92,8 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
   /// the room the floating tabs take, as on the home page
   static const _barHeight = GlassTabBar.extent;
 
-  /// how far the blur behind the bar eases out below it
-  static const _blurFade = 16.0;
+  /// from the screen's top to the bar's middle line: its margin and half its height
+  static final _tabsMiddle = UiSpace.s8 + GlassTabBar.height / 2;
 
   Widget upPanelPart(ColorScheme colorScheme) {
     final isTop = upPanelPosition == .top;
@@ -259,21 +260,16 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: Revamp.enabled,
       appBar: PreferredSize(
-        preferredSize: .fromHeight(
-          Revamp.enabled ? _barHeight + _blurFade : 50,
-        ),
+        preferredSize: .fromHeight(Revamp.enabled ? _barHeight : 50),
         child: Revamp.enabled
             ? Stack(
                 children: [
-                  // the feed blurs under the tabs and eases out below them
-                  const Positioned.fill(
-                    child: IgnorePointer(
-                      child: FadeBlur(
-                        sigma: 10,
-                        hold: _barHeight - 12,
-                        fade: _blurFade + 12,
-                      ),
-                    ),
+                  // the haze fades out at the bar's middle line
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: GlassFade(height: _tabsMiddle, fromTop: true),
                   ),
                   Positioned(
                     top: 0,

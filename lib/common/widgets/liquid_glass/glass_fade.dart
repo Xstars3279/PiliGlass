@@ -1,0 +1,37 @@
+import 'package:flutter/material.dart';
+
+/// A white haze over the feed behind a bar: solid at the screen's edge, fading
+/// to nothing at the bar's middle line, so the feed softens into the bar.
+class GlassFade extends StatelessWidget {
+  const GlassFade({super.key, required this.height, required this.fromTop});
+
+  /// the room from the edge to the bar's middle line
+  final double height;
+
+  /// whether the edge is the top of the screen, else the bottom
+  final bool fromTop;
+
+  static const _alpha = 0.8;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: SizedBox(
+        height: height,
+        width: double.infinity,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: fromTop ? Alignment.topCenter : Alignment.bottomCenter,
+              end: fromTop ? Alignment.bottomCenter : Alignment.topCenter,
+              colors: [
+                Colors.white.withValues(alpha: _alpha),
+                Colors.white.withValues(alpha: 0),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

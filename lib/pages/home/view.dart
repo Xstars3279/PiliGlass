@@ -3,7 +3,7 @@ import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/ui_icons.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/centered_glass_tabs.dart';
-import 'package:PiliPlus/common/widgets/liquid_glass/fade_blur.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_fade.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
@@ -118,21 +118,15 @@ class _HomePageState extends CommonPageState<HomePage>
     backgroundColor: Colors.transparent,
     extendBodyBehindAppBar: true,
     appBar: PreferredSize(
-      preferredSize: const Size.fromHeight(
-        _floatingTabsHeight + _topBlurFade,
-      ),
+      preferredSize: const Size.fromHeight(_floatingTabsHeight),
       child: Stack(
         children: [
-          // a blur of the feed that eases out below the bar, so the two do
-          // not meet on a hard picture
-          const Positioned.fill(
-            child: IgnorePointer(
-              child: FadeBlur(
-                sigma: 10,
-                hold: _floatingTabsHeight - 12,
-                fade: _topBlurFade + 12,
-              ),
-            ),
+          // the haze fades out at the bar's middle line
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: GlassFade(height: _tabsMiddle, fromTop: true),
           ),
           Positioned(top: 0, left: 0, right: 0, child: tabBar),
         ],
@@ -182,8 +176,8 @@ class _HomePageState extends CommonPageState<HomePage>
   /// the room the floating tabs take: their bar and its margins
   static const _floatingTabsHeight = GlassTabBar.extent;
 
-  /// how far the blur behind the bar eases out below it
-  static const _topBlurFade = 16.0;
+  /// from the screen's top to the bar's middle line: its margin and half its height
+  static final _tabsMiddle = UiSpace.s8 + GlassTabBar.height / 2;
 
   /// One row of text tabs; the selected one sits on a raised pill.
   /// Used when search lives in the bottom dock, so the top bar is just this.

@@ -4,11 +4,12 @@ import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/motion/spring_slide.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/ui_icons.dart';
 import 'package:PiliPlus/common/widgets/floating_navigation_bar.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
-import 'package:PiliPlus/common/widgets/liquid_glass/fade_blur.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_fade.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass_navigation_bar.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass_navigation_rail.dart';
 import 'package:PiliPlus/common/widgets/main_layout.dart';
@@ -165,8 +166,8 @@ class _MainAppState extends PopScopeState<MainApp>
   /// the dock shrunk to a circle, see [DockScrollWatcher]
   final _dockMinimized = false.obs;
 
-  /// how far the blur behind the dock eases out above it
-  static const _dockBlurFade = 36.0;
+  /// from the screen's bottom to the dock's middle line: its gap and half its height
+  static const _dockMiddle = UiSpace.dockGap + UiSpace.dock / 2;
 
   /// The dock as a rail on the left, for wide screens: icons at rest, the
   /// labels when held, search and 发布动态 below. See [LiquidGlassNavigationRail].
@@ -235,20 +236,8 @@ class _MainAppState extends PopScopeState<MainApp>
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // the feed blurs under the dock and eases out above it; the
-              // dock sits further from the edge than the top bar, so its
-              // fade reaches further into the page
-              const SizedBox(
-                height: _dockBlurFade,
-                width: double.infinity,
-                child: IgnorePointer(
-                  child: FadeBlur(
-                    sigma: 10,
-                    fade: _dockBlurFade,
-                    fromTop: false,
-                  ),
-                ),
-              ),
+              // the haze fades out at the dock's middle line
+              const GlassFade(height: _dockMiddle, fromTop: false),
               LiquidGlassNavigationBar(
                 onDestinationSelected: (index) {
                   _dockMinimized.value = false;
