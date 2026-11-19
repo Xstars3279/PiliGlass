@@ -178,8 +178,11 @@ class _HomePageState extends CommonPageState<HomePage>
           spacing: 8,
           children: [
             // the account's face at the left, on the same glass as the tabs:
-            // a tap goes to 我的, as the avatar on the old top bar did
-            _homeAvatar(),
+            // a tap goes to 我的, as the avatar on the old top bar did. Only
+            // where the dock is the bar's nav: the side rail already holds
+            // the account on a wide screen, and the face there is enough
+            if (_mainController.bottomNavFor(MediaQuery.sizeOf(context)))
+              _homeAvatar(),
             Expanded(
               // the row keeps to what it holds and sits in the middle of
               // the room between the avatar and the bell, unless the switch
