@@ -11,7 +11,7 @@ class GlassFade extends StatelessWidget {
   /// whether the edge is the top of the screen, else the bottom
   final bool fromTop;
 
-  static const _alpha = 0.8;
+  static const _alpha = 1.0;
 
   @override
   Widget build(BuildContext context) {
