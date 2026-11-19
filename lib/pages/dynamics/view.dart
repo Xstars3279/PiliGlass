@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/glass_features.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/centered_glass_tabs.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
@@ -53,8 +55,9 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
         ),
       );
 
-  /// The tabs on a capsule of the dock's glass, as on the home page; the
-  /// app's pill tabs from the theme.
+  /// The tabs on a capsule of the dock's glass, exactly as the home page's:
+  /// sized to what they hold, in the middle unless that switch is off, and
+  /// with the pill keeping step with the page as it is swiped.
   Widget _glassTabs(Widget? leading, Widget actions) => Padding(
     // the same bar as the home tabs: size, margins and glass
     padding: GlassTabBar.margin,
@@ -65,14 +68,17 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
         children: [
           ?leading,
           Expanded(
-            child: GlassTabBar(
-              controller: _dynamicsController.tabController,
-              labels: DynamicsTabType.values.map((e) => e.label).toList(),
-              onTap: (index) {
-                if (!_dynamicsController.tabController.indexIsChanging) {
-                  _dynamicsController.animateToTop();
-                }
-              },
+            child: Obx(
+              () => CenteredGlassTabs(
+                controller: _dynamicsController.tabController,
+                labels: DynamicsTabType.values.map((e) => e.label).toList(),
+                centered: GlassFeatures.centerTabs.value,
+                onTap: (index) {
+                  if (!_dynamicsController.tabController.indexIsChanging) {
+                    _dynamicsController.animateToTop();
+                  }
+                },
+              ),
             ),
           ),
           if (actions is! SizedBox) actions,

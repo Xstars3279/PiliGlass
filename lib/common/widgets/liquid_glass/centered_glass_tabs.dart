@@ -1,17 +1,22 @@
 import 'dart:math' as math;
+import 'dart:ui' show lerpDouble;
 
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// A page's tabs on the shell's glass, sized to what they hold and centred
-/// in the room they are given: a short row sits in the middle of the bar
-/// instead of hugging the left, and a long one takes the whole width and
-/// scrolls. Whenever the chosen tab has something on both of its sides, it
-/// is scrolled to the middle as well, as far as the row's ends allow.
+/// A page's tabs on the shell's glass, sized to what they hold: a short row
+/// sits in the middle of the room it is given instead of hugging the left, and
+/// a long one takes the whole width and scrolls. The pill under the chosen tab
+/// follows the page as it is swiped, in step with the page itself, and whenever
+/// the chosen tab has something on both of its sides the row is scrolled to put
+/// it in the middle, as far as the row's ends allow.
+///
+/// With [centered] off the row keeps the whole width and its tabs start at the
+/// left, as upstream's own bar does.
 ///
 /// One label is enough to size it: a page with a single tab gets a small
-/// capsule with that one tab centred.
+/// capsule with that one tab in it.
 class CenteredGlassTabs extends StatefulWidget {
   const CenteredGlassTabs({
     super.key,
@@ -21,6 +26,7 @@ class CenteredGlassTabs extends StatefulWidget {
     this.refraction = true,
     this.height = 44,
     this.labelPadding = 14,
+    this.centered = true,
   });
 
   final TabController controller;
@@ -35,6 +41,9 @@ class CenteredGlassTabs extends StatefulWidget {
 
   /// the room each label keeps on either side
   final double labelPadding;
+
+  /// whether the row sits in the middle of the room it is given
+  final bool centered;
 
   @override
   State<CenteredGlassTabs> createState() => _CenteredGlassTabsState();
@@ -65,6 +74,10 @@ class _CenteredGlassTabsState extends State<CenteredGlassTabs> {
       old.controller.removeListener(_onTabChanged);
       widget.controller.addListener(_onTabChanged);
     }
+    // turned to centring while shown: bring the chosen tab to the middle
+    if (!old.centered && widget.centered) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _centerChosen());
+    }
   }
 
   @override
@@ -76,7 +89,7 @@ class _CenteredGlassTabsState extends State<CenteredGlassTabs> {
 
   void _onTabChanged() {
     if (widget.controller.index == _centeredIndex) return;
-    // the pill and the label's weight follow the new tab
+    // the label's weight and colour follow the new tab
     setState(() {});
     _centerChosen();
   }
@@ -85,17 +98,14 @@ class _CenteredGlassTabsState extends State<CenteredGlassTabs> {
   /// something: at the two ends of the row it stops at the edge instead.
   void _centerChosen() {
     _centeredIndex = widget.controller.index;
-    if (!_scroll.hasClients) return;
+    if (!widget.centered || !_scroll.hasClients) return;
     final position = _scroll.position;
     final max = position.maxScrollExtent;
     if (max <= 0) return;
     final index = widget.controller.index;
     if (index < 0 || index >= _widths.length) return;
-    var start = 0.0;
-    for (var i = 0; i < index; i++) {
-      start += _widths[i];
-    }
-    final target = start + _widths[index] / 2 - position.viewportDimension / 2;
+    final target =
+        _start(index) + _widths[index] / 2 - position.viewportDimension / 2;
     _scroll.animateTo(
       target.clamp(0.0, max),
       duration: const Duration(milliseconds: 260),
@@ -111,22 +121,120 @@ class _CenteredGlassTabsState extends State<CenteredGlassTabs> {
     }
   }
 
+  /// how wide the labels before [index] are together
+  double _start(int index) {
+    var start = 0.0;
+    for (var i = 0; i < index && i < _widths.length; i++) {
+      start += _widths[i];
+    }
+    return start;
+  }
+
   /// Every label's width, the wider of the two styles, so the pill does not
   /// shift when the weights swap.
   List<double> _measure(BuildContext context, TextStyle? style) {
     final scaler = MediaQuery.textScalerOf(context);
     return widget.labels
         .map(
-          (label) =>
-              (TextPainter(
-                text: TextSpan(text: label, style: style),
-                textDirection: TextDirection.ltr,
-                textScaler: scaler,
-                maxLines: 1,
-              )..layout()).width +
+          (label) => (TextPainter(
+            text: TextSpan(text: label, style: style),
+            textDirection: TextDirection.ltr,
+            textScaler: scaler,
+            maxLines: 1,
+          )..layout()).width +
               widget.labelPadding * 2,
         )
         .toList();
+  }
+
+  /// A label's style at [near]: 1 when its tab is the chosen one, 0 when it
+  /// is not. The colour slides with the page; the weight swaps at half way,
+  /// as a weight cannot be drawn in between.
+  TextStyle? _labelStyle(
+    double near,
+    TextStyle? selected,
+    TextStyle? unselected,
+    ColorScheme colorScheme,
+  ) => (near >= 0.5 ? selected : unselected)?.copyWith(
+    color: Color.lerp(
+      colorScheme.onSurfaceVariant,
+      colorScheme.onSecondaryContainer,
+      near,
+    ),
+  );
+
+  /// The row, with the pill under [position]: a tab index as a fraction, so
+  /// that while a page is swiped the pill slides between the two tabs.
+  Widget _row(
+    ColorScheme colorScheme,
+    TextStyle? selected,
+    TextStyle? unselected,
+    double position,
+  ) {
+    final count = _widths.length;
+    final at = count == 0
+        ? 0.0
+        : position.clamp(0.0, (count - 1).toDouble());
+    final from = at.floor();
+    final to = count == 0 ? 0 : math.min(from + 1, count - 1);
+    final t = at - from;
+    final left = count == 0 ? 0.0 : lerpDouble(_start(from), _start(to), t)!;
+    final width = count == 0
+        ? 0.0
+        : lerpDouble(_widths[from], _widths[to], t)!;
+    return SizedBox(
+      // the row fills the capsule, so its labels sit on the capsule's own
+      // middle line rather than 4 above it
+      width: _widths.fold<double>(0, (sum, e) => sum + e),
+      height: widget.height,
+      child: Stack(
+        children: [
+          Positioned(
+            // 8 in from the capsule and the tab's edge, as the old bar's
+            // 4 of capsule padding and 4 of indicator inset came to
+            left: left + 8,
+            width: math.max(0, width - 16),
+            top: 8,
+            bottom: 8,
+            child: DecoratedBox(
+              decoration: ShapeDecoration(
+                color: colorScheme.secondaryContainer,
+                shape: const StadiumBorder(),
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              for (var i = 0; i < widget.labels.length; i++)
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _select(i),
+                  child: SizedBox(
+                    width: _widths[i],
+                    // the whole strip is a target, not just the glyphs
+                    height: widget.height,
+                    child: Center(
+                      child: Text(
+                        widget.labels[i],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        // the colour follows the page with the pill; the
+                        // weight swaps at the half way point
+                        style: _labelStyle(
+                          (1 - (at - i).abs()).clamp(0.0, 1.0),
+                          selected,
+                          unselected,
+                          colorScheme,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -147,66 +255,18 @@ class _CenteredGlassTabsState extends State<CenteredGlassTabs> {
         );
         final total = _widths.fold<double>(0, (sum, e) => sum + e);
         final fits = total <= available;
-        final width = math.min(total, available);
-        final rawIndex = widget.controller.index;
-        final index = _widths.isEmpty
-            ? 0
-            : rawIndex.clamp(0, _widths.length - 1).toInt();
-        var pillLeft = 0.0;
-        for (var i = 0; i < index; i++) {
-          pillLeft += _widths[i];
-        }
+        final width = widget.centered ? math.min(total, available) : available;
 
-        final row = SizedBox(
-          width: total,
-          height: widget.height - 8,
-          child: Stack(
-            children: [
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
-                left: pillLeft + 4,
-                width: math.max(0, _widths[index] - 8),
-                top: 4,
-                bottom: 4,
-                child: DecoratedBox(
-                  decoration: ShapeDecoration(
-                    color: colorScheme.secondaryContainer,
-                    shape: const StadiumBorder(),
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  for (var i = 0; i < widget.labels.length; i++)
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => _select(i),
-                      child: SizedBox(
-                        width: _widths[i],
-                        // the whole strip is a target, not just the glyphs
-                        height: widget.height - 8,
-                        child: Center(
-                          child: Text(
-                            widget.labels[i],
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: i == index
-                                ? selected.copyWith(
-                                    color: colorScheme.onSecondaryContainer,
-                                  )
-                                : unselected?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        );
+        // the pill keeps step with the page, frame by frame
+        final animation = widget.controller.animation;
+        final index = widget.controller.index.toDouble();
+        final body = animation == null
+            ? _row(colorScheme, selected, unselected, index)
+            : AnimatedBuilder(
+                animation: animation,
+                builder: (context, _) =>
+                    _row(colorScheme, selected, unselected, animation.value),
+              );
 
         final content = SingleChildScrollView(
           controller: _scroll,
@@ -214,11 +274,11 @@ class _CenteredGlassTabsState extends State<CenteredGlassTabs> {
           physics: fits
               ? const NeverScrollableScrollPhysics()
               : const ClampingScrollPhysics(),
-          child: row,
+          child: body,
         );
 
         return Align(
-          alignment: Alignment.center,
+          alignment: widget.centered ? Alignment.center : Alignment.centerLeft,
           child: SizedBox(
             width: width,
             child: GlassCapsule(

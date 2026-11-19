@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/utils/storage.dart';
+import 'package:get/get.dart';
 
 /// PiliGlass's own features, each with its switch in 设置 › PiliGlass 特性
 /// (see glass_settings.dart). All default on.
@@ -23,6 +24,7 @@ abstract final class GlassFeatures {
       coverHeroKey = 'glassCoverHero',
       actionPopKey = 'glassActionPop',
       updateDohKey = 'glassUpdateDoh',
+      centerTabsKey = 'glassCenterTabs',
       railWidthKey = 'glassRailWidth';
 
   static bool _get(String key) =>
@@ -74,6 +76,14 @@ abstract final class GlassFeatures {
   /// the update's download resolving GitHub over DNS over HTTPS, around
   /// poisoned answers; read when an update is downloaded
   static bool get updateDoh => _get(updateDohKey);
+
+  /// The home's and the dynamics' tabs keep to what they hold and sit in the
+  /// middle of the bar; off, they keep the whole width and start at the left.
+  /// It is live rather than read once, so the switch takes hold at once.
+  static final RxBool centerTabs = _get(centerTabsKey).obs;
+
+  /// [centerTabs], as the switch in the settings sets it
+  static void setCenterTabs(bool value) => centerTabs.value = value;
 
   /// The window width from which the side bar shows instead of the bottom
   /// one, in dp; 0 for the default, the side bar on a window lying on its

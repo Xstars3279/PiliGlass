@@ -39,6 +39,14 @@ const List<(String, List<SettingsModel>)> glassSettingGroups = [
         onTap: _showRailWidthDialog,
       ),
       SwitchModel(
+        title: '顶栏标签居中',
+        subtitle: '首页和动态页的标签只占自己的宽度、在栏里居中；关闭后从左边排起。立即生效',
+        leading: Icon(Icons.align_horizontal_center_outlined),
+        setKey: GlassFeatures.centerTabsKey,
+        defaultVal: true,
+        onChanged: GlassFeatures.setCenterTabs,
+      ),
+      SwitchModel(
         title: '评论玻璃面板',
         subtitle: '竖屏视频页的评论改为可拖拽的玻璃面板；关闭则为原版的评论标签页',
         leading: Icon(Icons.comment_outlined),

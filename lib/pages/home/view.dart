@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/ui_icons.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/centered_glass_tabs.dart';
@@ -167,16 +168,20 @@ class _HomePageState extends CommonPageState<HomePage>
             _homeAvatar(),
             Expanded(
               // the row keeps to what it holds and sits in the middle of
-              // the room between the avatar and the bell; a page with a
-              // single tab gets a small capsule with that one tab in it
-              child: CenteredGlassTabs(
-                controller: _homeController.tabController,
-                labels: _homeController.tabs.map((e) => e.label).toList(),
-                onTap: (_) {
-                  if (!_homeController.tabController.indexIsChanging) {
-                    _homeController.animateToTop();
-                  }
-                },
+              // the room between the avatar and the bell, unless the switch
+              // in 设置 › PiliGlass 特性 says to start at the left; a page
+              // with a single tab gets a small capsule with that one tab
+              child: Obx(
+                () => CenteredGlassTabs(
+                  controller: _homeController.tabController,
+                  labels: _homeController.tabs.map((e) => e.label).toList(),
+                  centered: GlassFeatures.centerTabs.value,
+                  onTap: (_) {
+                    if (!_homeController.tabController.indexIsChanging) {
+                      _homeController.animateToTop();
+                    }
+                  },
+                ),
               ),
             ),
             // on a wide screen the messages are on the rail's glass block,
