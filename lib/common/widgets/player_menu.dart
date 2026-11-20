@@ -31,7 +31,7 @@ class PlayerMenuButton extends StatefulWidget {
     super.key,
     required this.buildRows,
     required this.child,
-    this.width = 120,
+    this.width = 112,
   });
 
   /// the rows, read when the menu opens

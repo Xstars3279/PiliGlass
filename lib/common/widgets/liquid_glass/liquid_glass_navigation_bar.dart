@@ -100,7 +100,7 @@ class LiquidGlassNavigationBar extends StatefulWidget {
     required this.selectedIndex,
     required this.destinations,
     this.onDestinationSelected,
-    this.bottomPadding = 4.0,
+    this.bottomPadding = 6.0,
     this.onSearch,
     this.searchHint,
     this.action,

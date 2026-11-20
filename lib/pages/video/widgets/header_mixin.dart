@@ -23,11 +23,12 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
   Future<void>? showBottomSheet(
     StatefulWidgetBuilder builder, {
     ValueGetter<EdgeInsets>? padding,
+    double maxWidth = 512,
   }) {
     final theme = this.theme;
     return PageUtils.showVideoBottomSheet(
       context,
-      maxWidth: 512,
+      maxWidth: maxWidth,
       padding: padding,
       child: theme != null
           ? Theme(

@@ -41,6 +41,7 @@ import 'package:PiliPlus/pages/video/widgets/header_mixin.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_repeat.dart';
+import 'package:PiliPlus/plugin/pl_player/widgets/revamp_player_metrics.dart';
 import 'package:PiliPlus/services/shutdown_timer_service.dart'
     show shutdownTimerService, ShutdownPanel;
 import 'package:PiliPlus/utils/accounts.dart';
@@ -377,19 +378,27 @@ class HeaderControlState extends State<HeaderControl>
         final theme = Theme.of(context);
 
         return Padding(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(12),
           child: Material(
             clipBehavior: Clip.hardEdge,
             color: theme.colorScheme.surface,
             borderRadius: const BorderRadius.all(Radius.circular(12)),
             child: ListTileTheme(
-              // a tighter list than elsewhere: 40 a row, not the usual 48
+              // Only this panel is compact; the global 56dp rows stay intact.
               data: ListTileTheme.of(context).copyWith(
-                visualDensity: const VisualDensity(vertical: -2),
+                minTileHeight: Revamp.enabled && isFullScreen
+                    ? RevampPlayerMetrics.settingsRowHeight
+                    : null,
+                minVerticalPadding: Revamp.enabled && isFullScreen ? 4 : null,
+                visualDensity: Revamp.enabled && isFullScreen
+                    ? const VisualDensity(vertical: -2)
+                    : null,
               ),
               child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-              children: [
+                padding: EdgeInsets.symmetric(
+                  vertical: Revamp.enabled && isFullScreen ? 8 : 14,
+                ),
+                children: [
                 // what left the full screen's top and bottom rows, here at
                 // the top of ⋯ (7.1)
                 if (Revamp.enabled && isFullScreen) ...[
@@ -440,6 +449,7 @@ class HeaderControlState extends State<HeaderControl>
                       when langs.isNotEmpty)
                     PopupListTile<String>(
                       dense: true,
+                      useRevampLeading: false,
                       leading: const Icon(Icons.translate, size: 20),
                       title: const Text('翻译', style: titleStyle),
                       titleStyle: theme.textTheme.bodyLarge,
@@ -465,6 +475,7 @@ class HeaderControlState extends State<HeaderControl>
                     ),
                   PopupListTile<VideoFitType>(
                     dense: true,
+                    useRevampLeading: false,
                     leading: const Icon(Icons.aspect_ratio, size: 20),
                     title: const Text('画面比例', style: titleStyle),
                     titleStyle: theme.textTheme.bodyLarge,
@@ -597,6 +608,7 @@ class HeaderControlState extends State<HeaderControl>
                 ],
                 PopupListTile<SuperResolutionType>(
                   dense: true,
+                  useRevampLeading: false,
                   leading: const Icon(
                     Icons.stay_current_landscape_outlined,
                     size: 20,
@@ -787,6 +799,7 @@ class HeaderControlState extends State<HeaderControl>
                 ],
                 PopupListTile(
                   dense: true,
+                  useRevampLeading: false,
                   leading: const Icon(Icons.repeat, size: 20),
                   title: const Text('播放顺序', style: titleStyle),
                   titleStyle: theme.textTheme.bodyLarge,
@@ -922,12 +935,15 @@ class HeaderControlState extends State<HeaderControl>
                   leading: const Icon(Icons.error_outline, size: 20),
                   title: const Text('举报', style: titleStyle),
                 ),
-              ],
+                ],
               ),
             ),
           ),
         );
       },
+      maxWidth: Revamp.enabled && isFullScreen
+          ? RevampPlayerMetrics.settingsSheetWidth
+          : 512,
     );
   }
 
@@ -1784,15 +1800,14 @@ class HeaderControlState extends State<HeaderControl>
 
   late final isFileSource = videoDetailCtr.isFileSource;
 
-  // 40 in the redesign: under the plan's 48 tap target, as this page can
-  // afford it, the icons are 24 and the scrim carries them
-  static final btnWidth = Revamp.enabled ? 40.0 : 42.0;
-  static final btnHeight = Revamp.enabled ? 40.0 : 34.0;
+  // The player's own compact slot, not the app's usual 48dp button.
+  static const btnWidth = RevampPlayerMetrics.compactButtonWidth;
+  static const btnHeight = RevampPlayerMetrics.compactButtonHeight;
   static final _baseBtnStyle = Revamp.enabled
       ? Revamp.overlayButtonStyle
       : const ButtonStyle(padding: WidgetStatePropertyAll(.zero));
   ButtonStyle get btnStyle => Revamp.enabled && isFullScreen
-      ? Revamp.playerButtonStyle
+      ? RevampPlayerMetrics.compactButtonStyle
       : _baseBtnStyle;
 
   @override
@@ -1876,7 +1891,9 @@ class HeaderControlState extends State<HeaderControl>
                     style: btnStyle,
                     icon: Icon(
                       FontAwesomeIcons.arrowLeft,
-                      size: Revamp.enabled && isFullScreen ? 24 : 15,
+                      size: Revamp.enabled && isFullScreen
+                          ? RevampPlayerMetrics.compactIconSize
+                          : 15,
                       color: Colors.white,
                     ),
                     onPressed: () =>
@@ -2111,6 +2128,7 @@ class HeaderControlState extends State<HeaderControl>
                     child: Obx(
                       () => ActionItem(
                         expand: false,
+                        iconSize: RevampPlayerMetrics.compactIconSize,
                         icon: const Icon(
                           FontAwesomeIcons.thumbsUp,
                           color: Colors.white,
@@ -2140,6 +2158,7 @@ class HeaderControlState extends State<HeaderControl>
                     child: Obx(
                       () => ActionItem(
                         expand: false,
+                        iconSize: RevampPlayerMetrics.compactIconSize,
                         animation: introController.tripleAnimation,
                         icon: const Icon(
                           FontAwesomeIcons.b,
@@ -2158,6 +2177,7 @@ class HeaderControlState extends State<HeaderControl>
                     child: Obx(
                       () => ActionItem(
                         expand: false,
+                        iconSize: RevampPlayerMetrics.compactIconSize,
                         animation: introController.tripleAnimation,
                         icon: const Icon(
                           FontAwesomeIcons.star,
@@ -2185,7 +2205,9 @@ class HeaderControlState extends State<HeaderControl>
                     onPressed: showSettingSheet,
                     icon: Icon(
                       Icons.more_vert_outlined,
-                      size: Revamp.enabled && isFullScreen ? 24 : 19,
+                      size: Revamp.enabled && isFullScreen
+                          ? RevampPlayerMetrics.compactIconSize
+                          : 19,
                       color: Colors.white,
                     ),
                   ),

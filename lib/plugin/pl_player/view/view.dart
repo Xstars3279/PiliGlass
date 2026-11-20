@@ -5,7 +5,6 @@ import 'dart:ui' as ui;
 
 import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/revamp.dart';
-import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -47,6 +46,7 @@ import 'package:PiliPlus/plugin/pl_player/models/fullscreen_mode.dart';
 import 'package:PiliPlus/plugin/pl_player/models/gesture_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/video_fit_type.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/revamp_danmaku_bar.dart';
+import 'package:PiliPlus/plugin/pl_player/widgets/revamp_player_metrics.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/app_bar_ani.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/backward_seek.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/bottom_control.dart';
@@ -415,7 +415,14 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     final isPlayAll = videoDetailController.isPlayAll;
     final anySeason = isSeason || isPart || isPgc || isPlayAll;
     final isFullScreen = this.isFullScreen;
+    final compactControls = Revamp.enabled && isLandscape && isFullScreen;
     final double widgetWidth = isLandscape && isFullScreen ? 42 : 35;
+    final controlHeight = compactControls
+        ? RevampPlayerMetrics.compactButtonHeight
+        : 30.0;
+    final controlIconSize = compactControls
+        ? RevampPlayerMetrics.compactIconSize
+        : 22.0;
 
     Widget progressWidget(
       BottomControlType bottomControl,
@@ -428,11 +435,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       /// 上一集
       BottomControlType.pre => ComBtn(
         width: widgetWidth,
-        height: 30,
+        height: controlHeight,
         tooltip: '上一集',
-        icon: const Icon(
+        icon: Icon(
           Icons.skip_previous,
-          size: 22,
+          size: controlIconSize,
           color: Colors.white,
         ),
         onTap: () {
@@ -445,11 +452,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       /// 下一集
       BottomControlType.next => ComBtn(
         width: widgetWidth,
-        height: 30,
+        height: controlHeight,
         tooltip: '下一集',
-        icon: const Icon(
+        icon: Icon(
           Icons.skip_next,
-          size: 22,
+          size: controlIconSize,
           color: Colors.white,
         ),
         onTap: () {
@@ -479,13 +486,13 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             final show = videoDetailController.showDmTrendChart.value;
             return ComBtn(
               width: widgetWidth,
-              height: 30,
+              height: controlHeight,
               tooltip: '高能进度条',
               icon: DisabledIcon(
                 disable: !show,
-                child: const Icon(
+                child: Icon(
                   Icons.show_chart,
-                  size: 22,
+                  size: controlIconSize,
                   color: Colors.white,
                 ),
               ),
@@ -508,12 +515,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 ? Revamp.playerMenuColor
                 : Colors.black.withValues(alpha: 0.8),
             shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
-            constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
             itemBuilder: (context) {
               return SuperResolutionType.values
                   .map(
                     (type) => PopupMenuItem<SuperResolutionType>(
-                      height: 48,
+                      height: 35,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       value: type,
                       onTap: () => plPlayerController.setShader(type),
@@ -545,13 +551,13 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           if (videoDetailController.viewPointList.isNotEmpty) {
             return ComBtn(
               width: widgetWidth,
-              height: 30,
+              height: controlHeight,
               tooltip: '分段信息',
               icon: DisabledIcon(
                 disable: !videoDetailController.showVP.value,
-                child: const Icon(
+                child: Icon(
                   CustomIcons.view_headline_rotate_90,
-                  size: 22,
+                  size: controlIconSize,
                   color: Colors.white,
                 ),
               ),
@@ -572,11 +578,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       /// 选集
       BottomControlType.episode => ComBtn(
         width: widgetWidth,
-        height: 30,
+        height: controlHeight,
         tooltip: '选集',
-        icon: const Icon(
+        icon: Icon(
           Icons.list,
-          size: 22,
+          size: controlIconSize,
           color: Colors.white,
         ),
         onTap: () {
@@ -622,12 +628,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 ? Revamp.playerMenuColor
                 : Colors.black.withValues(alpha: 0.8),
             shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
-            constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
             itemBuilder: (context) {
               return VideoFitType.values
                   .map(
                     (boxFit) => PopupMenuItem<VideoFitType>(
-                      height: 48,
+                      height: 35,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       value: boxFit,
                       onTap: () => plPlayerController.toggleVideoFit(boxFit),
@@ -666,10 +671,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                   ? Revamp.playerMenuColor
                   : Colors.black.withValues(alpha: 0.8),
               shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
-              constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
               itemBuilder: (context) => [
                 const PopupMenuItem<String>(
-                  height: 48,
+                  height: 35,
                   value: '',
                   child: Text(
                     "关闭翻译",
@@ -678,7 +682,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 ),
                 ...list.map(
                   (e) => PopupMenuItem<String>(
-                    height: 48,
+                    height: 35,
                     value: e.lang,
                     child: Text(
                       e.title!,
@@ -689,10 +693,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               ],
               child: SizedBox(
                 width: widgetWidth,
-                height: 30,
-                child: const Icon(
+                height: controlHeight,
+                child: Icon(
                   Icons.translate,
-                  size: 18,
+                  size: compactControls ? controlIconSize : 18,
                   color: Colors.white,
                 ),
               ),
@@ -715,12 +719,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                   ? Revamp.playerMenuColor
                   : Colors.black.withValues(alpha: 0.8),
               shape: Revamp.enabled ? Revamp.rounded(Revamp.menuRadius) : null,
-              constraints: Revamp.enabled ? Revamp.playerMenuConstraints : null,
               itemBuilder: (context) {
                 return [
                   PopupMenuItem<int>(
                     value: 0,
-                    height: 48,
+                    height: 35,
                     onTap: () => videoDetailController.setSubtitle(0),
                     child: const Text(
                       "关闭字幕",
@@ -733,7 +736,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                   ...videoDetailController.subtitles.mapIndexed((i, e) {
                     return PopupMenuItem<int>(
                       value: i + 1,
-                      height: 48,
+                      height: 35,
                       onTap: () => videoDetailController.setSubtitle(i + 1),
                       child: Text(
                         e.lanDoc ?? e.lan,
@@ -747,16 +750,16 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               },
               child: SizedBox(
                 width: widgetWidth,
-                height: 30,
+                height: controlHeight,
                 child: val == 0
-                    ? const Icon(
+                    ? Icon(
                         Icons.closed_caption_off_outlined,
-                        size: 22,
+                        size: controlIconSize,
                         color: Colors.white,
                       )
-                    : const Icon(
+                    : Icon(
                         Icons.closed_caption_off_rounded,
-                        size: 22,
+                        size: controlIconSize,
                         color: Colors.white,
                       ),
               ),
@@ -804,7 +807,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               return speedList
                   .map(
                     (double speed) => PopupMenuItem<double>(
-                      height: 48,
+                      height: 35,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       value: speed,
                       onTap: () => plPlayerController.setPlaybackSpeed(speed),
@@ -897,7 +900,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                   final enabled = availableQa.contains(item.quality);
                   return PopupMenuItem<int>(
                     enabled: enabled,
-                    height: 48,
+                    height: 35,
                     padding: const EdgeInsets.only(left: 15, right: 10),
                     value: item.quality,
                     onTap: () async {
@@ -947,11 +950,19 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       /// 全屏
       BottomControlType.fullscreen => ComBtn(
         width: widgetWidth,
-        height: 30,
+        height: controlHeight,
         tooltip: isFullScreen ? '退出全屏' : '全屏',
         icon: isFullScreen
-            ? const Icon(Icons.fullscreen_exit, size: 24, color: Colors.white)
-            : const Icon(Icons.fullscreen, size: 24, color: Colors.white),
+            ? Icon(
+                Icons.fullscreen_exit,
+                size: compactControls ? controlIconSize : 24,
+                color: Colors.white,
+              )
+            : Icon(
+                Icons.fullscreen,
+                size: compactControls ? controlIconSize : 24,
+                color: Colors.white,
+              ),
         onTap: () =>
             plPlayerController.triggerFullScreen(status: !isFullScreen),
         onSecondaryTap: () => plPlayerController.triggerFullScreen(
@@ -970,41 +981,35 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         isFullScreen &&
         isNotFileSource &&
         !plPlayerController.isLive) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: UiSpace.s16,
-          vertical: 4,
-        ),
-        child: Row(
-          spacing: UiSpace.s8,
-          children: [
-            progressWidget(.playOrPause),
-            Expanded(
-              child: RevampDanmakuBar(
-                controller: plPlayerController,
-                onSend: videoDetailController.showShootDanmakuSheet,
-                onSettings: () =>
-                    (videoDetailController.headerCtrKey.currentState
-                            as HeaderControlState?)
-                        ?.showSetDanmaku(),
-              ),
+      return Row(
+        spacing: RevampPlayerMetrics.compactGap,
+        children: [
+          progressWidget(.playOrPause),
+          progressWidget(.time),
+          Expanded(
+            child: RevampDanmakuBar(
+              controller: plPlayerController,
+              onSend: videoDetailController.showShootDanmakuSheet,
+              onSettings: () =>
+                  (videoDetailController.headerCtrKey.currentState
+                          as HeaderControlState?)
+                      ?.showSetDanmaku(),
             ),
-            progressWidget(.subtitle),
-            progressWidget(.speed),
-            progressWidget(.qa),
-            progressWidget(.fullscreen),
-          ],
-        ),
+          ),
+          progressWidget(.subtitle),
+          progressWidget(.speed),
+          progressWidget(.qa),
+          progressWidget(.fullscreen),
+        ],
       );
     }
 
     final flag =
         isFullScreen || plPlayerController.isDesktopPip || maxWidth >= 500;
-    // the figures have moved onto the progress bar at the ends (7.1)
-    final timeOnBar = Revamp.enabled && flag;
+    // the figures stay beside the play button, as in 0.1.4
     List<BottomControlType> userSpecifyItemLeft = [
       .playOrPause,
-      if (!timeOnBar) .time,
+      .time,
       if (!isNotFileSource || anySeason) ...[.pre, .next],
     ];
 

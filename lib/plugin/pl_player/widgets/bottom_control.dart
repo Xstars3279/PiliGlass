@@ -1,11 +1,9 @@
 import 'package:PiliPlus/common/revamp.dart';
-import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/progress_bar/audio_video_progress_bar.dart';
 import 'package:PiliPlus/common/widgets/progress_bar/segment_progress_bar.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/view/view.dart';
-import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
@@ -57,20 +55,16 @@ class BottomControl extends StatelessWidget {
     final bufferedBarColor = primary.withValues(alpha: 0.4);
 
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: Revamp.enabled && isFullScreen ? UiSpace.s24 : 10,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(10, 0, 10, 6),
+            padding: const EdgeInsets.fromLTRB(10, 0, 10, 7),
             child: Obx(
               () => Offstage(
                 offstage: !controller.showControls.value,
-                child: _withTimes(
-                  Stack(
+                child: Stack(
                   clipBehavior: Clip.none,
                   alignment: Alignment.bottomCenter,
                   children: [
@@ -122,43 +116,12 @@ class BottomControl extends StatelessWidget {
                         buildDmChart(primary, list, videoDetailController, 4.5),
                   ],
                 ),
-                ),
               ),
             ),
           ),
           buildBottomControl(),
         ],
       ),
-    );
-  }
-
-  /// The full screen progress row: elapsed time, the bar, the whole
-  /// (7.1, first row), 11 / 500.
-  Widget _withTimes(Widget bar) {
-    if (!(Revamp.enabled && isFullScreen)) return bar;
-    const style = TextStyle(
-      color: Color(0xCCFFFFFF),
-      fontSize: 11,
-      fontWeight: FontWeight.w500,
-      fontFeatures: [FontFeature.tabularFigures()],
-    );
-    return Row(
-      spacing: UiSpace.s8,
-      children: [
-        Obx(
-          () => Text(
-            DurationUtils.formatDuration(controller.position.value),
-            style: style,
-          ),
-        ),
-        Expanded(child: bar),
-        Obx(
-          () => Text(
-            DurationUtils.formatDuration(controller.duration.value),
-            style: style,
-          ),
-        ),
-      ],
     );
   }
 }

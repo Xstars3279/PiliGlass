@@ -22,6 +22,7 @@ class PopupListTile<T> extends StatefulWidget {
     this.safeArea = true,
     this.enabled = true,
     this.leading,
+    this.useRevampLeading = true,
     required this.title,
     this.descPosType = .subtitle,
     required this.value,
@@ -35,6 +36,7 @@ class PopupListTile<T> extends StatefulWidget {
   final bool safeArea;
   final bool enabled;
   final Widget? leading;
+  final bool useRevampLeading;
   final Widget title;
 
   final DescPosType descPosType;
@@ -113,7 +115,9 @@ class _PopupListTileState<T> extends State<PopupListTile<T>> {
       safeArea: widget.safeArea,
       enabled: widget.enabled,
       onTapUp: (details) => _showButtonMenu(details, value),
-      leading: revampLeading(widget.leading),
+      leading: widget.useRevampLeading
+          ? revampLeading(widget.leading)
+          : widget.leading,
       title: title,
       titleTextStyle: widget.titleStyle ?? theme.textTheme.titleMedium,
       subtitle: subtitle,

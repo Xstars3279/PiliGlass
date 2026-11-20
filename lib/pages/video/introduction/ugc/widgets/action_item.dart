@@ -14,6 +14,7 @@ class ActionItem extends StatelessWidget {
     super.key,
     required this.icon,
     this.selectIcon,
+    this.iconSize,
     this.onTap,
     this.onLongPress,
     this.text,
@@ -28,6 +29,7 @@ class ActionItem extends StatelessWidget {
 
   final Icon icon;
   final Icon? selectIcon;
+  final double? iconSize;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final String? text;
@@ -53,8 +55,8 @@ class ActionItem extends StatelessWidget {
       hold: animation,
       child: Icon(
         selectStatus ? selectIcon!.icon! : icon.icon,
-        // 24 in the redesign, on the player and in the detail page's row
-        size: Revamp.enabled ? 24 : 22,
+        // 24 in the redesign; the compact player can override it locally
+        size: iconSize ?? (Revamp.enabled ? 24 : 22),
         color: selectStatus
             ? primary
             : icon.color ??
