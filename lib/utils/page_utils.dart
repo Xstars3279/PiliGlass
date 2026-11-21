@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:PiliPlus/common/widgets/fractionally_sized_box.dart';
+import 'package:PiliPlus/common/widgets/grow_from.dart';
 import 'package:PiliPlus/common/widgets/image_viewer/gallery_viewer.dart';
 import 'package:PiliPlus/common/widgets/image_viewer/hero_dialog_route.dart';
 import 'package:PiliPlus/grpc/im.dart';
@@ -478,6 +479,8 @@ abstract final class PageUtils {
     if (!context.mounted) {
       return null;
     }
+    // a page that sets PublishRoute.pendingMorph grows out of that rect
+    final morphFrom = PublishRoute.pendingMorph;
     return Get.key.currentState!.push(
       PublishRoute(
         pageBuilder: (context, animation, secondaryAnimation) {
@@ -490,26 +493,36 @@ abstract final class PageUtils {
               alignment: isPortrait ? .bottomCenter : .centerRight,
               child: Padding(
                 padding: isPortrait ? padding?.call() ?? .zero : .zero,
-                child: child,
+                child: morphFrom == null
+                    ? child
+                    : GrowFromRect(
+                        from: morphFrom,
+                        animation: animation,
+                        child: child,
+                      ),
               ),
             ),
           );
         },
-        transitionDuration: const Duration(milliseconds: 350),
-        transitionBuilder: (context, animation, secondaryAnimation, child) {
-          final begin = context.isPortrait
-              ? const Offset(0.0, 1.0)
-              : const Offset(1.0, 0.0);
-          return SlideTransition(
-            position: animation.drive(
-              Tween<Offset>(
-                begin: begin,
-                end: Offset.zero,
-              ).chain(CurveTween(curve: Curves.easeInOut)),
-            ),
-            child: child,
-          );
-        },
+        transitionDuration: Duration(
+          milliseconds: morphFrom == null ? 350 : 460,
+        ),
+        transitionBuilder: morphFrom != null
+            ? null
+            : (context, animation, secondaryAnimation, child) {
+                final begin = context.isPortrait
+                    ? const Offset(0.0, 1.0)
+                    : const Offset(1.0, 0.0);
+                return SlideTransition(
+                  position: animation.drive(
+                    Tween<Offset>(
+                      begin: begin,
+                      end: Offset.zero,
+                    ).chain(CurveTween(curve: Curves.easeInOut)),
+                  ),
+                  child: child,
+                );
+              },
         settings: RouteSettings(arguments: Get.arguments),
       ),
     );

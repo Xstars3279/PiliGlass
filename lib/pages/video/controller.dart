@@ -34,6 +34,7 @@ import 'package:PiliPlus/models_new/video/video_pbp/data.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
 import 'package:PiliPlus/models_new/video/video_stein_edgeinfo/data.dart';
 import 'package:PiliPlus/pages/audio/view.dart';
+import 'package:PiliPlus/common/widgets/grow_from.dart';
 import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/pages/search/widgets/search_text.dart';
 import 'package:PiliPlus/pages/sponsor_block/block_mixin.dart';
@@ -615,7 +616,7 @@ class VideoDetailController extends GetxController
   String? savedDanmaku;
 
   /// 发送弹幕
-  Future<void> showShootDanmakuSheet() async {
+  Future<void> showShootDanmakuSheet({Rect? from}) async {
     if (plPlayerController.dmState.contains(cid.value)) {
       SmartDialog.showToast('UP主已关闭弹幕');
       return;
@@ -625,10 +626,14 @@ class VideoDetailController extends GetxController
     if (isPlaying) {
       await plPlayerController.pause();
     }
+    if (from != null) {
+      // the panel grows out of the bar that opened it
+      PublishRoute.pendingMorph = from;
+    }
     await Get.key.currentState!.push(
       PublishRoute(
         pageBuilder: (buildContext, animation, secondaryAnimation) {
-          final child = SendDanmakuPanel(
+          Widget child = SendDanmakuPanel(
             cid: cid.value,
             bvid: bvid,
             progress: plPlayerController.positionInMilliseconds,
@@ -641,6 +646,15 @@ class VideoDetailController extends GetxController
             dmConfig: dmConfig,
             onSaveDmConfig: (dmConfig) => this.dmConfig = dmConfig,
           );
+          final route = ModalRoute.of(buildContext);
+          if (route is PublishRoute && route.morphFrom != null) {
+            child = GrowFromBottom(
+              from: route.morphFrom!,
+              animation: animation,
+              radius: 24,
+              child: child,
+            );
+          }
           if (plPlayerController.darkVideoPage) {
             return Theme(data: ThemeUtils.darkTheme, child: child);
           }

@@ -6,6 +6,8 @@ import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show ReplyInfo;
@@ -299,6 +301,9 @@ class _CommentSheetState extends State<CommentSheet>
           page.width.toDouble(),
           page.height.toDouble(),
         );
+    // the still follows the level too: thick glass at 极致, the frosted
+    // panel of the redesign elsewhere
+    final sigma = (UiGlass.liquid ? UiGlass.panelBlur : 8) * scale;
     // the filter on a layer: one on the paint of drawImage is not applied by
     // every backend
     Canvas(recorder)
@@ -306,11 +311,13 @@ class _CommentSheetState extends State<CommentSheet>
         bounds,
         Paint()
           ..imageFilter = ui.ImageFilter.blur(
-            sigmaX: 8 * scale,
-            sigmaY: 8 * scale,
+            sigmaX: sigma,
+            sigmaY: sigma,
             tileMode: .clamp,
           )
-          ..colorFilter = ColorFilter.matrix(_saturation(1.7)),
+          ..colorFilter = ColorFilter.matrix(
+            _saturation(UiGlass.liquid ? UiGlass.saturation : 1.7),
+          ),
       )
       ..drawImage(page, Offset.zero, Paint())
       ..restore();
@@ -756,7 +763,8 @@ class _CommentSheetState extends State<CommentSheet>
           child: CustomPaint(
             foregroundPainter: GlassRimPainter(
               radius: radius,
-              opacity: 0,
+              // the lit rim of the thick glass of 极致
+              opacity: UiGlass.panelRim,
               isDark: isDark,
               edge: UiGlass.edge(colorScheme),
             ),
@@ -1065,8 +1073,10 @@ typedef _Thread = ({
   String? replyTo,
 });
 
-/// 发条友善的评论: a solid capsule over the bottom of the sheet, the gray of a
-/// block in a block, the comments fading out above it.
+/// 发条友善的评论: a capsule of glass over the bottom of the sheet, as the
+/// dock is, the comments fading out above it. Its blur and refraction follow
+/// 透明效果: clear liquid glass at 极致, the dock's lens at 增强, frosted at
+/// 标准, solid at 无.
 class _InputBar extends StatelessWidget {
   const _InputBar({required this.label, required this.onTap});
 
@@ -1076,6 +1086,9 @@ class _InputBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
+    final isDark = colorScheme.brightness == .dark;
+    // the bar is 44 high, a stadium
+    const radius = Radius.circular(22);
     return Semantics(
       button: true,
       label: '发表评论',
@@ -1119,40 +1132,54 @@ class _InputBar extends StatelessWidget {
               ),
             ),
             Positioned.fill(
-              child: DecoratedBox(
-                decoration: ShapeDecoration(
-                  color: colorScheme.surfaceContainerHigh.withValues(
-                    alpha: UiGlass.panelAlpha,
+              child: LiquidPress(
+                maxGrowth: 8,
+                child: CustomPaint(
+                  painter: GlassShadowPainter.of(
+                    radius: radius,
+                    shadow: UiGlass.shadowIn(colorScheme, UiGlass.panelShadow),
                   ),
-                  shape: StadiumBorder(side: UiGlass.side(colorScheme)),
-                ),
-                child: Padding(
-                  padding: const .symmetric(horizontal: 18),
-                  child: Row(
-                    spacing: 10,
-                    children: [
-                      Icon(
-                        Icons.edit_outlined,
-                        size: 20,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      Expanded(
-                        child: Text(
-                          label,
-                          maxLines: 1,
-                          overflow: .ellipsis,
-                          style: TextStyle(
-                            fontSize: 15,
+                  foregroundPainter: GlassRimPainter(
+                    radius: radius,
+                    opacity: UiGlass.refraction ? 0.75 : 0,
+                    isDark: isDark,
+                    edge: UiGlass.edge(colorScheme),
+                  ),
+                  child: LiquidGlass(
+                    blurSigma: UiGlass.shellBlur,
+                    refractionHeight: UiGlass.refraction ? 16 : 0,
+                    refractionAmount: UiGlass.refraction ? 18 : 0,
+                    saturation: UiGlass.saturation,
+                    color: UiGlass.input(colorScheme),
+                    child: Padding(
+                      padding: const .symmetric(horizontal: 18),
+                      child: Row(
+                        spacing: 10,
+                        children: [
+                          Icon(
+                            Icons.edit_outlined,
+                            size: 20,
                             color: colorScheme.onSurfaceVariant,
                           ),
-                        ),
+                          Expanded(
+                            child: Text(
+                              label,
+                              maxLines: 1,
+                              overflow: .ellipsis,
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.sentiment_satisfied_alt_outlined,
+                            size: 22,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ],
                       ),
-                      Icon(
-                        Icons.sentiment_satisfied_alt_outlined,
-                        size: 22,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),

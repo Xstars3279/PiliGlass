@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/centered_glass_tabs.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
@@ -38,19 +39,22 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
         width: 34,
         height: 34,
         margin: isRight ? const .only(right: 16) : const .only(left: 16),
-        child: IconButton(
-          tooltip: '发布动态',
-          style: ButtonStyle(
-            padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-            backgroundColor: WidgetStatePropertyAll(
-              colorScheme.secondaryContainer,
+        child: LiquidPress(
+          maxGrowth: 9,
+          child: IconButton(
+            tooltip: '发布动态',
+            style: ButtonStyle(
+              padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+              backgroundColor: WidgetStatePropertyAll(
+                colorScheme.secondaryContainer,
+              ),
             ),
-          ),
-          onPressed: () => CreateDynPanel.onCreateDyn(context),
-          icon: Icon(
-            Icons.add,
-            size: 18,
-            color: colorScheme.onSecondaryContainer,
+            onPressed: () => CreateDynPanel.onCreateDyn(context),
+            icon: Icon(
+              Icons.add,
+              size: 18,
+              color: colorScheme.onSecondaryContainer,
+            ),
           ),
         ),
       );

@@ -6,6 +6,7 @@ import 'package:PiliPlus/common/widgets/liquid_glass/centered_glass_tabs.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_height_widget.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -210,12 +211,15 @@ class _HomePageState extends CommonPageState<HomePage>
                             MediaQuery.sizeOf(context),
                           ) ||
                           !_mainController.railMessages.value)
-                  ? GlassCapsule(
-                      refraction: true,
-                      padding: EdgeInsets.zero,
-                      child: SizedBox.square(
-                        dimension: GlassTabBar.height,
-                        child: Center(child: msgBadge(_mainController)),
+                  ? LiquidPress(
+                      maxGrowth: 10,
+                      child: GlassCapsule(
+                        refraction: true,
+                        padding: EdgeInsets.zero,
+                        child: SizedBox.square(
+                          dimension: GlassTabBar.height,
+                          child: Center(child: msgBadge(_mainController)),
+                        ),
                       ),
                     )
                   : const SizedBox.shrink(),
@@ -231,13 +235,15 @@ class _HomePageState extends CommonPageState<HomePage>
   Widget _homeAvatar() => Semantics(
     label: '我的',
     button: true,
-    child: GlassCapsule(
-      refraction: true,
-      padding: EdgeInsets.zero,
-      child: SizedBox.square(
-        dimension: GlassTabBar.height,
-        child: Center(
-          child: Obx(() {
+    child: LiquidPress(
+      maxGrowth: 10,
+      child: GlassCapsule(
+        refraction: true,
+        padding: EdgeInsets.zero,
+        child: SizedBox.square(
+          dimension: GlassTabBar.height,
+          child: Center(
+            child: Obx(() {
             final account = _mainController.accountService;
             final face = account.isLogin.value ? account.face.value : null;
             return GestureDetector(
@@ -268,6 +274,7 @@ class _HomePageState extends CommonPageState<HomePage>
               ),
             );
           }),
+          ),
         ),
       ),
     ),

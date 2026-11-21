@@ -4,6 +4,10 @@ import 'dart:math';
 import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/motion/cover_hero.dart';
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/grow_from.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_menu.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
@@ -731,19 +735,28 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                     : SizedBox(
                         width: 42,
                         height: 34,
-                        child: IconButton(
-                          tooltip: "更多设置",
-                          style: const ButtonStyle(
-                            padding: WidgetStatePropertyAll(EdgeInsets.zero),
-                          ),
-                          onPressed: () =>
-                              (videoDetailController.headerCtrKey.currentState
-                                      as HeaderControlState?)
-                                  ?.showSettingSheet(),
-                          icon: Icon(
-                            Icons.more_vert_outlined,
-                            size: 19,
-                            color: colorScheme.onSurface,
+                        child: LiquidPress(
+                          maxGrowth: 8,
+                          child: Builder(
+                            builder: (buttonContext) => IconButton(
+                              tooltip: "更多设置",
+                              style: const ButtonStyle(
+                                padding: WidgetStatePropertyAll(
+                                  EdgeInsets.zero,
+                                ),
+                              ),
+                              onPressed: () =>
+                                  (videoDetailController
+                                          .headerCtrKey
+                                          .currentState
+                                          as HeaderControlState?)
+                                      ?.showSettingSheet(from: buttonContext),
+                              icon: Icon(
+                                Icons.more_vert_outlined,
+                                size: 19,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -1198,16 +1211,9 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     return const SizedBox.shrink();
   });
 
-  Widget _moreBtn(Color color, {List<Shadow>? shadows}) => PopupMenuButton(
-    // a round of glass on the video, plain on the collapsed bar
-    style: shadows != null ? _overlayBtnStyle : null,
-    icon: Icon(
-      size: 22,
-      Icons.more_vert,
-      color: color,
-      shadows: shadows,
-    ),
-    itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+  Widget _moreBtn(Color color, {List<Shadow>? shadows}) =>
+      GlassPopupAnchor<Object?>(
+        itemBuilder: (BuildContext context) => <PopupMenuEntry>[
       PopupMenuItem(
         onTap: introController.viewLater,
         child: const Text('稍后再看'),
@@ -1243,8 +1249,31 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         },
         child: const Text('举报'),
       ),
-    ],
-  );
+        ],
+        targetBuilder: (open) => shadows != null
+            // the black round over the video still swells under the finger
+            ? LiquidPress(
+                maxGrowth: 9,
+                child: IconButton(
+                  style: _overlayBtnStyle,
+                  onPressed: open,
+                  icon: Icon(
+                    size: 22,
+                    Icons.more_vert,
+                    color: color,
+                    shadows: shadows,
+                  ),
+                ),
+              )
+            // bare on the collapsed bar: a light coin and the lit rim
+            : GlassIconButton(
+                size: 34,
+                iconSize: 20,
+                color: color,
+                onTap: open,
+                icon: const Icon(Icons.more_vert),
+              ),
+      );
 
   Widget plPlayer({
     required double width,
@@ -1278,7 +1307,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                 controller: videoDetailController.plPlayerController,
                 videoDetailCtr: videoDetailController,
                 heroTag: heroTag,
-                onEpisodes: () => showEpisodes(),
+                onEpisodes: showEpisodes,
               ),
               danmuWidget: isPipMode && pipNoDanmaku
                   ? null
@@ -1453,16 +1482,20 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
               ),
             SizedBox(
               height: 32,
-              child: TextButton(
-                style: const ButtonStyle(
-                  padding: WidgetStatePropertyAll(.zero),
-                ),
-                onPressed: videoDetailController.showShootDanmakuSheet,
-                child: Text(
-                  '发弹幕',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colorScheme.onSurfaceVariant,
+              child: Builder(
+                builder: (buttonContext) => TextButton(
+                  style: const ButtonStyle(
+                    padding: WidgetStatePropertyAll(.zero),
+                  ),
+                  onPressed: () => videoDetailController.showShootDanmakuSheet(
+                    from: morphRectOf(buttonContext),
+                  ),
+                  child: Text(
+                    '发弹幕',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),

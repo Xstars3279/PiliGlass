@@ -5,6 +5,7 @@ import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:PiliPlus/common/widgets/dialog/report.dart';
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/common/widgets/translucent_row.dart';
@@ -152,13 +153,16 @@ class AuthorPanel extends StatelessWidget {
         : SizedBox(
             width: 32,
             height: 32,
-            child: IconButton(
-              tooltip: '更多',
-              style: const ButtonStyle(
-                padding: WidgetStatePropertyAll(EdgeInsets.zero),
+            child: LiquidPress(
+              maxGrowth: 8,
+              child: IconButton(
+                tooltip: '更多',
+                style: const ButtonStyle(
+                  padding: WidgetStatePropertyAll(EdgeInsets.zero),
+                ),
+                onPressed: () => morePanel(context),
+                icon: const Icon(Icons.more_vert_outlined, size: 18),
               ),
-              onPressed: () => morePanel(context),
-              icon: const Icon(Icons.more_vert_outlined, size: 18),
             ),
           );
     final moduleTagText = !isDetail ? item.modules.moduleTag?.text : null;

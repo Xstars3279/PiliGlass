@@ -190,13 +190,15 @@ final List<SettingsModel> glassSettings = [
 UiGlassLevel _glassLevelNow() =>
     UiGlassLevel.values[(GStorage.setting.get(
       UiGlass.key,
-      defaultValue: 0,
+      defaultValue: UiGlassLevel.enhanced.index,
     ) as int).clamp(0, UiGlassLevel.values.length - 1)];
 
 String _glassLevelSubtitle() => switch (_glassLevelNow()) {
-  UiGlassLevel.none => '无：底栏、顶栏、面板都不透明，文字最清楚',
-  UiGlassLevel.standard => '标准：底栏、顶栏微微透出背后的内容，面板近乎不透明',
-  UiGlassLevel.extreme => '极致：底栏、顶栏更通透，边缘折射背后的内容，更耗电',
+  UiGlassLevel.none => '无：底栏、顶栏、面板都不透明，文字最清楚；重启生效',
+  UiGlassLevel.standard => '标准：浮层微微透出背后的内容，轻度模糊；重启生效',
+  UiGlassLevel.enhanced => '增强：底栏和顶部胶囊更透明并带折射，面板磨砂；重启生效',
+  UiGlassLevel.extreme =>
+    '极致：v0.1.4 的透明液态玻璃，底栏、面板都折射身后的内容；重启生效',
 };
 
 Future<void> _showGlassLevelDialog(

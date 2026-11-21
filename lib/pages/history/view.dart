@@ -1,8 +1,10 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/appbar/appbar.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart'
@@ -110,26 +112,53 @@ class _HistoryPageState extends State<HistoryPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     ?_buildPauseTip,
-                    TabBar(
-                      controller: _historyController.tabController,
-                      onTap: (index) {
-                        if (!_historyController
-                            .tabController!
-                            .indexIsChanging) {
-                          currCtr().scrollController.animToTop();
-                        } else {
-                          if (enableMultiSelect) {
-                            currCtr(
-                              _historyController.tabController!.previousIndex,
-                            ).handleSelect();
+                    if (Revamp.enabled)
+                      GlassTabStrip(
+                        items: [
+                          const GlassTabItem('全部'),
+                          ...tabs.map(
+                            (item) => GlassTabItem(item.name ?? ''),
+                          ),
+                        ],
+                        controller: _historyController.tabController!,
+                        capsule: true,
+                        refraction: false,
+                        centered: true,
+                        drag: GlassTabDrag.scrub,
+                        padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                        onSelected: (index) {
+                          // as the old bar's onTap: a re-tap goes back to the
+                          // top; a switch while selecting ends the selection
+                          // in the tab being left
+                          if (index ==
+                              _historyController.tabController!.index) {
+                            currCtr().scrollController.animToTop();
+                          } else if (enableMultiSelect) {
+                            currCtr().handleSelect();
                           }
-                        }
-                      },
-                      tabs: [
-                        const Tab(text: '全部'),
-                        ...tabs.map((item) => Tab(text: item.name)),
-                      ],
-                    ),
+                        },
+                      )
+                    else
+                      TabBar(
+                        controller: _historyController.tabController,
+                        onTap: (index) {
+                          if (!_historyController
+                              .tabController!
+                              .indexIsChanging) {
+                            currCtr().scrollController.animToTop();
+                          } else {
+                            if (enableMultiSelect) {
+                              currCtr(
+                                _historyController.tabController!.previousIndex,
+                              ).handleSelect();
+                            }
+                          }
+                        },
+                        tabs: [
+                          const Tab(text: '全部'),
+                          ...tabs.map((item) => Tab(text: item.name)),
+                        ],
+                      ),
                     Expanded(
                       child: TabBarView(
                         physics: enableMultiSelect

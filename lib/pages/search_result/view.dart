@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
@@ -104,62 +105,96 @@ class _SearchResultPageState extends State<SearchResultPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TabBar(
-              overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-              splashFactory: NoSplash.splashFactory,
-              padding: const EdgeInsets.only(top: 4, left: 8, right: 8),
-              controller: _tabController,
-              tabs: SearchType.actives
-                  .map(
-                    (item) => Obx(
-                      () {
-                        int count = _searchResultController.count[item.index];
-                        return Tab(
-                          text:
-                              '${item.label}${count != -1 ? ' ${count > 99 ? '99+' : count}' : ''}',
-                        );
-                      },
-                    ),
-                  )
-                  .toList(),
-              isScrollable: true,
-              // the redesign takes the app's tabs from the theme: a raised
-              // pill, bold labels
-              indicatorWeight: 0,
-              indicatorPadding: Revamp.enabled
-                  ? EdgeInsets.zero
-                  : const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
-              indicator: Revamp.enabled
-                  ? null
-                  : BoxDecoration(
-                      color: theme.colorScheme.secondaryContainer,
-                      borderRadius: const BorderRadius.all(Radius.circular(20)),
-                    ),
-              indicatorSize: TabBarIndicatorSize.tab,
-              labelColor: Revamp.enabled
-                  ? null
-                  : theme.colorScheme.onSecondaryContainer,
-              labelStyle: Revamp.enabled
-                  ? null
-                  : TabBarTheme.of(context).labelStyle
-                            ?.copyWith(fontSize: 13) ??
-                        const TextStyle(fontSize: 13),
-              dividerColor: Colors.transparent,
-              dividerHeight: 0,
-              unselectedLabelColor: Revamp.enabled
-                  ? null
-                  : theme.colorScheme.outline,
-              tabAlignment: TabAlignment.start,
-              onTap: (index) {
-                if (!_tabController.indexIsChanging) {
-                  if (_searchResultController.toTopIndex.value == index) {
-                    _searchResultController.toTopIndex.refresh();
-                  } else {
-                    _searchResultController.toTopIndex.value = index;
-                  }
+            if (Revamp.enabled)
+              Obx(() {
+                String labelOf(SearchType item) {
+                  final count = _searchResultController.count[item.index];
+                  if (count == -1) return item.label;
+                  return '${item.label} ${count > 99 ? '99+' : count}';
                 }
-              },
-            ),
+
+                return GlassTabStrip(
+                  items: [
+                    for (final item in SearchType.actives)
+                      GlassTabItem(labelOf(item)),
+                  ],
+                  controller: _tabController,
+                  capsule: true,
+                  refraction: false,
+                  centered: false,
+                  drag: GlassTabDrag.scrub,
+                  padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+                  onSelected: (index) {
+                    // as the old bar's onTap: only a re-tap goes back to the
+                    // top of the panel already shown
+                    if (index != _tabController.index) return;
+                    if (_searchResultController.toTopIndex.value == index) {
+                      _searchResultController.toTopIndex.refresh();
+                    } else {
+                      _searchResultController.toTopIndex.value = index;
+                    }
+                  },
+                );
+              })
+            else
+              TabBar(
+                overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+                splashFactory: NoSplash.splashFactory,
+                padding: const EdgeInsets.only(top: 4, left: 8, right: 8),
+                controller: _tabController,
+                tabs: SearchType.actives
+                    .map(
+                      (item) => Obx(
+                        () {
+                          int count = _searchResultController.count[item.index];
+                          return Tab(
+                            text:
+                                '${item.label}${count != -1 ? ' ${count > 99 ? '99+' : count}' : ''}',
+                          );
+                        },
+                      ),
+                    )
+                    .toList(),
+                isScrollable: true,
+                // the redesign takes the app's tabs from the theme: a raised
+                // pill, bold labels
+                indicatorWeight: 0,
+                indicatorPadding: Revamp.enabled
+                    ? EdgeInsets.zero
+                    : const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
+                indicator: Revamp.enabled
+                    ? null
+                    : BoxDecoration(
+                        color: theme.colorScheme.secondaryContainer,
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(20),
+                        ),
+                      ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelColor: Revamp.enabled
+                    ? null
+                    : theme.colorScheme.onSecondaryContainer,
+                labelStyle: Revamp.enabled
+                    ? null
+                    : TabBarTheme.of(context).labelStyle
+                              ?.copyWith(fontSize: 13) ??
+                          const TextStyle(fontSize: 13),
+                dividerColor: Colors.transparent,
+                dividerHeight: 0,
+                unselectedLabelColor: Revamp.enabled
+                    ? null
+                    : theme.colorScheme.outline,
+                tabAlignment: TabAlignment.start,
+                onTap: (index) {
+                  if (!_tabController.indexIsChanging) {
+                    if (_searchResultController.toTopIndex.value == index) {
+                      _searchResultController.toTopIndex.refresh();
+                    } else {
+                      _searchResultController.toTopIndex.value = index;
+                    }
+                  }
+                },
+              ),
             Expanded(
               child: tabBarView(
                 controller: _tabController,

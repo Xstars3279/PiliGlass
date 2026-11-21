@@ -24,8 +24,8 @@ abstract final class RevampTheme {
       PiliSheetMotion.reverseCurve = Curves.easeInCubic;
     }
     // menus, sheets and dialogs are panels (UiGlass, G2): white, solid at
-    // 无, at 标准 and 极致 just translucent enough for the patches to blur
-    // what is behind them; a shadow in the light, an outline in the dark
+    // 无, at the clear levels just translucent enough for the patches to
+    // blur what is behind them; a shadow in the light, an outline in the dark
     final panel = UiGlass.panel(colorScheme);
     final rim = UiGlass.side(colorScheme);
     // a Material's shadow at 6 comes near the panel's, see UiGlass.panelShadow

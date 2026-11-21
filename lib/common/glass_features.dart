@@ -42,7 +42,7 @@ abstract final class GlassFeatures {
   /// the video page tinted with the cover's color
   static final bool ambient = _get(ambientKey);
 
-  /// the glass bending what is behind it, at 透明效果 极致 only; see
+  /// the glass bending what is behind it, at 透明效果 增强 and 极致; see
   /// [UiGlass]
   static bool get refraction => UiGlass.refraction;
 

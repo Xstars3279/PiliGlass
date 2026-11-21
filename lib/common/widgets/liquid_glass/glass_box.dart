@@ -5,8 +5,8 @@ import 'package:material_ui/material_ui.dart';
 
 /// A panel floating over the page (UiGlass, G2), with a shadow, an outline
 /// in the dark: what the redesign's input boxes sit on, the reply box and
-/// the danmaku box among them. It carries text, so it is all but solid and
-/// never bends what is behind it.
+/// the danmaku box among them. It carries text, so it stays all but solid
+/// and only at 极致 bends what is behind it, as v0.1.4's panels did.
 class GlassBox extends StatelessWidget {
   const GlassBox({super.key, required this.child, this.radius = 24});
 
@@ -25,13 +25,16 @@ class GlassBox extends StatelessWidget {
       ),
       foregroundPainter: GlassRimPainter(
         radius: corner,
-        opacity: 0,
+        opacity: UiGlass.panelRim,
         isDark: isDark,
         edge: UiGlass.edge(colorScheme),
       ),
       child: LiquidGlass(
         radius: radius,
         blurSigma: UiGlass.panelBlur,
+        refractionHeight: UiGlass.panelRefractionHeight,
+        refractionAmount: UiGlass.panelRefractionAmount,
+        saturation: UiGlass.saturation,
         color: UiGlass.panel(colorScheme),
         child: child,
       ),

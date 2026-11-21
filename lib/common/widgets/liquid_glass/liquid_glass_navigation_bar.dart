@@ -17,6 +17,7 @@ import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/lens_motion.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:flutter/gestures.dart' show VelocityTracker, kTouchSlop;
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
@@ -674,9 +675,11 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
       button: true,
       label: action?.label ?? '搜索',
       excludeSemantics: true,
-      child: GestureDetector(
-        onTap: action?.onTap ?? _openSearch,
-        child: CustomPaint(
+      child: LiquidPress(
+        maxGrowth: 10,
+        child: GestureDetector(
+          onTap: action?.onTap ?? _openSearch,
+          child: CustomPaint(
           painter: GlassShadowPainter.of(
             radius: radius,
             shadow: UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
@@ -738,6 +741,7 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
               ),
             ),
           ),
+        ),
         ),
       ),
     );

@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_action_bar.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_menu.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
@@ -99,46 +101,55 @@ class _FollowPageState extends State<FollowPage>
           }),
     actions: _followController.isOwner
         ? [
-            IconButton(
-              onPressed: () => RequestUtils.createFavTag(
-                context,
-                _followController.onCreateFavTag,
-              ),
-              icon: const Icon(Icons.add),
-              tooltip: '新建分组',
-            ),
-            IconButton(
-              onPressed: () {
-                if (_followController.followState.value is! Success) {
-                  return;
-                }
-                Get.to(FollowTagSortPage(controller: _followController));
-              },
-              icon: const Icon(Icons.sort),
-              tooltip: '分组排序',
-            ),
-            IconButton(
-              onPressed: () => Get.toNamed(
-                '/followSearch',
-                arguments: {
-                  'mid': _followController.mid,
-                },
-              ),
-              icon: const Icon(Icons.search_outlined),
-              tooltip: '搜索',
-            ),
-            PopupMenuButton(
-              icon: const Icon(Icons.more_vert),
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  onTap: () => Get.toNamed('/blackListPage'),
-                  child: const Row(
-                    spacing: 10,
-                    mainAxisSize: .min,
-                    children: [
-                      Icon(Icons.block, size: 19),
-                      Text('黑名单管理'),
-                    ],
+            GlassActionBar(
+              refraction: false,
+              actions: [
+                IconButton(
+                  onPressed: () => RequestUtils.createFavTag(
+                    context,
+                    _followController.onCreateFavTag,
+                  ),
+                  icon: const Icon(Icons.add),
+                  tooltip: '新建分组',
+                ),
+                IconButton(
+                  onPressed: () {
+                    if (_followController.followState.value is! Success) {
+                      return;
+                    }
+                    Get.to(FollowTagSortPage(controller: _followController));
+                  },
+                  icon: const Icon(Icons.sort),
+                  tooltip: '分组排序',
+                ),
+                IconButton(
+                  onPressed: () => Get.toNamed(
+                    '/followSearch',
+                    arguments: {
+                      'mid': _followController.mid,
+                    },
+                  ),
+                  icon: const Icon(Icons.search_outlined),
+                  tooltip: '搜索',
+                ),
+                GlassPopupAnchor<Object?>(
+                  itemBuilder: (context) => <PopupMenuEntry>[
+                    PopupMenuItem(
+                      onTap: () => Get.toNamed('/blackListPage'),
+                      child: const Row(
+                        spacing: 10,
+                        mainAxisSize: .min,
+                        children: [
+                          Icon(Icons.block, size: 19),
+                          Text('黑名单管理'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  targetBuilder: (open) => IconButton(
+                    tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+                    onPressed: open,
+                    icon: const Icon(Icons.more_vert),
                   ),
                 ),
               ],

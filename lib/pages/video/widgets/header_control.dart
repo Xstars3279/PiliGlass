@@ -9,6 +9,9 @@ import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/plugin/pl_player/models/video_fit_type.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
+import 'package:PiliPlus/common/widgets/grow_from.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
+import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/common/widgets/dialog/report.dart';
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/common/widgets/marquee.dart';
@@ -372,7 +375,12 @@ class HeaderControlState extends State<HeaderControl>
   }
 
   /// 设置面板
-  void showSettingSheet() {
+  void showSettingSheet({BuildContext? from}) {
+    // the sheet grows out of the button that opened it
+    final box = from?.findRenderObject();
+    if (box is RenderBox && box.hasSize) {
+      PublishRoute.pendingMorph = box.localToGlobal(Offset.zero) & box.size;
+    }
     showBottomSheet(
       (context, setState) {
         final theme = Theme.of(context);
@@ -756,44 +764,53 @@ class HeaderControlState extends State<HeaderControl>
                   ),
                 ),
                 if (!isFileSource) ...[
-                  ListTile(
-                    dense: true,
-                    onTap: () {
-                      Get.back();
-                      showSetVideoQa();
-                    },
-                    leading: const Icon(Icons.play_circle_outline, size: 20),
-                    title: const Text('选择画质', style: titleStyle),
-                    subtitle: Text(
-                      '当前画质 ${videoDetailCtr.currentVideoQa.value?.desc}',
-                      style: subTitleStyle,
-                    ),
-                  ),
-                  if (videoDetailCtr.currentAudioQa != null)
-                    ListTile(
+                  Builder(
+                    builder: (rowContext) => ListTile(
                       dense: true,
                       onTap: () {
+                        final from = morphRectOf(rowContext);
                         Get.back();
-                        showSetAudioQa();
+                        showSetVideoQa(from: from);
                       },
-                      leading: const Icon(Icons.album_outlined, size: 20),
-                      title: const Text('选择音质', style: titleStyle),
+                      leading: const Icon(Icons.play_circle_outline, size: 20),
+                      title: const Text('选择画质', style: titleStyle),
                       subtitle: Text(
-                        '当前音质 ${videoDetailCtr.currentAudioQa!.desc}',
+                        '当前画质 ${videoDetailCtr.currentVideoQa.value?.desc}',
                         style: subTitleStyle,
                       ),
                     ),
-                  ListTile(
-                    dense: true,
-                    onTap: () {
-                      Get.back();
-                      showSetDecodeFormats();
-                    },
-                    leading: const Icon(Icons.av_timer_outlined, size: 20),
-                    title: const Text('解码格式', style: titleStyle),
-                    subtitle: Text(
-                      '当前解码格式 ${videoDetailCtr.currentDecodeFormats.description}',
-                      style: subTitleStyle,
+                  ),
+                  if (videoDetailCtr.currentAudioQa != null)
+                    Builder(
+                      builder: (rowContext) => ListTile(
+                        dense: true,
+                        onTap: () {
+                          final from = morphRectOf(rowContext);
+                          Get.back();
+                          showSetAudioQa(from: from);
+                        },
+                        leading: const Icon(Icons.album_outlined, size: 20),
+                        title: const Text('选择音质', style: titleStyle),
+                        subtitle: Text(
+                          '当前音质 ${videoDetailCtr.currentAudioQa!.desc}',
+                          style: subTitleStyle,
+                        ),
+                      ),
+                    ),
+                  Builder(
+                    builder: (rowContext) => ListTile(
+                      dense: true,
+                      onTap: () {
+                        final from = morphRectOf(rowContext);
+                        Get.back();
+                        showSetDecodeFormats(from: from);
+                      },
+                      leading: const Icon(Icons.av_timer_outlined, size: 20),
+                      title: const Text('解码格式', style: titleStyle),
+                      subtitle: Text(
+                        '当前解码格式 ${videoDetailCtr.currentDecodeFormats.description}',
+                        style: subTitleStyle,
+                      ),
                     ),
                   ),
                 ],
@@ -1048,7 +1065,7 @@ class HeaderControlState extends State<HeaderControl>
   }
 
   /// 选择画质
-  void showSetVideoQa() {
+  void showSetVideoQa({Rect? from}) {
     if (videoInfo.dash == null) {
       SmartDialog.showToast('当前视频不支持选择画质');
       return;
@@ -1059,6 +1076,9 @@ class HeaderControlState extends State<HeaderControl>
     final List<FormatItem> videoFormat = videoInfo.supportFormats!;
     final availableQa = videoInfo.dash!.video!.availableVideoQualities;
 
+    if (from != null) {
+      PublishRoute.pendingMorph = from;
+    }
     showBottomSheet(
       (context, setState) {
         final theme = Theme.of(context);
@@ -1150,9 +1170,12 @@ class HeaderControlState extends State<HeaderControl>
   }
 
   /// 选择音质
-  void showSetAudioQa() {
+  void showSetAudioQa({Rect? from}) {
     final AudioQuality currentAudioQa = videoDetailCtr.currentAudioQa!;
     final List<AudioItem> audio = videoInfo.dash!.audio!;
+    if (from != null) {
+      PublishRoute.pendingMorph = from;
+    }
     showBottomSheet(
       (context, setState) {
         final theme = Theme.of(context);
@@ -1229,7 +1252,7 @@ class HeaderControlState extends State<HeaderControl>
   }
 
   // 选择解码格式
-  void showSetDecodeFormats() {
+  void showSetDecodeFormats({Rect? from}) {
     final firstCode = videoDetailCtr.firstVideo.quality.code;
     // 当前视频可用的解码格式
     final videoFormat = videoInfo.supportFormats!;
@@ -1242,6 +1265,9 @@ class HeaderControlState extends State<HeaderControl>
 
     // 当前选中的解码格式
     final curCodecs = videoDetailCtr.currentDecodeFormats.codes;
+    if (from != null) {
+      PublishRoute.pendingMorph = from;
+    }
     showBottomSheet(
       (context, setState) {
         final colorScheme = ColorScheme.of(context);
@@ -2199,16 +2225,21 @@ class HeaderControlState extends State<HeaderControl>
                 SizedBox(
                   width: btnWidth,
                   height: btnHeight,
-                  child: IconButton(
-                    tooltip: "更多设置",
-                    style: btnStyle,
-                    onPressed: showSettingSheet,
-                    icon: Icon(
-                      Icons.more_vert_outlined,
-                      size: Revamp.enabled && isFullScreen
-                          ? RevampPlayerMetrics.compactIconSize
-                          : 19,
-                      color: Colors.white,
+                  child: LiquidPress(
+                    maxGrowth: 8,
+                    child: Builder(
+                      builder: (buttonContext) => IconButton(
+                        tooltip: "更多设置",
+                        style: btnStyle,
+                        onPressed: () => showSettingSheet(from: buttonContext),
+                        icon: Icon(
+                          Icons.more_vert_outlined,
+                          size: Revamp.enabled && isFullScreen
+                              ? RevampPlayerMetrics.compactIconSize
+                              : 19,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
                 ),

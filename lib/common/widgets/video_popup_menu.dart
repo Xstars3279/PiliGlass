@@ -2,6 +2,8 @@ import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/ui_icons.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_menu.dart';
 import 'package:PiliPlus/http/user.dart';
 import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/models/home/rcmd/result.dart';
@@ -42,17 +44,9 @@ class VideoPopupMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton(
-      padding: EdgeInsets.zero,
-      icon: Icon(
-        Icons.more_vert_outlined,
-        color: Theme.of(context).colorScheme.outline,
-        size: iconSize,
-      ),
-      position: PopupMenuPosition.under,
-      constraints: Revamp.enabled
-          ? const BoxConstraints(minWidth: 180, maxWidth: 280)
-          : null,
+    return GlassPopupAnchor<Object?>(
+      minWidth: Revamp.enabled ? 180 : 112,
+      maxWidth: Revamp.enabled ? 280 : 200,
       itemBuilder: (context) => _items(
           [
                 if (videoItem.bvid?.isNotEmpty == true) ...[
@@ -327,6 +321,12 @@ class VideoPopupMenu extends StatelessWidget {
                   MineController.onChangeAnonymity,
                 ),
               ]),
+      targetBuilder: (open) => GlassIconButton(
+        icon: Icon(Icons.more_vert_outlined, size: iconSize ?? 18),
+        color: Theme.of(context).colorScheme.outline,
+        size: 30,
+        onTap: open,
+      ),
     );
   }
 

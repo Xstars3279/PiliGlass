@@ -52,13 +52,16 @@ extension _VideoRevamp on _VideoDetailPageVState {
           spacing: UiSpace.s8,
           children: [
             Expanded(
-              child: Material(
+              child: Builder(
+                builder: (barContext) => Material(
                 // the same white as a field straight on the page
                 color: Revamp.onPage(colorScheme),
                 shape: capsule,
                 clipBehavior: .antiAlias,
                 child: InkWell(
-                  onTap: videoDetailController.showShootDanmakuSheet,
+                  onTap: () => videoDetailController.showShootDanmakuSheet(
+                    from: morphRectOf(barContext),
+                  ),
                   child: Padding(
                     padding: const .symmetric(horizontal: UiSpace.s12),
                     child: Row(
@@ -82,6 +85,7 @@ extension _VideoRevamp on _VideoDetailPageVState {
                       ],
                     ),
                   ),
+                ),
                 ),
               ),
             ),

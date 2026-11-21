@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/widgets/appbar/appbar.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
@@ -114,24 +116,51 @@ class _LaterPageState extends State<LaterPage>
             body: ViewSafeArea(
               child: Column(
                 children: [
-                  TabBar(
-                    // isScrollable: true,
-                    // tabAlignment: TabAlignment.start,
-                    controller: _tabController,
-                    tabs: LaterViewType.values.map((item) {
-                      final count = _baseCtr.counts[item.index];
-                      return Tab(
-                        text: '${item.title}${count != -1 ? '($count)' : ''}',
-                      );
-                    }).toList(),
-                    onTap: (_) {
-                      if (!_tabController.indexIsChanging) {
-                        currCtr().scrollController.animToTop();
-                      } else if (enableMultiSelect) {
-                        currCtr(_tabController.previousIndex).handleSelect();
-                      }
-                    },
-                  ),
+                  if (Revamp.enabled)
+                    GlassTabStrip(
+                      items: [
+                        for (final item in LaterViewType.values)
+                          GlassTabItem(
+                            '${item.title}'
+                            '${_baseCtr.counts[item.index] != -1 ? '(${_baseCtr.counts[item.index]})' : ''}',
+                          ),
+                      ],
+                      controller: _tabController,
+                      capsule: true,
+                      refraction: false,
+                      centered: true,
+                      drag: GlassTabDrag.scrub,
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                      onSelected: (index) {
+                        // as the old bar's onTap: a tap on the tab already
+                        // shown goes back to the top; a tap on another one
+                        // while selecting ends the selection in the tab left
+                        if (index == _tabController.index) {
+                          currCtr().scrollController.animToTop();
+                        } else if (enableMultiSelect) {
+                          currCtr().handleSelect();
+                        }
+                      },
+                    )
+                  else
+                    TabBar(
+                      // isScrollable: true,
+                      // tabAlignment: TabAlignment.start,
+                      controller: _tabController,
+                      tabs: LaterViewType.values.map((item) {
+                        final count = _baseCtr.counts[item.index];
+                        return Tab(
+                          text: '${item.title}${count != -1 ? '($count)' : ''}',
+                        );
+                      }).toList(),
+                      onTap: (_) {
+                        if (!_tabController.indexIsChanging) {
+                          currCtr().scrollController.animToTop();
+                        } else if (enableMultiSelect) {
+                          currCtr(_tabController.previousIndex).handleSelect();
+                        }
+                      },
+                    ),
                   Expanded(
                     child: TabBarView(
                       physics: enableMultiSelect

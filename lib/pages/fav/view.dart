@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
@@ -130,16 +132,23 @@ class _FavPageState extends State<FavPage> with SingleTickerProviderStateMixin {
       body: ViewSafeArea(
         child: Column(
           children: [
-            TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              tabs: FavTabType.values
-                  .map((item) => Tab(text: item.title))
-                  .toList(),
-              onTap: (index) {
-                try {
-                  if (!_tabController.indexIsChanging) {
+            if (Revamp.enabled)
+              GlassTabStrip(
+                items: [
+                  for (final item in FavTabType.values)
+                    GlassTabItem(item.title),
+                ],
+                controller: _tabController,
+                capsule: true,
+                refraction: false,
+                centered: false,
+                drag: GlassTabDrag.scrub,
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                onSelected: (index) {
+                  // as the old bar's onTap: only a tap on the tab already
+                  // shown goes back to the top
+                  if (index != _tabController.index) return;
+                  try {
                     switch (FavTabType.values[index]) {
                       case FavTabType.video:
                         _favController.scrollController.animToTop();
@@ -154,10 +163,38 @@ class _FavPageState extends State<FavPage> with SingleTickerProviderStateMixin {
                             .animToTop();
                       default:
                     }
-                  }
-                } catch (_) {}
-              },
-            ),
+                  } catch (_) {}
+                },
+              )
+            else
+              TabBar(
+                controller: _tabController,
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                tabs: FavTabType.values
+                    .map((item) => Tab(text: item.title))
+                    .toList(),
+                onTap: (index) {
+                  try {
+                    if (!_tabController.indexIsChanging) {
+                      switch (FavTabType.values[index]) {
+                        case FavTabType.video:
+                          _favController.scrollController.animToTop();
+                        case FavTabType.article:
+                          Get.find<FavArticleController>().scrollController
+                              .animToTop();
+                        case FavTabType.topic:
+                          Get.find<FavTopicController>().scrollController
+                              .animToTop();
+                        case FavTabType.cheese:
+                          Get.find<FavCheeseController>().scrollController
+                              .animToTop();
+                        default:
+                      }
+                    }
+                  } catch (_) {}
+                },
+              ),
             Expanded(
               child: tabBarView(
                 controller: _tabController,

@@ -2,6 +2,8 @@ import 'dart:io' show Platform;
 import 'dart:math' as math;
 
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_action_bar.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_menu.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
@@ -356,238 +358,247 @@ class _MemberPageState extends State<MemberPage> {
   }
 
   List<Widget> _actions(ColorScheme theme) => [
-    if (_userController.reserves?.isNotEmpty ?? false)
-      _reserveBtn(_userController.reserves!, theme),
-    IconButton(
-      tooltip: '搜索',
-      onPressed: () => Get.toNamed(
-        '/memberSearch?mid=$_mid&uname=${_userController.username}',
-      ),
-      icon: const Icon(Icons.search_outlined),
-    ),
-    PopupMenuButton(
-      icon: const Icon(Icons.more_vert),
-      itemBuilder: (_) => <PopupMenuEntry>[
-        if (_userController.account.mid != _mid) ...[
-          PopupMenuItem(
-            onTap: () => _userController.blockUser(context),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.block, size: 19),
-                const SizedBox(width: 10),
-                Text(
-                  _userController.relation.value != 128 ? '加入黑名单' : '移除黑名单',
-                ),
-              ],
-            ),
+    GlassActionBar(
+      refraction: false,
+      actions: [
+        if (_userController.reserves?.isNotEmpty ?? false)
+          _reserveBtn(_userController.reserves!, theme),
+        IconButton(
+          tooltip: '搜索',
+          onPressed: () => Get.toNamed(
+            '/memberSearch?mid=$_mid&uname=${_userController.username}',
           ),
-          if (_userController.account.isLogin &&
-              _userController.isFollowed == 1)
-            PopupMenuItem(
-              onTap: _userController.onRemoveFan,
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.remove_circle_outline_outlined, size: 19),
-                  SizedBox(width: 10),
-                  Text('移除粉丝'),
-                ],
-              ),
-            ),
-        ],
-        PopupMenuItem(
-          onTap: _userController.shareUser,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.share_outlined, size: 19),
-              const SizedBox(width: 10),
-              Text(
-                _userController.account.mid != _mid ? '分享UP主' : '分享我的主页',
-              ),
-            ],
-          ),
+          icon: const Icon(Icons.search_outlined),
         ),
-        if (PlatformUtils.isMobile)
-          PopupMenuItem(
-            onTap: _createShortcut,
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.add_box_outlined, size: 19),
-                SizedBox(width: 10),
-                Text('添加至桌面'),
-              ],
-            ),
-          ),
-        // if (_userController.hasCharge)
-        //   PopupMenuItem(
-        //     onTap: () => UpowerRankPage.toUpowerRank(
-        //       mid: _userController.mid,
-        //       name: _userController.username ?? '',
-        //       count: _userController.chargeCount,
-        //     ),
-        //     child: const Row(
-        //       mainAxisSize: MainAxisSize.min,
-        //       children: [
-        //         Icon(Icons.electric_bolt, size: 19),
-        //         SizedBox(width: 10),
-        //         Text('充电排行榜'),
-        //       ],
-        //     ),
-        //   ),
-        // if (_userController.hasGuard)
-        //   PopupMenuItem(
-        //     onTap: () => MemberGuard.toMemberGuard(
-        //       mid: _userController.mid,
-        //       name: _userController.username ?? '',
-        //       count: _userController.guardCount,
-        //     ),
-        //     child: const Row(
-        //       mainAxisSize: MainAxisSize.min,
-        //       children: [
-        //         Icon(Icons.anchor, size: 19),
-        //         SizedBox(width: 10),
-        //         Text('大航海舰队'),
-        //       ],
-        //     ),
-        //   ),
-        if (Get.isRegistered<MemberContributeCtr>(tag: _heroTag))
-          PopupMenuItem(
-            onTap: _toWebArchive,
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.extension_outlined, size: 19),
-                SizedBox(width: 10),
-                Text('网页投稿'),
-              ],
-            ),
-          ),
-        if (_userController.account.isLogin)
-          if (_userController.mid == _userController.account.mid) ...[
-            if ((_userController
-                        .loadingState
-                        .value
-                        .dataOrNull
-                        ?.card
-                        ?.vip
-                        ?.status ??
-                    0) >
-                0)
+        GlassPopupAnchor<Object?>(
+          itemBuilder: (_) => <PopupMenuEntry>[
+            if (_userController.account.mid != _mid) ...[
               PopupMenuItem(
-                onTap: _userController.vipExpAdd,
-                child: const Row(
+                onTap: () => _userController.blockUser(context),
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.upcoming_outlined, size: 19),
-                    SizedBox(width: 10),
-                    Text('大会员经验'),
+                    const Icon(Icons.block, size: 19),
+                    const SizedBox(width: 10),
+                    Text(
+                      _userController.relation.value != 128 ? '加入黑名单' : '移除黑名单',
+                    ),
                   ],
                 ),
               ),
-            PopupMenuItem(
-              onTap: () => Get.to(const LoginDevicesPage()),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.devices, size: 18),
-                  SizedBox(width: 10),
-                  Text('登录设备'),
-                ],
-              ),
-            ),
-            PopupMenuItem(
-              onTap: () => Get.to(
-                const LogPage(),
-                arguments: LoginLogController(),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.login, size: 18),
-                  SizedBox(width: 10),
-                  Text('登录记录'),
-                ],
-              ),
-            ),
-            PopupMenuItem(
-              onTap: () => Get.to(
-                const LogPage(),
-                arguments: CoinLogController(),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(FontAwesomeIcons.b, size: 16),
-                  SizedBox(width: 10),
-                  Text('硬币记录'),
-                ],
-              ),
-            ),
-            PopupMenuItem(
-              onTap: () => Get.to(
-                const LogPage(),
-                arguments: ExpLogController(),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.linear_scale, size: 18),
-                  SizedBox(width: 10),
-                  Text('经验记录'),
-                ],
-              ),
-            ),
-            PopupMenuItem(
-              onTap: () => Get.toNamed('/spaceSetting'),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.settings_outlined, size: 19),
-                  SizedBox(width: 10),
-                  Text('空间设置'),
-                ],
-              ),
-            ),
-          ] else ...[
-            if (_userController.isFollow)
-              PopupMenuItem(
-                onTap: _showFollowTime,
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.more_time_outlined, size: 19),
-                    SizedBox(width: 10),
-                    Text('关注时间'),
-                  ],
+              if (_userController.account.isLogin &&
+                  _userController.isFollowed == 1)
+                PopupMenuItem(
+                  onTap: _userController.onRemoveFan,
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.remove_circle_outline_outlined, size: 19),
+                      SizedBox(width: 10),
+                      Text('移除粉丝'),
+                    ],
+                  ),
                 ),
-              ),
-            const PopupMenuDivider(),
+            ],
             PopupMenuItem(
-              onTap: () => showMemberReportDialog(
-                context,
-                name: _userController.username,
-                mid: _mid,
-              ),
+              onTap: _userController.shareUser,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 19,
-                    color: theme.error,
-                  ),
+                  const Icon(Icons.share_outlined, size: 19),
                   const SizedBox(width: 10),
                   Text(
-                    '举报',
-                    style: TextStyle(color: theme.error),
+                    _userController.account.mid != _mid ? '分享UP主' : '分享我的主页',
                   ),
                 ],
               ),
             ),
+            if (PlatformUtils.isMobile)
+              PopupMenuItem(
+                onTap: _createShortcut,
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.add_box_outlined, size: 19),
+                    SizedBox(width: 10),
+                    Text('添加至桌面'),
+                  ],
+                ),
+              ),
+            // if (_userController.hasCharge)
+            //   PopupMenuItem(
+            //     onTap: () => UpowerRankPage.toUpowerRank(
+            //       mid: _userController.mid,
+            //       name: _userController.username ?? '',
+            //       count: _userController.chargeCount,
+            //     ),
+            //     child: const Row(
+            //       mainAxisSize: MainAxisSize.min,
+            //       children: [
+            //         Icon(Icons.electric_bolt, size: 19),
+            //         SizedBox(width: 10),
+            //         Text('充电排行榜'),
+            //       ],
+            //     ),
+            //   ),
+            // if (_userController.hasGuard)
+            //   PopupMenuItem(
+            //     onTap: () => MemberGuard.toMemberGuard(
+            //       mid: _userController.mid,
+            //       name: _userController.username ?? '',
+            //       count: _userController.guardCount,
+            //     ),
+            //     child: const Row(
+            //       mainAxisSize: MainAxisSize.min,
+            //       children: [
+            //         Icon(Icons.anchor, size: 19),
+            //         SizedBox(width: 10),
+            //         Text('大航海舰队'),
+            //       ],
+            //     ),
+            //   ),
+            if (Get.isRegistered<MemberContributeCtr>(tag: _heroTag))
+              PopupMenuItem(
+                onTap: _toWebArchive,
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.extension_outlined, size: 19),
+                    SizedBox(width: 10),
+                    Text('网页投稿'),
+                  ],
+                ),
+              ),
+            if (_userController.account.isLogin)
+              if (_userController.mid == _userController.account.mid) ...[
+                if ((_userController
+                            .loadingState
+                            .value
+                            .dataOrNull
+                            ?.card
+                            ?.vip
+                            ?.status ??
+                        0) >
+                    0)
+                  PopupMenuItem(
+                    onTap: _userController.vipExpAdd,
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.upcoming_outlined, size: 19),
+                        SizedBox(width: 10),
+                        Text('大会员经验'),
+                      ],
+                    ),
+                  ),
+                PopupMenuItem(
+                  onTap: () => Get.to(const LoginDevicesPage()),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.devices, size: 18),
+                      SizedBox(width: 10),
+                      Text('登录设备'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  onTap: () => Get.to(
+                    const LogPage(),
+                    arguments: LoginLogController(),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.login, size: 18),
+                      SizedBox(width: 10),
+                      Text('登录记录'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  onTap: () => Get.to(
+                    const LogPage(),
+                    arguments: CoinLogController(),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(FontAwesomeIcons.b, size: 16),
+                      SizedBox(width: 10),
+                      Text('硬币记录'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  onTap: () => Get.to(
+                    const LogPage(),
+                    arguments: ExpLogController(),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.linear_scale, size: 18),
+                      SizedBox(width: 10),
+                      Text('经验记录'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  onTap: () => Get.toNamed('/spaceSetting'),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.settings_outlined, size: 19),
+                      SizedBox(width: 10),
+                      Text('空间设置'),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                if (_userController.isFollow)
+                  PopupMenuItem(
+                    onTap: _showFollowTime,
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.more_time_outlined, size: 19),
+                        SizedBox(width: 10),
+                        Text('关注时间'),
+                      ],
+                    ),
+                  ),
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  onTap: () => showMemberReportDialog(
+                    context,
+                    name: _userController.username,
+                    mid: _mid,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 19,
+                        color: theme.error,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        '举报',
+                        style: TextStyle(color: theme.error),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
           ],
+          targetBuilder: (open) => IconButton(
+            tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+            onPressed: open,
+            icon: const Icon(Icons.more_vert),
+          ),
+        ),
       ],
     ),
     const SizedBox(width: 4),

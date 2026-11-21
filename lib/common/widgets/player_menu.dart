@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
+import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// One row of a menu over the video: its label, and what choosing it does.
@@ -139,11 +141,15 @@ class _PlayerMenuButtonState extends State<PlayerMenuButton> {
   Widget build(BuildContext context) {
     return CompositedTransformTarget(
       link: _link,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        excludeFromSemantics: true,
-        onTap: _open,
-        child: widget.child,
+      child: LiquidPress(
+        // the button swells under the finger, as the dock's do
+        maxGrowth: 10,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          excludeFromSemantics: true,
+          onTap: _open,
+          child: widget.child,
+        ),
       ),
     );
   }
@@ -164,34 +170,44 @@ class _Panel extends StatelessWidget {
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 160),
-      curve: Curves.easeOutCubic,
+      duration: const Duration(milliseconds: 420),
+      // out of the button: a spring that overshoots a little
+      curve: SpringCurve(Springs.bouncy, const Duration(milliseconds: 420)),
       builder: (context, t, child) => Opacity(
-        opacity: t,
+        opacity: t.clamp(0.0, 1.0),
         child: Transform.translate(
           offset: Offset(0, (1 - t) * UiSpace.s8),
-          child: child,
+          child: Transform.scale(
+            // it grows from the button under it, not from its own middle
+            alignment: Alignment.bottomCenter,
+            scale: 0.72 + 0.28 * t,
+            child: child,
+          ),
         ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(Revamp.menuRadius),
-        child: BackdropFilter(
-          // the picture still shows, blurred, through the black
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: DecoratedBox(
-            decoration: const BoxDecoration(color: Revamp.playerMenuColor),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(vertical: UiSpace.s8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (final row in rows)
-                    _Row(
-                      colorScheme: colorScheme,
-                      row: row,
-                      onChosen: onChosen,
-                    ),
-                ],
+      // a press inside the open menu swells it, as the dock does
+      child: LiquidPress(
+        maxGrowth: 8,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(Revamp.menuRadius),
+          child: BackdropFilter(
+            // the picture still shows, blurred, through the black
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: DecoratedBox(
+              decoration: const BoxDecoration(color: Revamp.playerMenuColor),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(vertical: UiSpace.s8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final row in rows)
+                      _Row(
+                        colorScheme: colorScheme,
+                        row: row,
+                        onChosen: onChosen,
+                      ),
+                  ],
+                ),
               ),
             ),
           ),

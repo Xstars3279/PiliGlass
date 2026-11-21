@@ -1,12 +1,12 @@
-import 'package:PiliPlus/common/revamp_theme.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
-import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
-import 'package:PiliPlus/utils/feed_back.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// A page's tabs on a capsule of refracting glass, floating over its feed:
 /// the home tabs and the 动态 tabs share it, so they look and move alike.
 /// The tabs start at the left and scroll if they run out of room.
+///
+/// The work is [GlassTabStrip]'s; this keeps the member page's API.
 class GlassTabBar extends StatelessWidget {
   const GlassTabBar({
     super.key,
@@ -39,50 +39,16 @@ class GlassTabBar extends StatelessWidget {
   static const fade = UiSpace.s24;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    return GlassCapsule(
-      // a feed passing under it is bent like the dock bends it
-      refraction: refraction,
-      child: ShaderMask(
-        blendMode: BlendMode.dstIn,
-        shaderCallback: (bounds) => LinearGradient(
-          colors: const [Colors.white, Colors.white, Colors.transparent],
-          stops: [
-            0,
-            ((bounds.width - fade) / bounds.width).clamp(0.0, 1.0),
-            1,
-          ],
-        ).createShader(Offset.zero & bounds.size),
-        child: TabBar(
-        controller: controller,
-        tabs: labels.map((e) => Tab(text: e)).toList(),
-        isScrollable: true,
-        tabAlignment: TabAlignment.start,
-        padding: EdgeInsets.zero,
-        labelPadding: const EdgeInsets.symmetric(horizontal: 14),
-        dividerColor: Colors.transparent,
-        dividerHeight: 0,
-        overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-        labelColor: colorScheme.onSecondaryContainer,
-        unselectedLabelColor: colorScheme.onSurfaceVariant,
-        labelStyle: theme.tabBarTheme.labelStyle,
-        unselectedLabelStyle: theme.tabBarTheme.unselectedLabelStyle,
-        indicatorSize: TabBarIndicatorSize.tab,
-        indicatorPadding: EdgeInsets.zero,
-        // the theme's pill, 4 inside the capsule all round, so the two
-        // rounds share a center
-        indicator: PillTabIndicator(
-          color: colorScheme.secondaryContainer,
-          insets: const EdgeInsets.all(UiSpace.s4),
-        ),
-        onTap: (index) {
-          feedBack();
-          onTap?.call(index);
-        },
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => GlassTabStrip(
+    items: [for (final label in labels) GlassTabItem(label)],
+    controller: controller,
+    // reported after the controller moves, as TabBar's own onTap is: the
+    // member page checks indexIsChanging to go back to the top
+    onTap: onTap,
+    capsule: true,
+    centered: false,
+    height: height,
+    refraction: refraction,
+    drag: GlassTabDrag.scrub,
+  );
 }

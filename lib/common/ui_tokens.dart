@@ -144,9 +144,14 @@ abstract final class UiColor {
 
 /// 透明效果 in 设置 › PiliGlass 特性: how much of the content shows
 /// through what floats over it. 无 by default: floating, but solid.
+///
+/// 增强 is the redesign's look until now, the level that used to be called
+/// 极致. 极致 is the liquid glass of v0.1.4: the shell a clear lens, and the
+/// panels bend what is behind them as well.
 enum UiGlassLevel {
   none('无'),
   standard('标准'),
+  enhanced('增强'),
   extreme('极致');
 
   const UiGlassLevel(this.label);
@@ -166,11 +171,11 @@ abstract final class UiGlass {
   static const String key = 'glassLevel';
 
   /// read once, like the other features: a restart applies a change.
-  /// 极致 is where the redesign starts.
+  /// 增强, the redesign's look until now, is where it starts.
   static final UiGlassLevel level =
       UiGlassLevel.values[(GStorage.setting.get(
                 key,
-                defaultValue: UiGlassLevel.extreme.index,
+                defaultValue: UiGlassLevel.enhanced.index,
               )
               as int)
           .clamp(0, UiGlassLevel.values.length - 1)];
@@ -178,33 +183,74 @@ abstract final class UiGlass {
   /// anything showing through at all
   static bool get clear => level != UiGlassLevel.none;
 
-  /// the shell bending what is behind it, at 极致 only
-  static bool get refraction => level == UiGlassLevel.extreme;
+  /// the shell bending what is behind it, at 增强 and 极致
+  static bool get refraction => level.index >= UiGlassLevel.enhanced.index;
 
-  /// the colors behind the shell made more vivid where it shows them
+  /// the liquid glass of 极致: much clearer, and the panels bend too
+  static bool get liquid => level == UiGlassLevel.extreme;
+
+  /// the colors behind the glass made more vivid where it shows them
   static double get saturation => clear ? 1.5 : 1;
 
   /// The unified alpha value across shell and panel floating surfaces.
   /// none: 1.0 (纯白不透明)
   /// standard: 0.90
-  /// extreme: 0.75 (75% 透明度)
+  /// enhanced: 0.75 (原来的极致)
+  /// extreme: 0.30 (v0.1.4 的透明液态玻璃，底栏 0.28、按钮 0.40)
   static double get alpha => switch (level) {
     UiGlassLevel.none => 1.0,
     UiGlassLevel.standard => 0.90,
-    UiGlassLevel.extreme => 0.75,
+    UiGlassLevel.enhanced => 0.75,
+    UiGlassLevel.extreme => 0.30,
   };
 
-  /// the shell: solid, 90% or 75%
+  /// the shell: solid, 90%, 75% or the clear 30% of 极致
   static double get shellAlpha => alpha;
-  static double get shellBlur => clear ? 6 : 0;
+  static double get shellBlur => switch (level) {
+    UiGlassLevel.none => 0,
+    UiGlassLevel.standard => 6,
+    UiGlassLevel.enhanced => 6,
+    // v0.1.4 let the lens do the work, not the blur
+    UiGlassLevel.extreme => 3,
+  };
   static Color shell(ColorScheme colorScheme) =>
       colorScheme.surfaceContainerLow.withValues(alpha: shellAlpha);
 
-  /// a panel: solid, 90% or 75%
-  static double get panelAlpha => alpha;
-  static double get panelBlur => clear ? 4 : 0;
+  /// a panel: solid, 90%, 75%, or the thick glass of 极致
+  static double get panelAlpha => switch (level) {
+    UiGlassLevel.none => 1.0,
+    UiGlassLevel.standard => 0.90,
+    UiGlassLevel.enhanced => 0.75,
+    UiGlassLevel.extreme => 0.66,
+  };
+  static double get panelBlur => switch (level) {
+    UiGlassLevel.none => 0,
+    UiGlassLevel.standard => 4,
+    UiGlassLevel.enhanced => 4,
+    // v0.1.4's GlassBox
+    UiGlassLevel.extreme => 16,
+  };
   static Color panel(ColorScheme colorScheme) =>
       colorScheme.surfaceContainerLow.withValues(alpha: panelAlpha);
+
+  /// a panel bending what is behind it, at 极致 only, as v0.1.4's GlassBox
+  /// did
+  static double get panelRefractionHeight => liquid ? 16 : 0;
+  static double get panelRefractionAmount => liquid ? 18 : 0;
+
+  /// the lit rim of a panel, back with the thick glass of 极致
+  static double get panelRim => liquid ? 0.75 : 0;
+
+  /// a bar floating over content, as the comment sheet's: the dock's clear
+  /// glass at 极致 (v0.1.4's input bar), the panel's tint elsewhere
+  static Color input(ColorScheme colorScheme) =>
+      colorScheme.surfaceContainerHigh.withValues(alpha: inputAlpha);
+  static double get inputAlpha => switch (level) {
+    UiGlassLevel.none => 1.0,
+    UiGlassLevel.standard => 0.90,
+    UiGlassLevel.enhanced => 0.75,
+    UiGlassLevel.extreme => 0.40,
+  };
 
   static const shellShadow = BoxShadow(
     color: Color(0x14000000),
@@ -233,6 +279,6 @@ abstract final class UiGlass {
     null => BorderSide.none,
   };
 
-  /// the lit rim of glass, at 极致 only, where the shell is glass
+  /// the lit rim of glass, at 增强 and 极致, where the shell is glass
   static double get rim => refraction ? 0.75 : 0;
 }

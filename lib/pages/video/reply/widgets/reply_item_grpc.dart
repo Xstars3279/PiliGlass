@@ -18,6 +18,7 @@ import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/common/widgets/text_ellipsis/text_ellipsis.dart';
 import 'package:PiliPlus/common/widgets/text_more/text_more.dart';
 import 'package:PiliPlus/common/widgets/translucent_row.dart';
+import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show ReplyInfo, ReplyControl, Content, Url, ReplyControl_VoteOption, Emote;
 import 'package:PiliPlus/grpc/reply.dart';
@@ -542,25 +543,33 @@ class ReplyItemGrpc extends StatelessWidget {
         const SizedBox(width: 36),
         SizedBox(
           height: 32,
-          child: TextButton(
-            style: buttonStyle,
-            onPressed: () {
-              feedBack();
-              onReply?.call(replyItem);
-            },
-            child: Row(
-              spacing: 3,
-              mainAxisSize: .min,
-              children: [
-                Icon(
-                  Revamp.enabled ? Icons.reply_rounded : Icons.reply,
-                  size: 18,
-                  color: Revamp.enabled
-                      ? colorScheme.onSurfaceVariant
-                      : colorScheme.outline.withValues(alpha: 0.8),
-                ),
-                Text('回复', style: textStyle),
-              ],
+          child: Builder(
+            builder: (buttonContext) => TextButton(
+              style: buttonStyle,
+              onPressed: () {
+                feedBack();
+                // the reply panel grows out of this button, over the list
+                final box = buttonContext.findRenderObject();
+                if (box is RenderBox && box.hasSize) {
+                  PublishRoute.pendingMorph =
+                      box.localToGlobal(Offset.zero) & box.size;
+                }
+                onReply?.call(replyItem);
+              },
+              child: Row(
+                spacing: 3,
+                mainAxisSize: .min,
+                children: [
+                  Icon(
+                    Revamp.enabled ? Icons.reply_rounded : Icons.reply,
+                    size: 18,
+                    color: Revamp.enabled
+                        ? colorScheme.onSurfaceVariant
+                        : colorScheme.outline.withValues(alpha: 0.8),
+                  ),
+                  Text('回复', style: textStyle),
+                ],
+              ),
             ),
           ),
         ),
