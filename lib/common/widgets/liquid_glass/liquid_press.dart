@@ -14,6 +14,21 @@ import 'package:flutter/widgets.dart';
 /// risen; it rises all the way first, as UIKit lifts a tab bar's lens.
 ///
 /// Off with 设置 › PiliGlass 特性 › 按压回弹, like the cards' dip.
+/// Drives a [LiquidPress] with a press it does not hear, at global
+/// positions, e.g. a finger that went down on the button and then slid into
+/// the menu the button opened.
+class LiquidPressController {
+  _LiquidPressState? _state;
+
+  void press(Offset globalPosition) => _state?._pressGlobal(globalPosition);
+
+  void drag(Offset globalPosition) => _state?._dragGlobal(globalPosition);
+
+  void release() => _state?._release();
+
+  void cancel() => _state?._release();
+}
+
 class LiquidPress extends StatefulWidget {
   const LiquidPress({
     super.key,
@@ -22,6 +37,7 @@ class LiquidPress extends StatefulWidget {
     this.maxGrowth = 16,
     this.pullPastEdges = false,
     this.panelOf,
+    this.controller,
   });
 
   final bool enabled;
@@ -35,6 +51,10 @@ class LiquidPress extends StatefulWidget {
 
   /// Where the pressed panel lies in this box, when the box is larger.
   final Rect Function(RenderBox box)? panelOf;
+
+  /// Lets a menu the button opened keep the press going after the finger
+  /// leaves the button.
+  final LiquidPressController? controller;
 
   final Widget child;
 
@@ -95,14 +115,45 @@ class _LiquidPressState extends State<LiquidPress>
   void initState() {
     super.initState();
     _lift.addListener(_settle);
+    widget.controller?._state = this;
+  }
+
+  @override
+  void didUpdateWidget(LiquidPress old) {
+    super.didUpdateWidget(old);
+    if (old.controller != widget.controller) {
+      if (old.controller?._state == this) {
+        old.controller!._state = null;
+      }
+      widget.controller?._state = this;
+    }
   }
 
   @override
   void dispose() {
+    if (widget.controller?._state == this) {
+      widget.controller!._state = null;
+    }
     _lift.dispose();
     _pullX.dispose();
     _pullY.dispose();
     super.dispose();
+  }
+
+  void _pressGlobal(Offset globalPosition) {
+    if (!mounted || !_enabled) return;
+    final box = context.findRenderObject();
+    if (box is RenderBox && box.hasSize) {
+      _swell(box.globalToLocal(globalPosition));
+    }
+  }
+
+  void _dragGlobal(Offset globalPosition) {
+    if (!mounted) return;
+    final box = context.findRenderObject();
+    if (box is RenderBox && box.hasSize) {
+      _pullToward(box.globalToLocal(globalPosition));
+    }
   }
 
   void _swell(Offset origin) {
