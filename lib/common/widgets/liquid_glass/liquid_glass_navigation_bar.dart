@@ -48,8 +48,9 @@ const _kPullStretch = 0.5;
 
 const _kBarHeight = UiSpace.dock;
 const _kBarPadding = 4.0;
-// the selected tab's pill, 8 inside the bar above and below
-const _kPillHeight = 48.0;
+// the selected tab's pill, 4 inside the bar all round, so its round and the
+// bar's are concentric: 32 - 4 = 28 = pill height / 2
+const _kPillHeight = 56.0;
 const _kTabWidth = 82.0;
 // pressed, the pill swells to 78 high as it always did, whatever its height
 // at rest; and as wide as it always grew
@@ -497,7 +498,9 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
                       _width / 2 + panelOffset,
                       _kBarHeight / 2,
                     ),
-                    width: _width * barScale * stretch,
+                    // a hair wider than the bar, so the bar's edge never
+                    // shows inside the pill as a thinner inner bar
+                    width: _width * barScale * stretch + 2,
                     height: _kPillHeight,
                   ),
                   child: LiquidGlass(

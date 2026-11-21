@@ -75,7 +75,8 @@ class _GlassPopupAnchorState<T> extends State<GlassPopupAnchor<T>> {
       barrierDismissible: true,
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
       barrierColor: Colors.transparent,
-      transitionDuration: const Duration(milliseconds: 360),
+      // as long as the spring takes to settle, so the last frame is 1:1
+      transitionDuration: const Duration(milliseconds: 460),
       pageBuilder: (context, _, _) => _AnchoredGlassMenu<T>(
         items: items,
         anchor: anchor,
@@ -144,14 +145,22 @@ class _AnchoredGlassMenu<T> extends StatelessWidget {
               builder: (context, child) {
                 final t = SpringCurve(
                   Springs.bouncy,
-                  const Duration(milliseconds: 360),
+                  const Duration(milliseconds: 460),
                 ).transform(animation.value);
+                final settled = t.clamp(0.0, 1.0);
+                // It starts as a small copy over the button itself, not a
+                // faded full-size panel: the button seems to hand over its
+                // glass, then the menu grows away from it.
                 return Opacity(
-                  opacity: t.clamp(0.0, 1.0),
+                  opacity: 0.3 + 0.7 * settled,
                   child: Transform.translate(
-                    offset: Offset(0, (below ? 1 : -1) * (1 - t) * 6),
+                    offset: Offset(
+                      0,
+                      (1 - settled) * (below ? -anchor.height : anchor.height) +
+                          (below ? 1 : -1) * (1 - settled) * 6,
+                    ),
                     child: Transform.scale(
-                      scale: 0.78 + 0.22 * t,
+                      scale: 0.24 + 0.76 * t,
                       alignment: alignment,
                       child: child,
                     ),

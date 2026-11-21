@@ -2,6 +2,8 @@ import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -15,8 +17,8 @@ class CustomToast extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
-    // the redesign: a solid capsule in the inverse surface, 36 high, that
-    // pops in on a spring; never glass (11.5)
+    // the redesign: a capsule of the level's glass, 36 high, that pops in
+    // on a spring and follows 透明效果 like the dock
     if (Revamp.enabled && GlassFeatures.toast) {
       return Padding(
         padding: .only(
@@ -31,26 +33,52 @@ class CustomToast extends StatelessWidget {
           ),
           builder: (context, t, child) =>
               Transform.scale(scale: 0.8 + 0.2 * t, child: child),
-          child: Container(
-            height: 36,
-            padding: const .symmetric(horizontal: UiSpace.s16),
-            decoration: ShapeDecoration(
-              color: colorScheme.inverseSurface,
-              shape: const StadiumBorder(),
-            ),
-            // widthFactor 1, not Container's alignment: that one wraps the
-            // child in an Align that takes the whole width the toast host
-            // offers, and the capsule came out as a strip across the screen
-            child: Align(
-              alignment: Alignment.center,
-              widthFactor: 1,
-              child: Text(
-                msg,
-                maxLines: 1,
-                overflow: .ellipsis,
-                style: UiType.label.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: colorScheme.onInverseSurface,
+          child: Align(
+            alignment: Alignment.center,
+            widthFactor: 1,
+            child: CustomPaint(
+              painter: GlassShadowPainter.of(
+                radius: const Radius.circular(18),
+                shadow: UiGlass.shadowIn(
+                  colorScheme,
+                  UiGlass.shellShadow,
+                ),
+              ),
+              foregroundPainter: GlassRimPainter(
+                radius: const Radius.circular(18),
+                opacity: UiGlass.rim * 0.7,
+                isDark: colorScheme.brightness == .dark,
+                edge: UiGlass.edge(colorScheme),
+              ),
+              child: LiquidGlass(
+                radius: 18,
+                blurSigma: UiGlass.shellBlur,
+                refractionHeight: UiGlass.refraction ? 12 : 0,
+                refractionAmount: UiGlass.refraction ? 14 : 0,
+                saturation: UiGlass.saturation,
+                color: UiGlass.input(colorScheme),
+                // widthFactor 1, not Container's alignment: that one wraps
+                // the child in an Align that takes the whole width the toast
+                // host offers, and the capsule came out as a strip across
+                // the screen
+                child: SizedBox(
+                  height: 36,
+                  child: Padding(
+                    padding: const .symmetric(horizontal: UiSpace.s16),
+                    child: Align(
+                      alignment: Alignment.center,
+                      widthFactor: 1,
+                      child: Text(
+                        msg,
+                        maxLines: 1,
+                        overflow: .ellipsis,
+                        style: UiType.label.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
