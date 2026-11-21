@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
@@ -402,7 +403,7 @@ class _GlassTabStripState extends State<GlassTabStrip>
             bottom: 8,
             child: DecoratedBox(
               decoration: ShapeDecoration(
-                color: colorScheme.secondaryContainer,
+                color: UiGlass.selected(colorScheme),
                 shape: const StadiumBorder(),
               ),
             ),

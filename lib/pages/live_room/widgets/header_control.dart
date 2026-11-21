@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/draggable_sheet/dyn.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
 import 'package:PiliPlus/common/widgets/marquee.dart';
 import 'package:PiliPlus/pages/live_room/controller.dart';
 import 'package:PiliPlus/pages/setting/models/play_settings.dart'
@@ -117,10 +118,12 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
       child: Row(
         children: [
           if (isFullScreen || plPlayerController.isDesktopPip)
-            ComBtn(
-              height: btnHeight,
-              tooltip: '返回',
-              icon: const Icon(FontAwesomeIcons.arrowLeft, size: 15),
+            GlassBackButton(
+              overlay: true,
+              size: btnHeight,
+              tapSize: btnHeight + 4,
+              iconSize: 15,
+              icon: const Icon(FontAwesomeIcons.arrowLeft),
               onTap: () {
                 if (plPlayerController.isDesktopPip) {
                   plPlayerController.exitDesktopPip();

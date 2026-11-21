@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -98,6 +99,7 @@ class _ArticleListPageState extends State<ArticleListPage> with GridMixin {
       style: TextStyle(color: theme.colorScheme.outline.withValues(alpha: 0.7)),
     );
     return SliverAppBar.medium(
+      leading: const Center(child: GlassBackButton()),
       title: Text(item.name!),
       pinned: true,
       expandedHeight: kToolbarHeight + 127,

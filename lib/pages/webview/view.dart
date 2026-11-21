@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
 import 'package:PiliPlus/common/widgets/route_aware_mixin.dart'
     show routeObserver;
 import 'package:PiliPlus/common/widgets/selection_text.dart';
@@ -303,6 +304,7 @@ document.addEventListener('click', function(e) {
       appBar: widget.url != null
           ? null
           : AppBar(
+              leading: const Center(child: GlassBackButton()),
               title: Obx(
                 () => Text(
                   _title.value.isNotEmpty ? _title.value : _currentUrl,
@@ -382,6 +384,7 @@ document.addEventListener('click', function(e) {
       appBar: widget.url != null
           ? null
           : AppBar(
+              leading: const Center(child: GlassBackButton()),
               title: Obx(
                 () => Text(
                   _title.value.isNotEmpty ? _title.value : _currentUrl,

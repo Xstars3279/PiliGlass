@@ -7,6 +7,7 @@ import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/ui_icons.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_capsule.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
@@ -168,7 +169,7 @@ class _MediaPageState extends CommonPageState<MinePage>
       left: widget.showBackBtn
           ? const Padding(
               padding: EdgeInsets.only(left: 8),
-              child: BackButton(),
+              child: GlassBackButton(),
             )
           : const SizedBox.shrink(),
       right: _headerGroup(

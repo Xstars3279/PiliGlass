@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models_new/sub/sub/list.dart';
@@ -136,6 +137,7 @@ class _SubDetailPageState extends State<SubDetailPage> with GridMixin {
     return SliverAppBar.medium(
       expandedHeight: kToolbarHeight + 132,
       pinned: true,
+      leading: const Center(child: GlassBackButton()),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

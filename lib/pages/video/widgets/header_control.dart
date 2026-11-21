@@ -10,6 +10,7 @@ import 'package:PiliPlus/plugin/pl_player/models/video_fit_type.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/grow_from.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/common/widgets/dialog/report.dart';
@@ -1909,22 +1910,16 @@ class HeaderControlState extends State<HeaderControl>
             left: Row(
               mainAxisSize: .min,
               children: [
-                SizedBox(
-                  width: btnWidth,
-                  height: btnHeight,
-                  child: IconButton(
-                    tooltip: '返回',
-                    style: btnStyle,
-                    icon: Icon(
-                      FontAwesomeIcons.arrowLeft,
-                      size: Revamp.enabled && isFullScreen
-                          ? RevampPlayerMetrics.compactIconSize
-                          : 15,
-                      color: Colors.white,
-                    ),
-                    onPressed: () =>
-                        plPlayerController.onPopInvokedWithResult(false, null),
-                  ),
+                GlassBackButton(
+                  overlay: true,
+                  size: btnHeight - 2,
+                  tapSize: btnHeight,
+                  iconSize: Revamp.enabled && isFullScreen
+                      ? RevampPlayerMetrics.compactIconSize
+                      : 15,
+                  icon: const Icon(FontAwesomeIcons.arrowLeft),
+                  onTap: () =>
+                      plPlayerController.onPopInvokedWithResult(false, null),
                 ),
                 // in the redesign's full screen 回到主页 is in the ⋯ menu
                 if (!plPlayerController.isDesktopPip &&

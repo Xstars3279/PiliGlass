@@ -7,6 +7,7 @@ import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/draggable_sheet/dyn.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/text_field.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
 import 'package:PiliPlus/common/widgets/pair.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart'
     show platformClampingPhysics;
@@ -327,24 +328,12 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
       children: [
         Align(
           alignment: Alignment.centerLeft,
-          child: SizedBox(
-            width: 34,
-            height: 34,
-            child: IconButton(
-              tooltip: '返回',
-              style: ButtonStyle(
-                padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-                backgroundColor: WidgetStatePropertyAll(
-                  theme.colorScheme.secondaryContainer,
-                ),
-              ),
-              onPressed: Get.back,
-              icon: Icon(
-                Icons.arrow_back_outlined,
-                size: 18,
-                color: theme.colorScheme.onSecondaryContainer,
-              ),
-            ),
+          child: GlassBackButton(
+            size: 34,
+            tapSize: 34,
+            iconSize: 18,
+            icon: const Icon(Icons.arrow_back_outlined),
+            onTap: Get.back,
           ),
         ),
         Center(

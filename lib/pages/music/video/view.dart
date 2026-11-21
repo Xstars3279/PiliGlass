@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
@@ -77,6 +78,7 @@ class _MusicRecommendPageState extends State<MusicRecommendPage>
     final info = _controller.musicDetail;
     return SliverAppBar(
       pinned: true,
+      leading: const Center(child: GlassBackButton()),
       title: Row(
         spacing: 12,
         children: [

@@ -4,7 +4,8 @@ import 'package:material_ui/material_ui.dart';
 
 /// A page's tabs on a capsule of refracting glass, floating over its feed:
 /// the home tabs and the 动态 tabs share it, so they look and move alike.
-/// The tabs start at the left and scroll if they run out of room.
+/// The capsule keeps to the tabs it holds and sits in the middle, as the
+/// home page's top bar does; a row too long for the room scrolls.
 ///
 /// The work is [GlassTabStrip]'s; this keeps the member page's API.
 class GlassTabBar extends StatelessWidget {
@@ -46,7 +47,7 @@ class GlassTabBar extends StatelessWidget {
     // member page checks indexIsChanging to go back to the top
     onTap: onTap,
     capsule: true,
-    centered: false,
+    centered: true,
     height: height,
     refraction: refraction,
     drag: GlassTabDrag.scrub,

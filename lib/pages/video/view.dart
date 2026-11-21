@@ -5,6 +5,7 @@ import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/motion/cover_hero.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/grow_from.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_menu.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
@@ -697,18 +698,13 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                 child: Row(
                   mainAxisSize: .min,
                   children: [
-                    SizedBox(
-                      width: 42,
-                      height: 34,
-                      child: IconButton(
-                        tooltip: '返回',
-                        icon: Icon(
-                          FontAwesomeIcons.arrowLeft,
-                          size: 15,
-                          color: colorScheme.onSurface,
-                        ),
-                        onPressed: Get.back,
-                      ),
+                    GlassBackButton(
+                      size: 32,
+                      tapSize: 42,
+                      iconSize: 15,
+                      icon: const Icon(FontAwesomeIcons.arrowLeft),
+                      color: colorScheme.onSurface,
+                      onTap: Get.back,
                     ),
                     SizedBox(
                       width: 42,
@@ -1146,25 +1142,13 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             height: kToolbarHeight,
             child: Row(
               children: [
-                SizedBox(
-                  width: 42,
-                  height: 34,
-                  child: IconButton(
-                    tooltip: '返回',
-                    style: _overlayBtnStyle,
-                    icon: const Icon(
-                      FontAwesomeIcons.arrowLeft,
-                      size: 15,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          blurRadius: 1.5,
-                          color: Colors.black,
-                        ),
-                      ],
-                    ),
-                    onPressed: Get.back,
-                  ),
+                GlassBackButton(
+                  overlay: true,
+                  size: 34,
+                  tapSize: 42,
+                  iconSize: 15,
+                  icon: const Icon(FontAwesomeIcons.arrowLeft),
+                  onTap: Get.back,
                 ),
                 SizedBox(
                   width: 42,

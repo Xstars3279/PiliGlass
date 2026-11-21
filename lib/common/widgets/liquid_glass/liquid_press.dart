@@ -336,4 +336,30 @@ class _RenderPressTransform extends RenderProxyBox {
       oldLayer: layer is TransformLayer ? layer as TransformLayer? : null,
     );
   }
+
+  /// The swell and the stretch are painted, so positions and hit tests that
+  /// come in from outside (a finger sliding through the menu) have to be
+  /// mapped through them as well.
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    if (_lift == 0 && _pull == .zero) {
+      return;
+    }
+    transform.multiply(_transform);
+  }
+
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    if (_lift == 0 && _pull == .zero) {
+      return super.hitTest(result, position: position);
+    }
+    final inverse = Matrix4.tryInvert(_transform);
+    if (inverse == null) {
+      return false;
+    }
+    return super.hitTest(
+      result,
+      position: MatrixUtils.transformPoint(inverse, position),
+    );
+  }
 }

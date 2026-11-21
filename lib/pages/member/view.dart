@@ -2,7 +2,8 @@ import 'dart:io' show Platform;
 import 'dart:math' as math;
 
 import 'package:PiliPlus/common/revamp.dart';
-import 'package:PiliPlus/common/widgets/liquid_glass/glass_action_bar.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_menu.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -107,6 +108,7 @@ class _MemberPageState extends State<MemberPage> {
               if (response != null) {
                 return [
                   DynamicSliverAppBar.medium(
+                    leading: const GlassBackButton(),
                     actions: _actions(theme),
                     title: Text(_userController.username ?? ''),
                     flexibleSpace: Obx(
@@ -134,6 +136,7 @@ class _MemberPageState extends State<MemberPage> {
               return [
                 SliverAppBar(
                   pinned: true,
+                  leading: const GlassBackButton(),
                   actions: _actions(theme),
                   title: GestureDetector(
                     onTap: _userController.onReload,
@@ -358,14 +361,18 @@ class _MemberPageState extends State<MemberPage> {
   }
 
   List<Widget> _actions(ColorScheme theme) => [
-    GlassActionBar(
-      refraction: false,
-      actions: [
+    Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 8,
+      children: [
         if (_userController.reserves?.isNotEmpty ?? false)
           _reserveBtn(_userController.reserves!, theme),
-        IconButton(
+        GlassIconButton(
+          size: 46,
+          tapSize: 48,
+          iconSize: 22,
           tooltip: '搜索',
-          onPressed: () => Get.toNamed(
+          onTap: () => Get.toNamed(
             '/memberSearch?mid=$_mid&uname=${_userController.username}',
           ),
           icon: const Icon(Icons.search_outlined),
@@ -593,9 +600,12 @@ class _MemberPageState extends State<MemberPage> {
                 ),
               ],
           ],
-          targetBuilder: (open) => IconButton(
+          targetBuilder: (open) => GlassIconButton(
+            size: 46,
+            tapSize: 48,
+            iconSize: 22,
             tooltip: MaterialLocalizations.of(context).showMenuTooltip,
-            onPressed: open,
+            onTap: open,
             icon: const Icon(Icons.more_vert),
           ),
         ),

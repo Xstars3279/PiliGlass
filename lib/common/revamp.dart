@@ -2,6 +2,7 @@ import 'package:PiliPlus/common/motion/appear_in.dart';
 import 'package:PiliPlus/common/motion/pressable_scale.dart';
 import 'package:PiliPlus/common/ui_icons.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -322,10 +323,15 @@ class RevampLargeAppBar extends StatelessWidget {
       ),
       // medium, not large: its title is the large title's 24, and it sits
       // just below the bar instead of a bar's height lower
-      child: SliverAppBar.medium(
-        automaticallyImplyLeading: implyLeading,
-        title: Text(title),
-        actions: actions,
+      // the implicit back arrow gets the PiliGlass coin, and the slot keeps
+      // its width and the bar its height
+      child: ActionIconTheme(
+        data: glassBackActionIconTheme,
+        child: SliverAppBar.medium(
+          automaticallyImplyLeading: implyLeading,
+          title: Text(title),
+          actions: actions,
+        ),
       ),
     );
   }

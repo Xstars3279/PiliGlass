@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
 import 'package:PiliPlus/common/widgets/slotted_layout_helper.dart';
 import 'package:flutter/rendering.dart' show ChildLayoutHelper;
 import 'package:material_ui/material_ui.dart';
@@ -20,12 +21,17 @@ class SimpleScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: backgroundColor,
-      child: ScaffoldLayout(
-        fab: fab,
-        appBar: appBar,
-        body: body,
+    // the bars' implicit back arrows as glass coins, without touching their
+    // slots: the bar keeps its tap, tooltip, width and height
+    return ActionIconTheme(
+      data: glassBackActionIconTheme,
+      child: Material(
+        color: backgroundColor,
+        child: ScaffoldLayout(
+          fab: fab,
+          appBar: appBar,
+          body: body,
+        ),
       ),
     );
   }

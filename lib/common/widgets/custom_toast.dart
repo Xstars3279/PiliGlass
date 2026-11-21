@@ -36,6 +36,9 @@ class CustomToast extends StatelessWidget {
           child: Align(
             alignment: Alignment.center,
             widthFactor: 1,
+            // heightFactor 1 is load-bearing: without it this Align expands
+            // to the whole screen and the toast sits in the middle of it.
+            heightFactor: 1,
             child: CustomPaint(
               painter: GlassShadowPainter.of(
                 radius: const Radius.circular(18),

@@ -233,6 +233,25 @@ abstract final class UiGlass {
   static Color panel(ColorScheme colorScheme) =>
       colorScheme.surfaceContainerLow.withValues(alpha: panelAlpha);
 
+  /// A menu floats over the content and is read at a glance, so it takes
+  /// more of what is behind it as the glass gets deeper: solid at 无, nearly
+  /// solid at 标准, and clearly liquid at 极致.
+  static double get menuAlpha => switch (level) {
+    UiGlassLevel.none => 1.0,
+    UiGlassLevel.standard => 0.90,
+    UiGlassLevel.enhanced => 0.78,
+    UiGlassLevel.extreme => 0.54,
+  };
+  static Color menu(ColorScheme colorScheme) =>
+      colorScheme.surfaceContainerLow.withValues(alpha: menuAlpha);
+
+  /// The pill behind the selected tab, in the bottom bar and the top tabs.
+  /// At 极致 it lets 30% of the content behind it through, so the moving
+  /// indicator reads as a tinted lens rather than a solid chip.
+  static double get selectedAlpha => liquid ? 0.70 : 1.0;
+  static Color selected(ColorScheme colorScheme) =>
+      colorScheme.secondaryContainer.withValues(alpha: selectedAlpha);
+
   /// a panel bending what is behind it, at 极致 only, as v0.1.4's GlassBox
   /// did
   static double get panelRefractionHeight => liquid ? 16 : 0;

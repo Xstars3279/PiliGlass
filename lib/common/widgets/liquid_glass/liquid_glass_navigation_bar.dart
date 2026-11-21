@@ -756,7 +756,7 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     final isDark = colorScheme.brightness == .dark;
     final viewPadding = MediaQuery.viewPaddingOf(context);
     final barTint = UiGlass.shell(colorScheme);
-    final selectedFill = colorScheme.secondaryContainer;
+    final selectedFill = UiGlass.selected(colorScheme);
 
     final baseTabs = IconTheme.merge(
       data: IconThemeData(size: 24, color: colorScheme.onSurfaceVariant),

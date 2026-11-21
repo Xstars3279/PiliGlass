@@ -11,6 +11,7 @@ import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
 import 'package:PiliPlus/common/widgets/route_aware_mixin.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart'
@@ -588,6 +589,14 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       backgroundColor: Colors.transparent,
       foregroundColor: Colors.white,
       titleTextStyle: const TextStyle(color: Colors.white),
+      leading: isFullScreen || plPlayerController.isDesktopPip
+          ? null
+          : const Center(
+              child: GlassBackButton(
+                overlay: true,
+                color: Colors.white,
+              ),
+            ),
       title: isFullScreen || plPlayerController.isDesktopPip
           ? null
           : Obx(

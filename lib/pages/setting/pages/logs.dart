@@ -3,6 +3,7 @@ import 'dart:convert' show jsonDecode;
 
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/selection_text.dart';
 import 'package:PiliPlus/services/logger.dart';
@@ -108,6 +109,7 @@ class _LogsPageState extends State<LogsPage> {
     final padding = MediaQuery.viewPaddingOf(context);
     return Scaffold(
       appBar: AppBar(
+        leading: const Center(child: GlassBackButton()),
         title: const Text('日志'),
         actions: [
           PopupMenuButton(

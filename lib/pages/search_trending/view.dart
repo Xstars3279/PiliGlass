@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/sliver/trending_header.dart';
@@ -102,6 +103,12 @@ class _SearchTrendingPageState extends State<SearchTrendingPage> {
                     alpha: scrollRatio,
                   ),
                   foregroundColor: flag ? null : Colors.white,
+                  leading: Center(
+                    child: GlassBackButton(
+                      overlay: !flag,
+                      color: flag ? null : Colors.white,
+                    ),
+                  ),
                   systemOverlayStyle: flag
                       ? null
                       : const SystemUiOverlayStyle(

@@ -7,3 +7,11 @@ void feedBack() {
     HapticFeedback.lightImpact();
   }
 }
+
+/// The tick of moving from one choice to the next, e.g. under a finger that
+/// is sliding through a menu. Follows 设置 › 震动反馈.
+void feedBackSelection() {
+  if (enableFeedback) {
+    HapticFeedback.selectionClick();
+  }
+}
