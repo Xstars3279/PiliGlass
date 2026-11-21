@@ -77,6 +77,10 @@ class _GlassPopupAnchorState<T> extends State<GlassPopupAnchor<T>> {
       barrierColor: Colors.transparent,
       // as long as the spring takes to settle, so the last frame is 1:1
       transitionDuration: const Duration(milliseconds: 460),
+      // no default fade: the menu's own growth from the button is the whole
+      // transition, and a fade on top of it reads as a plain fade
+      transitionBuilder: (context, animation, secondaryAnimation, child) =>
+          child,
       pageBuilder: (context, _, _) => _AnchoredGlassMenu<T>(
         items: items,
         anchor: anchor,
