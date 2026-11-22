@@ -147,8 +147,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
   }
 
   List<Widget> buildInputView() {
-    final field = Obx(
-      () => RichTextField(
+    final field = RichTextField(
         key: key,
         controller: editController,
         minLines: Revamp.enabled ? 2 : 4,
@@ -163,8 +162,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
           hintStyle: const TextStyle(fontSize: 14),
         ),
         style: theme.textTheme.bodyLarge,
-      ),
-    );
+      );
     return [
       if (Revamp.enabled)
         _revampField(field)
