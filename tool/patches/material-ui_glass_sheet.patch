@@ -1,5 +1,5 @@
 diff --git a/lib/src/bottom_sheet.dart b/lib/src/bottom_sheet.dart
-index 0d5c5c9..676a1bf 100644
+index 4cfdac2..b9d0f1b 100644
 --- a/lib/src/bottom_sheet.dart
 +++ b/lib/src/bottom_sheet.dart
 @@ -6,7 +6,7 @@
@@ -20,7 +20,59 @@ index 0d5c5c9..676a1bf 100644
        reverseDuration: sheetAnimationStyle?.reverseDuration ?? _kBottomSheetExitDuration,
        debugLabel: 'BottomSheet',
        vsync: vsync,
-@@ -416,6 +416,8 @@ class _BottomSheetState<T extends BottomSheet> extends State<T> {
+@@ -258,8 +258,11 @@ class BottomSheet extends StatefulWidget {
+   }
+ }
+ 
+-class _BottomSheetState extends State<BottomSheet> {
++typedef BottomSheetState<T extends BottomSheet> = _BottomSheetState<T>;
++
++class _BottomSheetState<T extends BottomSheet> extends State<T> {
+   final GlobalKey _childKey = GlobalKey(debugLabel: 'BottomSheet child');
++  GlobalKey get childKey => _childKey;
+ 
+   double get _childHeight {
+     final renderBox = _childKey.currentContext!.findRenderObject()! as RenderBox;
+@@ -270,14 +273,14 @@ class _BottomSheetState extends State<BottomSheet> {
+ 
+   Set<WidgetState> dragHandleStates = <WidgetState>{};
+ 
+-  void _handleDragStart(DragStartDetails details) {
++  void handleDragStart(DragStartDetails details) {
+     setState(() {
+       dragHandleStates.add(WidgetState.dragged);
+     });
+     widget.onDragStart?.call(details);
+   }
+ 
+-  void _handleDragUpdate(DragUpdateDetails details) {
++  void handleDragUpdate(DragUpdateDetails details) {
+     assert(
+       (widget.enableDrag || (widget.showDragHandle ?? false)) && widget.animationController != null,
+       "'BottomSheet.animationController' cannot be null when 'BottomSheet.enableDrag' or 'BottomSheet.showDragHandle' is true. "
+@@ -289,7 +292,7 @@ class _BottomSheetState extends State<BottomSheet> {
+     widget.animationController!.value -= details.primaryDelta! / _childHeight;
+   }
+ 
+-  void _handleDragEnd(DragEndDetails details) {
++  void handleDragEnd(DragEndDetails details) {
+     assert(
+       (widget.enableDrag || (widget.showDragHandle ?? false)) && widget.animationController != null,
+       "'BottomSheet.animationController' cannot be null when 'BottomSheet.enableDrag' or 'BottomSheet.showDragHandle' is true. "
+@@ -381,9 +384,9 @@ class _BottomSheetState extends State<BottomSheet> {
+       // no need to add it.
+       if (!widget.enableDrag) {
+         dragHandle = _BottomSheetGestureDetector(
+-          onVerticalDragStart: _handleDragStart,
+-          onVerticalDragUpdate: _handleDragUpdate,
+-          onVerticalDragEnd: _handleDragEnd,
++          onVerticalDragStart: handleDragStart,
++          onVerticalDragUpdate: handleDragUpdate,
++          onVerticalDragEnd: handleDragEnd,
+           child: dragHandle,
+         );
+       }
+@@ -414,6 +417,8 @@ class _BottomSheetState extends State<BottomSheet> {
        ),
      );
  
@@ -29,11 +81,21 @@ index 0d5c5c9..676a1bf 100644
      if (constraints != null) {
        bottomSheet = Align(
          alignment: Alignment.bottomCenter,
-@@ -435,6 +437,53 @@ class _BottomSheetState<T extends BottomSheet> extends State<T> {
+@@ -425,14 +430,60 @@ class _BottomSheetState extends State<BottomSheet> {
+     return !widget.enableDrag
+         ? bottomSheet
+         : _BottomSheetGestureDetector(
+-            onVerticalDragStart: _handleDragStart,
+-            onVerticalDragUpdate: _handleDragUpdate,
+-            onVerticalDragEnd: _handleDragEnd,
++            onVerticalDragStart: handleDragStart,
++            onVerticalDragUpdate: handleDragUpdate,
++            onVerticalDragEnd: handleDragEnd,
+             child: bottomSheet,
+           );
    }
  }
  
-+
 +// PiliPlus: a translucent sheet or dialog blurs what is behind it, like
 +// glass; an opaque one is drawn as before
 +Widget _piliGlass(Widget child, ShapeBorder? shape, Color? color, {bool extendDown = false}) {
@@ -83,7 +145,7 @@ index 0d5c5c9..676a1bf 100644
  // PERSISTENT BOTTOM SHEETS
  
  // See scaffold.dart
-@@ -693,8 +742,8 @@ class _ModalBottomSheetState<T> extends State<_ModalBottomSheet<T>> {
+@@ -694,8 +745,8 @@ class _ModalBottomSheetState<T> extends State<_ModalBottomSheet<T>> {
      super.initState();
      _curvedSheetAnimation = CurvedAnimation(
        parent: widget.route.animation!,
@@ -94,7 +156,7 @@ index 0d5c5c9..676a1bf 100644
      );
      _sheetAnimation = ProxyAnimation(_curvedSheetAnimation);
    }
-@@ -705,11 +754,11 @@ class _ModalBottomSheetState<T> extends State<_ModalBottomSheet<T>> {
+@@ -706,11 +757,11 @@ class _ModalBottomSheetState<T> extends State<_ModalBottomSheet<T>> {
      assert(oldWidget.route == widget.route);
  
      assert(
@@ -108,7 +170,7 @@ index 0d5c5c9..676a1bf 100644
      );
    }
  
-@@ -748,11 +797,11 @@ class _ModalBottomSheetState<T> extends State<_ModalBottomSheet<T>> {
+@@ -756,11 +807,11 @@ class _ModalBottomSheetState<T> extends State<_ModalBottomSheet<T>> {
        parent: widget.route.animation!,
        curve: Split(
          currentProgress,
@@ -121,8 +183,8 @@ index 0d5c5c9..676a1bf 100644
 +        endCurve: widget.animationStyle?.reverseCurve ?? PiliSheetMotion.reverseCurve ?? _kModalBottomSheetCurve,
        ),
      );
-   }
-@@ -1092,6 +1141,7 @@ class ModalBottomSheetRoute<T> extends PopupRoute<T> {
+     _sheetAnimation.parent = _dragEndCurvedAnimation;
+@@ -1104,6 +1155,7 @@ class ModalBottomSheetRoute<T> extends PopupRoute<T> {
    Duration get transitionDuration =>
        transitionAnimationController?.duration ??
        sheetAnimationStyle?.duration ??
@@ -130,8 +192,16 @@ index 0d5c5c9..676a1bf 100644
        _kBottomSheetEnterDuration;
  
    @override
+@@ -1502,6 +1554,7 @@ class _BottomSheetGestureDetector extends StatelessWidget {
+                   ..onStart = onVerticalDragStart
+                   ..onUpdate = onVerticalDragUpdate
+                   ..onEnd = onVerticalDragEnd
++                  ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context)
+                   ..onlyAcceptDragOnThreshold = true;
+               },
+             ),
 diff --git a/lib/src/dialog.dart b/lib/src/dialog.dart
-index eb3580d..8b33f86 100644
+index 2668c5a..ba83fd9 100644
 --- a/lib/src/dialog.dart
 +++ b/lib/src/dialog.dart
 @@ -10,7 +10,8 @@
@@ -144,42 +214,41 @@ index eb3580d..8b33f86 100644
  
  import 'package:cupertino_ui/cupertino_ui.dart';
  import 'package:flutter/foundation.dart';
-@@ -289,16 +290,20 @@ class Dialog extends StatelessWidget {
-         alignment: alignment ?? dialogTheme.alignment ?? defaults.alignment!,
-         child: ConstrainedBox(
-           constraints: boxConstraints,
--          child: Material(
--            color: backgroundColor ?? dialogTheme.backgroundColor ?? defaults.backgroundColor,
--            elevation: elevation ?? dialogTheme.elevation ?? defaults.elevation!,
--            shadowColor: shadowColor ?? dialogTheme.shadowColor ?? defaults.shadowColor,
--            surfaceTintColor:
--                surfaceTintColor ?? dialogTheme.surfaceTintColor ?? defaults.surfaceTintColor,
--            shape: shape ?? dialogTheme.shape ?? defaults.shape!,
--            type: MaterialType.card,
--            clipBehavior: clipBehavior ?? dialogTheme.clipBehavior ?? defaults.clipBehavior!,
--            child: child,
-+          child: _piliGlass(
-+            Material(
-+              color: backgroundColor ?? dialogTheme.backgroundColor ?? defaults.backgroundColor,
-+              elevation: elevation ?? dialogTheme.elevation ?? defaults.elevation!,
-+              shadowColor: shadowColor ?? dialogTheme.shadowColor ?? defaults.shadowColor,
-+              surfaceTintColor:
-+                  surfaceTintColor ?? dialogTheme.surfaceTintColor ?? defaults.surfaceTintColor,
-+              shape: shape ?? dialogTheme.shape ?? defaults.shape!,
-+              type: MaterialType.card,
-+              clipBehavior: clipBehavior ?? dialogTheme.clipBehavior ?? defaults.clipBehavior!,
-+              child: child,
-+            ),
-+            shape ?? dialogTheme.shape ?? defaults.shape,
-+            backgroundColor ?? dialogTheme.backgroundColor ?? defaults.backgroundColor,
+@@ -303,16 +304,20 @@ class Dialog extends StatelessWidget {
+           alignment: alignment ?? dialogTheme.alignment ?? defaults.alignment!,
+           child: ConstrainedBox(
+             constraints: boxConstraints,
+-            child: Material(
+-              color: backgroundColor ?? dialogTheme.backgroundColor ?? defaults.backgroundColor,
+-              elevation: elevation ?? dialogTheme.elevation ?? defaults.elevation!,
+-              shadowColor: shadowColor ?? dialogTheme.shadowColor ?? defaults.shadowColor,
+-              surfaceTintColor:
+-                  surfaceTintColor ?? dialogTheme.surfaceTintColor ?? defaults.surfaceTintColor,
+-              shape: shape ?? dialogTheme.shape ?? defaults.shape!,
+-              type: MaterialType.card,
+-              clipBehavior: clipBehavior ?? dialogTheme.clipBehavior ?? defaults.clipBehavior!,
+-              child: child,
++            child: _piliGlass(
++              Material(
++                color: backgroundColor ?? dialogTheme.backgroundColor ?? defaults.backgroundColor,
++                elevation: elevation ?? dialogTheme.elevation ?? defaults.elevation!,
++                shadowColor: shadowColor ?? dialogTheme.shadowColor ?? defaults.shadowColor,
++                surfaceTintColor:
++                    surfaceTintColor ?? dialogTheme.surfaceTintColor ?? defaults.surfaceTintColor,
++                shape: shape ?? dialogTheme.shape ?? defaults.shape!,
++                type: MaterialType.card,
++                clipBehavior: clipBehavior ?? dialogTheme.clipBehavior ?? defaults.clipBehavior!,
++                child: child,
++              ),
++              shape ?? dialogTheme.shape ?? defaults.shape,
++              backgroundColor ?? dialogTheme.backgroundColor ?? defaults.backgroundColor,
+             ),
            ),
          ),
-       );
-@@ -323,6 +328,46 @@ class Dialog extends StatelessWidget {
+@@ -346,6 +351,44 @@ class Dialog extends StatelessWidget {
    }
  }
  
-+
 +// PiliPlus: a translucent sheet or dialog blurs what is behind it, like
 +// glass; an opaque one is drawn as before
 +Widget _piliGlass(Widget child, ShapeBorder? shape, Color? color, {bool extendDown = false}) {
@@ -217,7 +286,6 @@ index eb3580d..8b33f86 100644
 +    ],
 +  );
 +}
-+
 +
  /// A Material Design alert dialog.
  ///
