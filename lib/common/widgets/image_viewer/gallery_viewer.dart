@@ -46,7 +46,7 @@ import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:flutter/gestures.dart' show LongPressGestureRecognizer;
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:get/get.dart';
-import 'package:material_ui/material_ui.dart' hide Image;
+import 'package:material_ui/material_ui.dart' hide Image, Springs;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 

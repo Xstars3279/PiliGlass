@@ -3,7 +3,7 @@ import 'dart:math' as math;
 
 import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/motion/springs.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart' hide Springs;
 
 /// Rises and fades in, staggered by [index], when it is built shortly after
 /// [since] (the moment the list's data arrived), and again when a refresh

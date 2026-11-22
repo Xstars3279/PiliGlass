@@ -36,7 +36,7 @@ import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart' hide Springs;
 
 class ImageModel {
   ImageModel({

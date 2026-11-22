@@ -2,7 +2,7 @@ import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart' hide Springs;
 
 /// The redesign's look for the standard components, so the pages that are
 /// not redesigned one by one (most of them) still speak the same language:

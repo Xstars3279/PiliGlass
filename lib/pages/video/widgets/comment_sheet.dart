@@ -18,7 +18,7 @@ import 'package:PiliPlus/pages/video/reply_reply/view.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:flutter/scheduler.dart' show SchedulerBinding;
 import 'package:get/get.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart' hide Springs;
 
 /// Whether a video's comment sheet is up, one per reply controller, so the
 /// preview card in the intro can raise the sheet that wraps the page.

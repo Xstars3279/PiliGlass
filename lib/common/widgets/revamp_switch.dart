@@ -1,5 +1,5 @@
 import 'package:PiliPlus/common/motion/springs.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart' hide Springs;
 
 /// The redesign's switch: a white thumb on a track that fills with the
 /// primary color. The thumb springs to its side and, like jelly, stretches

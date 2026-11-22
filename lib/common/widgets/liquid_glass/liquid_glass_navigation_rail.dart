@@ -15,7 +15,7 @@ import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass_navigation_bar
     show LiquidGlassDockAction, LiquidGlassNavigationDestination;
 import 'package:flutter/gestures.dart' show VelocityTracker, kTouchSlop;
 import 'package:flutter/services.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart' hide Springs;
 
 /// Springs of the dock, see liquid_glass_navigation_bar.dart.
 SpringDescription _spring(double ratio, double stiffness) =>
