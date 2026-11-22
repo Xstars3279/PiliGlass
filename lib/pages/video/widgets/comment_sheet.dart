@@ -587,8 +587,8 @@ class _CommentSheetState extends State<CommentSheet>
 
   void _reply() => _replyCtr.onReply(
     null,
-    oid: _replyCtr.aid,
-    replyType: _replyCtr.videoType.replyType,
+    oid: _replyCtr.oid,
+    replyType: _replyCtr.replyType,
     mentionItem: _replyCtr.mentionItem,
   );
 
@@ -837,7 +837,7 @@ class _CommentSheetState extends State<CommentSheet>
           rpid: thread.rpid,
           dialog: thread.dialog,
           firstFloor: thread.firstFloor,
-          replyType: _replyCtr.videoType.replyType,
+          replyType: _replyCtr.replyType,
           isVideoDetail: true,
           upMid: _replyCtr.upMid,
           inSheet: true,

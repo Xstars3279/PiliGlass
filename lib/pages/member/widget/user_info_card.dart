@@ -32,7 +32,6 @@ import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/bili_colors.dart';
 import 'package:PiliPlus/utils/bili_utils.dart';
 import 'package:PiliPlus/utils/color_utils.dart';
-import 'package:PiliPlus/utils/extension/context_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
@@ -85,7 +84,7 @@ class UserInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isLight = colorScheme.isLight;
-    final width = context.width;
+    final width = MediaQuery.widthOf(context);
     final isPortrait = width < 600;
     return ViewSafeArea(
       top: !isPortrait,
@@ -326,9 +325,14 @@ class UserInfoCard extends StatelessWidget {
   }
 
   Widget _buildExtraInfo(ColorScheme colorScheme) {
-    final style = TextStyle(fontSize: 12, color: colorScheme.outline);
+    final style = TextStyle(
+      fontSize: 12,
+      height: 1,
+      color: colorScheme.outline,
+    );
+    const strutStyle = StrutStyle(leading: 0, height: 1, fontSize: 12);
     return Padding(
-      padding: const .only(left: 20, top: 6, right: 20),
+      padding: const .only(left: 20, top: 8, right: 20),
       child: Wrap(
         spacing: 10,
         runSpacing: 8,
@@ -336,7 +340,11 @@ class UserInfoCard extends StatelessWidget {
         children: [
           GestureDetector(
             onTap: () => Utils.copyText(card.mid.toString()),
-            child: Text('UID: ${card.mid}', style: style),
+            child: Text(
+              'UID: ${card.mid}',
+              style: style,
+              strutStyle: strutStyle,
+            ),
           ),
           ...?card.spaceTag?.map(
             (item) {
@@ -346,6 +354,7 @@ class UserInfoCard extends StatelessWidget {
                 style: hasUri
                     ? TextStyle(fontSize: 12, color: colorScheme.secondary)
                     : style,
+                strutStyle: strutStyle,
               );
               if (hasUri) {
                 return GestureDetector(
@@ -380,6 +389,7 @@ class UserInfoCard extends StatelessWidget {
                   child: Text(
                     '粉丝勋章${hasMedalName ? ': $medalName' : ''}',
                     style: style,
+                    strutStyle: strutStyle,
                   ),
                 );
               },

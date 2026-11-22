@@ -29,7 +29,6 @@ import 'package:PiliPlus/pages/emote/controller.dart';
 import 'package:PiliPlus/pages/emote/view.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
-import 'package:PiliPlus/utils/extension/context_ext.dart';
 import 'package:PiliPlus/utils/grid.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
 import 'package:collection/collection.dart';
@@ -572,7 +571,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
 
   @override
   Widget buildMorePanel() {
-    double height = context.isTablet ? 300 : 170;
+    double height = MediaQuery.isTabletOf(context) ? 300 : 170;
     final keyboardHeight = controller.keyboardHeight;
     if (keyboardHeight != 0) {
       height = max(height, keyboardHeight);
@@ -686,28 +685,25 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
     selected: false,
   );
 
-  Widget _buildEditWidget() => Obx(
-    () => RichTextField(
-      key: key,
-      controller: editController,
-      minLines: 4,
-      maxLines: null,
-      focusNode: focusNode,
-      readOnly: readOnly.value,
-      onChanged: onChanged,
-      onSubmitted: onSubmitted,
-      decoration: InputDecoration(
-        hintText: '说点什么吧',
-        visualDensity: .standard,
-        hintStyle: TextStyle(color: theme.colorScheme.outline),
-        border: const OutlineInputBorder(
-          borderSide: BorderSide.none,
-          gapPadding: 0,
-        ),
-        contentPadding: EdgeInsets.zero,
+  Widget _buildEditWidget() => RichTextField(
+    key: key,
+    controller: editController,
+    minLines: 4,
+    maxLines: null,
+    focusNode: focusNode,
+    onChanged: onChanged,
+    onSubmitted: onSubmitted,
+    decoration: InputDecoration(
+      hintText: '说点什么吧',
+      visualDensity: .standard,
+      hintStyle: TextStyle(color: theme.colorScheme.outline),
+      border: const OutlineInputBorder(
+        borderSide: BorderSide.none,
+        gapPadding: 0,
       ),
-      // inputFormatters: [LengthLimitingTextInputFormatter(1000)],
+      contentPadding: EdgeInsets.zero,
     ),
+    // inputFormatters: [LengthLimitingTextInputFormatter(1000)],
   );
 
   @override

@@ -292,7 +292,7 @@ class VideoCardH extends StatelessWidget {
               maxLines: 1,
               style: UiType.caption.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
-                overflow: .clip,
+                overflow: .ellipsis,
               ),
             ),
             if (videoItem.isLive != true)
@@ -340,7 +340,7 @@ class VideoCardH extends StatelessWidget {
                 fontSize: 12,
                 height: 1,
                 color: theme.colorScheme.outline,
-                overflow: .clip,
+                overflow: .ellipsis,
               ),
             ),
             if (videoItem.isLive != true) ...[

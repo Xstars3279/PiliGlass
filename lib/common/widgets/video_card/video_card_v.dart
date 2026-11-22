@@ -283,7 +283,7 @@ class VideoCardV extends StatelessWidget {
                         ? '${videoItem.owner.name} · ${DateFormatUtils.dateFormat(videoItem.pubdate, short: shortFormat, long: longFormat)}'
                         : videoItem.owner.name.toString(),
                     maxLines: 1,
-                    overflow: .clip,
+                    overflow: .ellipsis,
                     semanticsLabel: 'UP：${videoItem.owner.name}',
                     style: TextStyle(
                       height: 1.5,

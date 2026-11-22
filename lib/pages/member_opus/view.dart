@@ -187,7 +187,10 @@ class _MemberOpusState extends State<MemberOpus>
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: CollectionSection(collection: collection),
+                  child: CollectionSection(
+                    collection: collection,
+                    onCollapse: _controller.onCollapseCollection,
+                  ),
                 ),
                 child,
               ],

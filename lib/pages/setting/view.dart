@@ -17,7 +17,6 @@ import 'package:PiliPlus/pages/setting/widgets/multi_select_dialog.dart';
 import 'package:PiliPlus/pages/webdav/view.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
-import 'package:PiliPlus/utils/extension/size_ext.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
@@ -113,9 +112,8 @@ class _SettingPageState extends State<SettingPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
     theme = Theme.of(context);
-    _isPortrait = MediaQuery.sizeOf(context).isPortrait;
+    _isPortrait = MediaQuery.isPortraitOf(context);
   }
 
   /// Large title that collapses as the list scrolls, and the entries in
