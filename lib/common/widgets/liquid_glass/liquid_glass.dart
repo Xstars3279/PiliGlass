@@ -221,9 +221,14 @@ class RenderLiquidGlass extends RenderProxyBox {
       ..setFloat(13, _chromaticAberration)
       ..setFloat(14, _saturation);
     final lens = ui.ImageFilter.shader(shader);
+    // The lens reads the backdrop itself and the blur frosts what it bent.
+    // Under a blur, Impeller re-rasterizes the lens's input from an origin
+    // taken from the layer's transform; a home page shown again by a jump of
+    // its PageView keeps its layers, that origin lands ~70px to the right,
+    // and a strip at each glass's left end is left unfiltered.
     return blur == null
         ? lens
-        : ui.ImageFilter.compose(outer: lens, inner: blur);
+        : ui.ImageFilter.compose(outer: blur, inner: lens);
   }
 
   @override

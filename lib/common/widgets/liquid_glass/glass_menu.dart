@@ -177,6 +177,15 @@ class _GlassPopupAnchorState<T> extends State<GlassPopupAnchor<T>> {
     _route = route;
     Navigator.of(context, rootNavigator: true).push<T>(route);
 
+    // The route takes the drop off the screen in the frame its animation is
+    // dismissed, but [completed] resolves only after that frame: shown then,
+    // the button would be missing for a frame and seem to hop back in.
+    route.animation!.addStatusListener((status) {
+      if (status.isDismissed && mounted) {
+        _hidden.value = false;
+      }
+    });
+
     unawaited(
       route.completed.then<void>((_) {
         if (!mounted) {
@@ -1323,9 +1332,10 @@ class RenderGlassMenuMorph extends RenderProxyBox {
         ..setFloat(13, 0)
         ..setFloat(14, UiGlass.saturation);
       final lens = ui.ImageFilter.shader(shader);
+      // lens first, then the blur, as in LiquidGlass: see there
       return blur == null
           ? lens
-          : ui.ImageFilter.compose(outer: lens, inner: blur);
+          : ui.ImageFilter.compose(outer: blur, inner: lens);
     }
     if (UiGlass.saturation == 1) {
       return blur;
