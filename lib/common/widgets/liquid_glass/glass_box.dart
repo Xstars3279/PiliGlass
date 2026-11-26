@@ -18,26 +18,30 @@ class GlassBox extends StatelessWidget {
     final colorScheme = ColorScheme.of(context);
     final isDark = colorScheme.brightness == .dark;
     final corner = Radius.circular(radius);
-    return CustomPaint(
-      painter: GlassShadowPainter.of(
-        radius: corner,
-        shadow: UiGlass.shadowIn(colorScheme, UiGlass.panelShadow),
+    return ListenableBuilder(
+      listenable: UiGlass.revision,
+      builder: (context, child) => CustomPaint(
+        painter: GlassShadowPainter.of(
+          radius: corner,
+          shadow: UiGlass.shadowIn(colorScheme, UiGlass.panelShadow),
+        ),
+        foregroundPainter: GlassRimPainter(
+          radius: corner,
+          opacity: UiGlass.panelRim,
+          isDark: isDark,
+          edge: UiGlass.edge(colorScheme),
+        ),
+        child: LiquidGlass(
+          radius: radius,
+          blurSigma: UiGlass.panelBlur,
+          refractionHeight: UiGlass.panelRefractionHeight,
+          refractionAmount: UiGlass.panelRefractionAmount,
+          saturation: UiGlass.saturation,
+          color: UiGlass.panel(colorScheme),
+          child: child,
+        ),
       ),
-      foregroundPainter: GlassRimPainter(
-        radius: corner,
-        opacity: UiGlass.panelRim,
-        isDark: isDark,
-        edge: UiGlass.edge(colorScheme),
-      ),
-      child: LiquidGlass(
-        radius: radius,
-        blurSigma: UiGlass.panelBlur,
-        refractionHeight: UiGlass.panelRefractionHeight,
-        refractionAmount: UiGlass.panelRefractionAmount,
-        saturation: UiGlass.saturation,
-        color: UiGlass.panel(colorScheme),
-        child: child,
-      ),
+      child: child,
     );
   }
 }

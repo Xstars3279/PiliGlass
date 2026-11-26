@@ -35,11 +35,11 @@ class GlassActionBar extends StatelessWidget {
         child: IconButtonTheme(
           data: IconButtonThemeData(
             style: IconButton.styleFrom(
-              fixedSize: const Size.square(38),
-              minimumSize: const Size.square(38),
-              maximumSize: const Size.square(38),
+              fixedSize: const Size.square(34),
+              minimumSize: const Size.square(34),
+              maximumSize: const Size.square(34),
               padding: EdgeInsets.zero,
-              iconSize: 21,
+              iconSize: 20,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ),

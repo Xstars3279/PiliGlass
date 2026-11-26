@@ -210,7 +210,7 @@ class _GlassPopupAnchorState<T> extends State<GlassPopupAnchor<T>> {
       final boundary = _key.currentContext?.findRenderObject();
       if (boundary is RenderRepaintBoundary) {
         _snapshot.value = boundary.toImageSync(
-          pixelRatio: MediaQuery.devicePixelRatioOf(context),
+          pixelRatio: math.min(2.0, MediaQuery.devicePixelRatioOf(context)),
         );
         _hidden.value = true;
       }
@@ -1233,9 +1233,7 @@ class RenderGlassMenuMorph extends RenderProxyBox {
 
   Path _roundedPath(Rect rect, double radius) {
     final round = math.min(radius, rect.shortestSide / 2);
-    return RoundedSuperellipseBorder(
-      borderRadius: BorderRadius.all(Radius.circular(round)),
-    ).getOuterPath(rect);
+    return Path()..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(round)));
   }
 
   Path _outline(_MorphFrame frame) {
@@ -1296,19 +1294,23 @@ class RenderGlassMenuMorph extends RenderProxyBox {
     );
   }
 
-  (ui.ImageFilter?, ui.ImageFilter?) _filtersFor(Rect platter, double radius) {
+  (ui.ImageFilter?, ui.ImageFilter?) _filtersFor(
+    Rect platter,
+    double radius,
+    bool settled,
+  ) {
     if (!UiGlass.clear || platter.width <= 0) {
       return (null, null);
     }
     ui.ImageFilter? blur;
-    if (UiGlass.panelBlur > 0) {
+    if (UiGlass.menuBlur > 0) {
       blur = ui.ImageFilter.blur(
-        sigmaX: UiGlass.panelBlur,
-        sigmaY: UiGlass.panelBlur,
+        sigmaX: UiGlass.menuBlur,
+        sigmaY: UiGlass.menuBlur,
         tileMode: TileMode.clamp,
       );
     }
-    if (UiGlass.liquid && _shader != null) {
+    if (UiGlass.menuRefraction && settled && _shader != null) {
       final global = MatrixUtils.transformRect(
         getTransformTo(null),
         platter,
@@ -1326,8 +1328,8 @@ class RenderGlassMenuMorph extends RenderProxyBox {
         ..setFloat(7, radius * scale)
         ..setFloat(8, radius * scale)
         ..setFloat(9, radius * scale)
-        ..setFloat(10, UiGlass.panelRefractionHeight * scale)
-        ..setFloat(11, UiGlass.panelRefractionAmount * scale)
+        ..setFloat(10, UiGlass.menuRefractionHeight * scale)
+        ..setFloat(11, UiGlass.menuRefractionAmount * scale)
         ..setFloat(12, 0)
         ..setFloat(13, 0)
         ..setFloat(14, UiGlass.saturation);
@@ -1335,18 +1337,11 @@ class RenderGlassMenuMorph extends RenderProxyBox {
       // Blur first, then refract in a second BackdropFilterLayer: see LiquidGlass.
       return blur == null ? (lens, null) : (blur, lens);
     }
-    if (UiGlass.saturation == 1) {
-      return (blur, null);
-    }
-    final vibrancy = ui.ColorFilter.matrix(
-      _saturationMatrix(UiGlass.saturation),
-    );
-    return (
-      blur == null
-          ? vibrancy
-          : ui.ImageFilter.compose(outer: vibrancy, inner: blur),
-      null,
-    );
+    // Skip ImageFilter.compose(ColorFilter, Blur) to avoid a second offscreen
+    // render pass on every morph frame.
+    if (blur != null) return (blur, null);
+    if (UiGlass.saturation == 1) return (null, null);
+    return (ui.ColorFilter.matrix(_saturationMatrix(UiGlass.saturation)), null);
   }
 
   void _paintShadow(
@@ -1388,7 +1383,12 @@ class RenderGlassMenuMorph extends RenderProxyBox {
     _MorphFrame frame,
     Path path,
   ) {
-    final (first, second) = _filtersFor(frame.platter, frame.radius);
+    final isSettled = !frame.returning && frame.settled >= 0.99;
+    final (first, second) = _filtersFor(
+      frame.platter,
+      frame.radius,
+      isSettled,
+    );
     void paintTint(PaintingContext context, Offset offset) {
       context.canvas.drawPath(
         path.shift(offset),
@@ -1414,21 +1414,22 @@ class RenderGlassMenuMorph extends RenderProxyBox {
           );
           return;
         }
-        context.pushLayer(
-          BackdropFilterLayer(filter: first),
-          (context, offset) {
-            context.canvas.drawRect(
-              path.getBounds().shift(offset),
-              Paint()..color = const Color(0x00000000),
-            );
-          },
-          offset,
-        );
-        context.pushLayer(
-          BackdropFilterLayer(filter: second),
-          paintTint,
-          offset,
-        );
+        context
+          ..pushLayer(
+            BackdropFilterLayer(filter: first),
+            (context, offset) {
+              context.canvas.drawRect(
+                path.getBounds().shift(offset),
+                Paint()..color = const Color(0x00000000),
+              );
+            },
+            offset,
+          )
+          ..pushLayer(
+            BackdropFilterLayer(filter: second),
+            paintTint,
+            offset,
+          );
       },
     );
   }
@@ -1532,20 +1533,7 @@ class RenderGlassMenuMorph extends RenderProxyBox {
               (context, offset) => context.paintChild(child, offset),
             );
         void paintBlurred(PaintingContext context, Offset offset) {
-          if (frame.contentBlur <= 0.1) {
-            paintChild(context, offset);
-            return;
-          }
-          context.pushLayer(
-            ImageFilterLayer(
-              imageFilter: ui.ImageFilter.blur(
-                sigmaX: frame.contentBlur,
-                sigmaY: frame.contentBlur,
-              ),
-            ),
-            paintChild,
-            offset,
-          );
+          paintChild(context, offset);
         }
 
         if (frame.reveal >= 0.999) {

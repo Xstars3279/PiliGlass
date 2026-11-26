@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -19,46 +20,60 @@ class ActionRowLineItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
+    final revamp = Revamp.enabled;
+    final bg = selectStatus
+        ? colorScheme.secondaryContainer
+        : revamp
+        ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.72)
+        : null;
+    final fg = selectStatus
+        ? colorScheme.onSecondaryContainer
+        : revamp
+        ? colorScheme.onSurfaceVariant
+        : colorScheme.outline;
+    final label = text?.trim() ?? '';
     return Material(
-      color: selectStatus ? colorScheme.secondaryContainer : null,
-      type: selectStatus ? MaterialType.canvas : MaterialType.transparency,
+      color: bg,
+      type: bg != null ? MaterialType.canvas : MaterialType.transparency,
       borderRadius: const BorderRadius.all(Radius.circular(30)),
       child: InkWell(
         borderRadius: const BorderRadius.all(Radius.circular(30)),
-        onTap: () => {
-          feedBack(),
-          onTap?.call(),
+        onTap: () {
+          feedBack();
+          onTap?.call();
         },
         child: Container(
-          padding: const EdgeInsets.fromLTRB(13, 5.5, 13, 4.5),
-          decoration: BoxDecoration(
-            borderRadius: const BorderRadius.all(Radius.circular(30)),
-            border: Border.all(
-              color: selectStatus
-                  ? Colors.transparent
-                  : colorScheme.secondaryContainer,
-            ),
-          ),
+          padding: revamp
+              ? const EdgeInsets.symmetric(horizontal: 14, vertical: 7)
+              : const EdgeInsets.fromLTRB(13, 5.5, 13, 4.5),
+          decoration: revamp
+              ? null
+              : BoxDecoration(
+                  borderRadius: const BorderRadius.all(Radius.circular(30)),
+                  border: Border.all(
+                    color: selectStatus
+                        ? Colors.transparent
+                        : colorScheme.secondaryContainer,
+                  ),
+                ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            spacing: revamp && (iconData != null || icon != null) ? 5 : 0,
             children: [
               if (iconData != null)
                 Icon(
                   iconData,
-                  size: 13,
-                  color: selectStatus
-                      ? colorScheme.onSecondaryContainer
-                      : colorScheme.outline,
+                  size: revamp ? 15 : 13,
+                  color: fg,
                 )
               else
                 ?icon,
               Text(
-                text!,
+                revamp ? label : text!,
                 style: TextStyle(
                   fontSize: 13,
-                  color: selectStatus
-                      ? colorScheme.onSecondaryContainer
-                      : colorScheme.outline,
+                  fontWeight: revamp && selectStatus ? FontWeight.w500 : null,
+                  color: fg,
                 ),
               ),
             ],

@@ -121,7 +121,7 @@ abstract final class UiColor {
     );
     return scheme.copyWith(
       // the page
-      surface: dark ? n.surface : n.surfaceContainerLow,
+      surface: dark ? n.surface : const Color.fromARGB(255, 239, 237, 240),
       // the white blocks on it
       surfaceContainerLow: dark ? n.surfaceContainer : n.surfaceContainerLowest,
       surfaceContainerLowest: n.surfaceContainerLowest,
@@ -169,6 +169,23 @@ enum UiGlassLevel {
 /// gradient at every level, and the content is solid at every level.
 abstract final class UiGlass {
   static const String key = 'glassLevel';
+  static const String extremeShellAlphaKey = 'glassExtremeShellAlpha';
+  static const String extremeShellBlurKey = 'glassExtremeShellBlur';
+  static const String extremeRefractionScaleKey = 'glassExtremeRefractionScale';
+  static const String extremeRoundBtnFollowsShellKey =
+      'glassExtremeRoundBtnShell';
+  static const String extremeMenuClearKey = 'glassExtremeMenuClear';
+  static const String extremeMenuRefractionKey = 'glassExtremeMenuRefraction';
+  static const String extremeSheetClearKey = 'glassExtremeSheetClear';
+  static const String extremeSheetRefractionKey = 'glassExtremeSheetRefraction';
+
+  static const double extremeShellAlphaDefault = 0.30;
+  static const double extremeShellBlurDefault = 3.0;
+  static const double extremeRefractionScaleDefault = 1.0;
+
+  /// Increments whenever an extreme-glass parameter changes so mounted
+  /// persistent shell widgets rebuild live without restarting.
+  static final ValueNotifier<int> revision = ValueNotifier<int>(0);
 
   /// read once, like the other features: a restart applies a change.
   /// 增强, the redesign's look until now, is where it starts.
@@ -179,6 +196,128 @@ abstract final class UiGlass {
               )
               as int)
           .clamp(0, UiGlassLevel.values.length - 1)];
+
+  static double extremeShellAlpha =
+      (GStorage.setting.get(
+                extremeShellAlphaKey,
+                defaultValue: extremeShellAlphaDefault,
+              )
+              as num)
+          .toDouble()
+          .clamp(0.0, 0.60);
+
+  static double extremeShellBlur =
+      (GStorage.setting.get(
+                extremeShellBlurKey,
+                defaultValue: extremeShellBlurDefault,
+              )
+              as num)
+          .toDouble()
+          .clamp(0.0, 6.0);
+
+  static double extremeRefractionScale =
+      (GStorage.setting.get(
+                extremeRefractionScaleKey,
+                defaultValue: extremeRefractionScaleDefault,
+              )
+              as num)
+          .toDouble()
+          .clamp(0.0, 2.0);
+
+  static bool extremeRoundBtnFollowsShell =
+      GStorage.setting.get(
+        extremeRoundBtnFollowsShellKey,
+        defaultValue: true,
+      )
+          as bool;
+
+  static bool extremeMenuClear =
+      GStorage.setting.get(extremeMenuClearKey, defaultValue: false) as bool;
+
+  static bool extremeMenuRefraction =
+      GStorage.setting.get(extremeMenuRefractionKey, defaultValue: true)
+          as bool;
+
+  static bool extremeSheetClear =
+      GStorage.setting.get(extremeSheetClearKey, defaultValue: false) as bool;
+
+  static bool extremeSheetRefraction =
+      GStorage.setting.get(extremeSheetRefractionKey, defaultValue: true)
+          as bool;
+
+  static Future<void> setExtremeShellAlpha(double v) async {
+    extremeShellAlpha = v.clamp(0.0, 0.60);
+    revision.value++;
+    await GStorage.setting.put(extremeShellAlphaKey, extremeShellAlpha);
+  }
+
+  static Future<void> setExtremeShellBlur(double v) async {
+    extremeShellBlur = v.clamp(0.0, 6.0);
+    revision.value++;
+    await GStorage.setting.put(extremeShellBlurKey, extremeShellBlur);
+  }
+
+  static Future<void> setExtremeRefractionScale(double v) async {
+    extremeRefractionScale = v.clamp(0.0, 2.0);
+    revision.value++;
+    await GStorage.setting.put(
+      extremeRefractionScaleKey,
+      extremeRefractionScale,
+    );
+  }
+
+  static Future<void> setExtremeRoundBtnFollowsShell(bool v) async {
+    extremeRoundBtnFollowsShell = v;
+    revision.value++;
+    await GStorage.setting.put(extremeRoundBtnFollowsShellKey, v);
+  }
+
+  static Future<void> setExtremeMenuClear(bool v) async {
+    extremeMenuClear = v;
+    revision.value++;
+    await GStorage.setting.put(extremeMenuClearKey, v);
+  }
+
+  static Future<void> setExtremeMenuRefraction(bool v) async {
+    extremeMenuRefraction = v;
+    revision.value++;
+    await GStorage.setting.put(extremeMenuRefractionKey, v);
+  }
+
+  static Future<void> setExtremeSheetClear(bool v) async {
+    extremeSheetClear = v;
+    revision.value++;
+    await GStorage.setting.put(extremeSheetClearKey, v);
+  }
+
+  static Future<void> setExtremeSheetRefraction(bool v) async {
+    extremeSheetRefraction = v;
+    revision.value++;
+    await GStorage.setting.put(extremeSheetRefractionKey, v);
+  }
+
+  static Future<void> resetExtremeDefaults() async {
+    extremeShellAlpha = extremeShellAlphaDefault;
+    extremeShellBlur = extremeShellBlurDefault;
+    extremeRefractionScale = extremeRefractionScaleDefault;
+    extremeRoundBtnFollowsShell = true;
+    extremeMenuClear = false;
+    extremeMenuRefraction = true;
+    extremeSheetClear = false;
+    extremeSheetRefraction = true;
+    revision.value++;
+    await GStorage.setting.put(extremeShellAlphaKey, extremeShellAlpha);
+    await GStorage.setting.put(extremeShellBlurKey, extremeShellBlur);
+    await GStorage.setting.put(
+      extremeRefractionScaleKey,
+      extremeRefractionScale,
+    );
+    await GStorage.setting.put(extremeRoundBtnFollowsShellKey, true);
+    await GStorage.setting.put(extremeMenuClearKey, false);
+    await GStorage.setting.put(extremeMenuRefractionKey, true);
+    await GStorage.setting.put(extremeSheetClearKey, false);
+    await GStorage.setting.put(extremeSheetRefractionKey, true);
+  }
 
   /// anything showing through at all
   static bool get clear => level != UiGlassLevel.none;
@@ -201,20 +340,28 @@ abstract final class UiGlass {
     UiGlassLevel.none => 1.0,
     UiGlassLevel.standard => 0.90,
     UiGlassLevel.enhanced => 0.75,
-    UiGlassLevel.extreme => 0.30,
+    UiGlassLevel.extreme => extremeShellAlpha,
   };
 
-  /// the shell: solid, 90%, 75% or the clear 30% of 极致
+  /// the shell: solid, 90%, 75% or the clear 30% of 极致 (tunable)
   static double get shellAlpha => alpha;
   static double get shellBlur => switch (level) {
     UiGlassLevel.none => 0,
     UiGlassLevel.standard => 6,
     UiGlassLevel.enhanced => 6,
     // v0.1.4 let the lens do the work, not the blur
-    UiGlassLevel.extreme => 3,
+    UiGlassLevel.extreme => extremeShellBlur,
   };
+  static double get shellRefractionScale =>
+      liquid ? extremeRefractionScale : 1.0;
+
   static Color shell(ColorScheme colorScheme) =>
       colorScheme.surfaceContainerLow.withValues(alpha: shellAlpha);
+
+  static Color roundButtonFill(ColorScheme colorScheme) =>
+      liquid && extremeRoundBtnFollowsShell
+      ? shell(colorScheme)
+      : panel(colorScheme);
 
   /// a panel: solid, 90%, 75%, or the thick glass of 极致
   static double get panelAlpha => switch (level) {
@@ -233,6 +380,13 @@ abstract final class UiGlass {
   static Color panel(ColorScheme colorScheme) =>
       colorScheme.surfaceContainerLow.withValues(alpha: panelAlpha);
 
+  static double get sheetAlpha =>
+      liquid && extremeSheetClear ? extremeShellAlpha : panelAlpha;
+  static double get sheetBlur =>
+      liquid && extremeSheetClear ? extremeShellBlur : panelBlur;
+  static Color sheetPanel(ColorScheme colorScheme) =>
+      colorScheme.surfaceContainerLow.withValues(alpha: sheetAlpha);
+
   /// A menu floats over the content and is read at a glance, so it takes
   /// more of what is behind it as the glass gets deeper: solid at 无, nearly
   /// solid at 标准, and clearly liquid at 极致.
@@ -240,10 +394,18 @@ abstract final class UiGlass {
     UiGlassLevel.none => 1.0,
     UiGlassLevel.standard => 0.90,
     UiGlassLevel.enhanced => 0.78,
-    UiGlassLevel.extreme => 0.54,
+    UiGlassLevel.extreme => extremeMenuClear ? extremeShellAlpha : 0.54,
   };
+  static double get menuBlur =>
+      liquid && extremeMenuClear ? extremeShellBlur : panelBlur;
   static Color menu(ColorScheme colorScheme) =>
       colorScheme.surfaceContainerLow.withValues(alpha: menuAlpha);
+
+  static bool get menuRefraction => liquid && extremeMenuRefraction;
+  static double get menuRefractionHeight =>
+      menuRefraction ? 16 * extremeRefractionScale : 0;
+  static double get menuRefractionAmount =>
+      menuRefraction ? 18 * extremeRefractionScale : 0;
 
   /// The pill behind the selected tab, in the bottom bar and the top tabs.
   /// At 极致 it lets 30% of the content behind it through, so the moving
@@ -254,8 +416,10 @@ abstract final class UiGlass {
 
   /// a panel bending what is behind it, at 极致 only, as v0.1.4's GlassBox
   /// did
-  static double get panelRefractionHeight => liquid ? 16 : 0;
-  static double get panelRefractionAmount => liquid ? 18 : 0;
+  static double get panelRefractionHeight =>
+      liquid && extremeSheetRefraction ? 16 * extremeRefractionScale : 0;
+  static double get panelRefractionAmount =>
+      liquid && extremeSheetRefraction ? 18 * extremeRefractionScale : 0;
 
   /// the lit rim of a panel, back with the thick glass of 极致
   static double get panelRim => liquid ? 0.75 : 0;

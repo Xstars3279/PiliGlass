@@ -7,6 +7,7 @@ import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
+import 'package:PiliPlus/common/widgets/grow_from.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/image_viewer/hero.dart';
 import 'package:PiliPlus/common/widgets/stat/stat.dart';
@@ -246,60 +247,63 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
 
   Widget _buildInfoPanel(bool isPortrait, PgcInfoModel item) {
     if (introController.isPgc) {
-      Widget subBtn() => Obx(
-        () {
-          final isFollowed = introController.isFollowed.value;
-          final followStatus = introController.followStatus.value;
-          return FilledButton.tonal(
-            style: FilledButton.styleFrom(
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: EdgeInsets.symmetric(
-                horizontal: Revamp.enabled ? UiSpace.s16 : 20,
-                vertical: Revamp.enabled ? 0 : 10,
+      Widget subBtn() => Builder(
+        builder: (btnCtx) => Obx(
+          () {
+            final isFollowed = introController.isFollowed.value;
+            final followStatus = introController.followStatus.value;
+            return FilledButton.tonal(
+              style: FilledButton.styleFrom(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: EdgeInsets.symmetric(
+                  horizontal: Revamp.enabled ? UiSpace.s16 : 20,
+                  vertical: Revamp.enabled ? 0 : 10,
+                ),
+                minimumSize: Revamp.enabled ? const Size(0, 32) : null,
+                visualDensity: Revamp.enabled
+                    ? VisualDensity.standard
+                    : VisualDensity.compact,
+                foregroundColor:
+                    Revamp.followFg(colorScheme, isFollowed) ??
+                    (isFollowed ? colorScheme.outline : null),
+                backgroundColor:
+                    Revamp.followBg(colorScheme, isFollowed) ??
+                    (isFollowed ? colorScheme.onInverseSurface : null),
+                textStyle: Revamp.enabled
+                    ? UiType.caption.copyWith(fontWeight: FontWeight.w500)
+                    : null,
               ),
-              minimumSize: Revamp.enabled ? const Size(0, 32) : null,
-              visualDensity: Revamp.enabled
-                  ? VisualDensity.standard
-                  : VisualDensity.compact,
-              foregroundColor:
-                  Revamp.followFg(colorScheme, isFollowed) ??
-                  (isFollowed ? colorScheme.outline : null),
-              backgroundColor:
-                  Revamp.followBg(colorScheme, isFollowed) ??
-                  (isFollowed ? colorScheme.onInverseSurface : null),
-              textStyle: Revamp.enabled
-                  ? UiType.caption.copyWith(fontWeight: FontWeight.w500)
-                  : null,
-            ),
-            onPressed: followStatus == -1
-                ? null
-                : () {
-                    if (isFollowed) {
-                      showPgcFollowDialog(
-                        context: context,
-                        type: introController.pgcType,
-                        followStatus: followStatus,
-                        onUpdateStatus: (followStatus) {
-                          if (followStatus == -1) {
-                            introController.pgcDel();
-                          } else {
-                            introController.pgcUpdate(
-                              followStatus,
-                            );
-                          }
-                        },
-                      );
-                    } else {
-                      introController.pgcAdd();
-                    }
-                  },
-            child: Text(
-              isFollowed
-                  ? '已${introController.pgcType}'
-                  : introController.pgcType,
-            ),
-          );
-        },
+              onPressed: followStatus == -1
+                  ? null
+                  : () {
+                      if (isFollowed) {
+                        showPgcFollowDialog(
+                          context: btnCtx,
+                          type: introController.pgcType,
+                          followStatus: followStatus,
+                          from: morphRectOf(btnCtx),
+                          onUpdateStatus: (followStatus) {
+                            if (followStatus == -1) {
+                              introController.pgcDel();
+                            } else {
+                              introController.pgcUpdate(
+                                followStatus,
+                              );
+                            }
+                          },
+                        );
+                      } else {
+                        introController.pgcAdd();
+                      }
+                    },
+              child: Text(
+                isFollowed
+                    ? '已${introController.pgcType}'
+                    : introController.pgcType,
+              ),
+            );
+          },
+        ),
       );
       // the redesign: the title takes the whole width beside the poster,
       // the button drops below it (6.7)

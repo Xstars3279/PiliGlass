@@ -9,6 +9,7 @@ import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart';
 import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart';
+import 'package:PiliPlus/common/widgets/grow_from.dart';
 import 'package:PiliPlus/common/widgets/pair.dart';
 import 'package:PiliPlus/common/widgets/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/scaffold/mini_scaffold.dart';
@@ -307,11 +308,11 @@ class _DynamicDetailPageState extends CommonDynPageMultiState<DynamicDetailPage>
               }(),
           ],
           controller: tabController,
-          capsule: false,
+          capsule: true,
           refraction: false,
           centered: false,
           drag: GlassTabDrag.scrub,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
           onSelected: (value) {
             if (value == tabController.index) {
               final positions = PrimaryScrollController.of(context).positions;
@@ -452,13 +453,23 @@ class _DynamicDetailPageState extends CommonDynPageMultiState<DynamicDetailPage>
       child: Builder(
         builder: (context) {
           _scrollable = Scrollable.maybeOf(context);
-          return DynamicPanel(
+          final panel = DynamicPanel(
             item: controller.dynItem,
             isDetail: true,
             isDetailPortraitW: isPortrait,
             onSetPubSetting: controller.onSetPubSetting,
             onEdit: _onEdit,
             onSetReplySubject: controller.onSetReplySubject,
+          );
+          if (!Revamp.enabled) return panel;
+          return Container(
+            margin: const EdgeInsets.fromLTRB(12, 6, 12, 4),
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            decoration: ShapeDecoration(
+              color: Revamp.groupColor(theme.colorScheme),
+              shape: Revamp.rounded(Revamp.groupRadius),
+            ),
+            child: panel,
           );
         },
       ),
@@ -608,9 +619,10 @@ class _DynamicDetailPageState extends CommonDynPageMultiState<DynamicDetailPage>
                         icon: FontAwesomeIcons.shareFromSquare,
                         text: '转发',
                         stat: forward,
-                        onPressed: (_) => showModalBottomSheet(
+                        onPressed: (_) => showGrowingSheet(
                           context: context,
-                          isScrollControlled: true,
+                          from: morphRectOf(btnContext),
+                          anchor: Alignment.bottomLeft,
                           useSafeArea: true,
                           builder: (context) => RepostPanel(
                             item: dynItem,

@@ -1,9 +1,11 @@
 import 'dart:math';
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/fractionally_sized_box.dart';
 import 'package:PiliPlus/common/widgets/grow_from.dart';
 import 'package:PiliPlus/common/widgets/image_viewer/gallery_viewer.dart';
 import 'package:PiliPlus/common/widgets/image_viewer/hero_dialog_route.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_sheet.dart';
 import 'package:PiliPlus/grpc/im.dart';
 import 'package:PiliPlus/http/dynamics.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -30,13 +32,14 @@ import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/reply_scheme_helper.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:PiliPlus/utils/theme_utils.dart';
 import 'package:PiliPlus/utils/url_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart' hide Springs;
 import 'package:url_launcher/url_launcher.dart';
 
 abstract final class PageUtils {
@@ -155,18 +158,21 @@ abstract final class PageUtils {
     required BuildContext context,
     required FavMixin ctr,
   }) {
-    showModalBottomSheet(
+    final maxChildSize =
+        PlatformUtils.isMobile && !MediaQuery.isPortraitOf(context)
+        ? 1.0
+        : 0.7;
+    showGlassSheet(
       context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
+      heightFactor: Revamp.enabled ? maxChildSize : null,
+      showHandle: true,
       constraints: BoxConstraints(
         maxWidth: min(640, MediaQuery.shortestSideOf(context)),
       ),
       builder: (BuildContext context) {
-        final maxChildSize =
-            PlatformUtils.isMobile && !MediaQuery.isPortraitOf(context)
-            ? 1.0
-            : 0.7;
+        if (Revamp.enabled) {
+          return FavPanel(ctr: ctr);
+        }
         return DraggableScrollableSheet(
           minChildSize: 0,
           maxChildSize: 1,
@@ -463,16 +469,50 @@ abstract final class PageUtils {
     required Widget child,
     ValueGetter<EdgeInsets>? padding,
     double maxWidth = 500,
+    ThemeData? sheetTheme,
   }) {
     if (!context.mounted) {
       return null;
     }
-    // a page that sets PublishRoute.pendingMorph grows out of that rect
-    final morphFrom = PublishRoute.pendingMorph;
+    if (Revamp.enabled && MediaQuery.isPortraitOf(context)) {
+      return showGlassSheet<void>(
+        context: context,
+        heightFactor: 0.7,
+        showHandle: true,
+        useRootNavigator: true,
+        sheetTheme: sheetTheme,
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        settings: RouteSettings(arguments: Get.arguments),
+        builder: (_) => child,
+      );
+    }
+    // landscape or non-revamp
+    final morphFrom = Revamp.enabled ? null : PublishRoute.pendingMorph;
     return Get.key.currentState!.push(
       PublishRoute(
         pageBuilder: (context, animation, secondaryAnimation) {
           final isPortrait = MediaQuery.isPortraitOf(context);
+          if (Revamp.enabled) {
+            final surface = Theme(
+              data: sheetTheme ?? ThemeUtils.darkTheme,
+              child: GlassSheetSurface(
+                allCorners: true,
+                child: child,
+              ),
+            );
+            return SafeArea(
+              child: CustomFractionallySizedBox(
+                maxWidth: maxWidth,
+                widthFactor: 0.5,
+                heightFactor: 1.0,
+                alignment: .centerRight,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
+                  child: surface,
+                ),
+              ),
+            );
+          }
           return SafeArea(
             child: CustomFractionallySizedBox(
               maxWidth: maxWidth,
@@ -492,9 +532,7 @@ abstract final class PageUtils {
             ),
           );
         },
-        transitionDuration: Duration(
-          milliseconds: morphFrom == null ? 350 : 460,
-        ),
+        transitionDuration: const Duration(milliseconds: 350),
         transitionBuilder: morphFrom != null
             ? null
             : (context, animation, secondaryAnimation, child) {

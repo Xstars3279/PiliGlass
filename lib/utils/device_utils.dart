@@ -1,12 +1,15 @@
-import 'dart:io' show Platform, exit;
+import 'dart:io' show Platform, Process, exit;
 
 import 'package:PiliPlus/utils/android/bindings.g.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/storage.dart';
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:flutter/widgets.dart' show WidgetsBinding, Size;
 import 'package:nativeapi/nativeapi.dart' as nativeapi show Size;
 import 'package:win32/win32.dart' as kernel32;
 
 abstract final class DeviceUtils {
+  static const _appChannel = MethodChannel('piliglass/app');
   static final int sdkInt = AndroidHelper.sdkInt();
 
   static final isChromeOS = Platform.isAndroid && AndroidHelper.isChromeOS;
@@ -36,6 +39,24 @@ abstract final class DeviceUtils {
     } else {
       exit(0);
     }
+  }
+
+  static Future<void> restartApp() async {
+    try {
+      await GStorage.close();
+    } catch (_) {}
+    if (Platform.isAndroid) {
+      await _appChannel.invokeMethod<void>('restartApp');
+      return;
+    }
+    if (PlatformUtils.isDesktop) {
+      await Process.start(
+        Platform.resolvedExecutable,
+        Platform.executableArguments,
+        mode: .detached,
+      );
+    }
+    exitApp();
   }
 
   static const desktopMinSize = nativeapi.Size(width: 400, height: 720);

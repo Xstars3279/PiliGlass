@@ -49,8 +49,6 @@ class GlassIconButton extends StatelessWidget {
         (selected
             ? colorScheme.onSecondaryContainer
             : colorScheme.onSurfaceVariant);
-    final fill = selected ? colorScheme.secondaryContainer : UiGlass.panel(colorScheme);
-
     Widget button = SizedBox.square(
       dimension: size,
       child: IconTheme.merge(
@@ -58,35 +56,47 @@ class GlassIconButton extends StatelessWidget {
         child: Center(child: icon),
       ),
     );
-
-    final glass = liquid
-        ? LiquidGlass(
-            radius: size / 2,
-            blurSigma: UiGlass.shellBlur,
-            refractionHeight: UiGlass.refraction ? 12 : 0,
-            refractionAmount: UiGlass.refraction ? 14 : 0,
-            saturation: UiGlass.saturation,
-            color: fill,
-            child: button,
-          )
-        : DecoratedBox(
-            decoration: ShapeDecoration(color: fill, shape: const StadiumBorder()),
-            child: button,
-          );
-
-    final coin = CustomPaint(
-      painter: GlassShadowPainter.of(
-        radius: radius,
-        shadow: UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
-      ),
-      foregroundPainter: GlassRimPainter(
-        radius: radius,
-        // a light outline, not the full lit rim of a larger panel
-        opacity: UiGlass.rim * 0.7,
-        isDark: isDark,
-        edge: UiGlass.edge(colorScheme),
-      ),
-      child: glass,
+    final coin = ListenableBuilder(
+      listenable: UiGlass.revision,
+      builder: (context, child) {
+        final fill = selected
+            ? colorScheme.secondaryContainer
+            : UiGlass.roundButtonFill(colorScheme);
+        final glass = liquid
+            ? LiquidGlass(
+                radius: size / 2,
+                blurSigma: UiGlass.shellBlur,
+                refractionHeight:
+                    UiGlass.refraction ? 12 * UiGlass.shellRefractionScale : 0,
+                refractionAmount:
+                    UiGlass.refraction ? 14 * UiGlass.shellRefractionScale : 0,
+                saturation: UiGlass.saturation,
+                color: fill,
+                child: child,
+              )
+            : DecoratedBox(
+                decoration: ShapeDecoration(
+                  color: fill,
+                  shape: const StadiumBorder(),
+                ),
+                child: child,
+              );
+        return CustomPaint(
+          painter: GlassShadowPainter.of(
+            radius: radius,
+            shadow: UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
+          ),
+          foregroundPainter: GlassRimPainter(
+            radius: radius,
+            // a light outline, not the full lit rim of a larger panel
+            opacity: UiGlass.rim * 0.7,
+            isDark: isDark,
+            edge: UiGlass.edge(colorScheme),
+          ),
+          child: glass,
+        );
+      },
+      child: button,
     );
 
     if (tooltip != null) {

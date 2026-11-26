@@ -39,46 +39,52 @@ class CustomToast extends StatelessWidget {
             // heightFactor 1 is load-bearing: without it this Align expands
             // to the whole screen and the toast sits in the middle of it.
             heightFactor: 1,
-            child: CustomPaint(
-              painter: GlassShadowPainter.of(
-                radius: const Radius.circular(18),
-                shadow: UiGlass.shadowIn(
-                  colorScheme,
-                  UiGlass.shellShadow,
+            child: ListenableBuilder(
+              listenable: UiGlass.revision,
+              builder: (context, child) => CustomPaint(
+                painter: GlassShadowPainter.of(
+                  radius: const Radius.circular(18),
+                  shadow: UiGlass.shadowIn(
+                    colorScheme,
+                    UiGlass.shellShadow,
+                  ),
+                ),
+                foregroundPainter: GlassRimPainter(
+                  radius: const Radius.circular(18),
+                  opacity: UiGlass.rim * 0.7,
+                  isDark: colorScheme.brightness == .dark,
+                  edge: UiGlass.edge(colorScheme),
+                ),
+                child: LiquidGlass(
+                  radius: 18,
+                  blurSigma: UiGlass.shellBlur,
+                  refractionHeight:
+                      UiGlass.refraction ? 12 * UiGlass.shellRefractionScale : 0,
+                  refractionAmount:
+                      UiGlass.refraction ? 14 * UiGlass.shellRefractionScale : 0,
+                  saturation: UiGlass.saturation,
+                  color: UiGlass.input(colorScheme),
+                  // widthFactor 1, not Container's alignment: that one wraps
+                  // the child in an Align that takes the whole width the toast
+                  // host offers, and the capsule came out as a strip across
+                  // the screen
+                  child: child,
                 ),
               ),
-              foregroundPainter: GlassRimPainter(
-                radius: const Radius.circular(18),
-                opacity: UiGlass.rim * 0.7,
-                isDark: colorScheme.brightness == .dark,
-                edge: UiGlass.edge(colorScheme),
-              ),
-              child: LiquidGlass(
-                radius: 18,
-                blurSigma: UiGlass.shellBlur,
-                refractionHeight: UiGlass.refraction ? 12 : 0,
-                refractionAmount: UiGlass.refraction ? 14 : 0,
-                saturation: UiGlass.saturation,
-                color: UiGlass.input(colorScheme),
-                // widthFactor 1, not Container's alignment: that one wraps
-                // the child in an Align that takes the whole width the toast
-                // host offers, and the capsule came out as a strip across
-                // the screen
-                child: SizedBox(
-                  height: 36,
-                  child: Padding(
-                    padding: const .symmetric(horizontal: UiSpace.s16),
-                    child: Align(
-                      alignment: Alignment.center,
-                      widthFactor: 1,
-                      child: Text(
-                        msg,
-                        maxLines: 1,
-                        overflow: .ellipsis,
-                        style: UiType.label.copyWith(
-                          fontWeight: FontWeight.w500,
-                          color: colorScheme.onSurface,
-                        ),
+              child: SizedBox(
+                height: 36,
+                child: Padding(
+                  padding: const .symmetric(horizontal: UiSpace.s16),
+                  child: Align(
+                    alignment: Alignment.center,
+                    widthFactor: 1,
+                    child: Text(
+                      msg,
+                      maxLines: 1,
+                      overflow: .ellipsis,
+                      style: UiType.label.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                   ),

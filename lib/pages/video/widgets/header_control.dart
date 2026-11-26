@@ -8,10 +8,8 @@ import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/plugin/pl_player/models/video_fit_type.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
-import 'package:PiliPlus/common/widgets/grow_from.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
-import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/common/widgets/dialog/report.dart';
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/common/widgets/marquee.dart';
@@ -372,37 +370,29 @@ class HeaderControlState extends State<HeaderControl>
 
   /// 设置面板
   void showSettingSheet({BuildContext? from}) {
-    // the sheet grows out of the button that opened it
-    final box = from?.findRenderObject();
-    if (box is RenderBox && box.hasSize) {
-      PublishRoute.pendingMorph = box.localToGlobal(Offset.zero) & box.size;
-    }
     showBottomSheet(
       (context, setState) {
         final theme = Theme.of(context);
-
-        return Padding(
-          padding: const EdgeInsets.all(12),
-          child: Material(
-            clipBehavior: Clip.hardEdge,
-            color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.all(Radius.circular(12)),
-            child: ListTileTheme(
-              // Only this panel is compact; the global 56dp rows stay intact.
-              data: ListTileTheme.of(context).copyWith(
-                minTileHeight: Revamp.enabled && isFullScreen
-                    ? RevampPlayerMetrics.settingsRowHeight
-                    : null,
-                minVerticalPadding: Revamp.enabled && isFullScreen ? 4 : null,
-                visualDensity: Revamp.enabled && isFullScreen
-                    ? const VisualDensity(vertical: -2)
-                    : null,
+        return wrapPlayerPanel(
+          context,
+          child: ListTileTheme(
+            // Only this panel is compact; the global 56dp rows stay intact.
+            data: ListTileTheme.of(context).copyWith(
+              minTileHeight: Revamp.enabled && isFullScreen
+                  ? RevampPlayerMetrics.settingsRowHeight
+                  : null,
+              minVerticalPadding:
+                  Revamp.enabled && isFullScreen ? 4 : null,
+              visualDensity: Revamp.enabled && isFullScreen
+                  ? const VisualDensity(vertical: -2)
+                  : null,
+            ),
+            child: ListView(
+              padding: EdgeInsets.only(
+                top: Revamp.enabled && isFullScreen ? 8 : 6,
+                bottom: MediaQuery.viewPaddingOf(context).bottom + 16,
               ),
-              child: ListView(
-                padding: EdgeInsets.symmetric(
-                  vertical: Revamp.enabled && isFullScreen ? 8 : 14,
-                ),
-                children: [
+              children: [
                 // what left the full screen's top and bottom rows, here at
                 // the top of ⋯ (7.1)
                 if (Revamp.enabled && isFullScreen) ...[
@@ -759,53 +749,44 @@ class HeaderControlState extends State<HeaderControl>
                   ),
                 ),
                 if (!isFileSource) ...[
-                  Builder(
-                    builder: (rowContext) => ListTile(
-                      dense: true,
-                      onTap: () {
-                        final from = morphRectOf(rowContext);
-                        Get.back();
-                        showSetVideoQa(from: from);
-                      },
-                      leading: const Icon(Icons.play_circle_outline, size: 20),
-                      title: const Text('选择画质', style: titleStyle),
-                      subtitle: Text(
-                        '当前画质 ${videoDetailCtr.currentVideoQa.value?.desc}',
-                        style: subTitleStyle,
-                      ),
+                  ListTile(
+                    dense: true,
+                    onTap: () {
+                      Get.back();
+                      showSetVideoQa();
+                    },
+                    leading: const Icon(Icons.play_circle_outline, size: 20),
+                    title: const Text('选择画质', style: titleStyle),
+                    subtitle: Text(
+                      '当前画质 ${videoDetailCtr.currentVideoQa.value?.desc}',
+                      style: subTitleStyle,
                     ),
                   ),
                   if (videoDetailCtr.currentAudioQa != null)
-                    Builder(
-                      builder: (rowContext) => ListTile(
-                        dense: true,
-                        onTap: () {
-                          final from = morphRectOf(rowContext);
-                          Get.back();
-                          showSetAudioQa(from: from);
-                        },
-                        leading: const Icon(Icons.album_outlined, size: 20),
-                        title: const Text('选择音质', style: titleStyle),
-                        subtitle: Text(
-                          '当前音质 ${videoDetailCtr.currentAudioQa!.desc}',
-                          style: subTitleStyle,
-                        ),
-                      ),
-                    ),
-                  Builder(
-                    builder: (rowContext) => ListTile(
+                    ListTile(
                       dense: true,
                       onTap: () {
-                        final from = morphRectOf(rowContext);
                         Get.back();
-                        showSetDecodeFormats(from: from);
+                        showSetAudioQa();
                       },
-                      leading: const Icon(Icons.av_timer_outlined, size: 20),
-                      title: const Text('解码格式', style: titleStyle),
+                      leading: const Icon(Icons.album_outlined, size: 20),
+                      title: const Text('选择音质', style: titleStyle),
                       subtitle: Text(
-                        '当前解码格式 ${videoDetailCtr.currentDecodeFormats.description}',
+                        '当前音质 ${videoDetailCtr.currentAudioQa!.desc}',
                         style: subTitleStyle,
                       ),
+                    ),
+                  ListTile(
+                    dense: true,
+                    onTap: () {
+                      Get.back();
+                      showSetDecodeFormats();
+                    },
+                    leading: const Icon(Icons.av_timer_outlined, size: 20),
+                    title: const Text('解码格式', style: titleStyle),
+                    subtitle: Text(
+                      '当前解码格式 ${videoDetailCtr.currentDecodeFormats.description}',
+                      style: subTitleStyle,
                     ),
                   ),
                 ],
@@ -906,25 +887,24 @@ class HeaderControlState extends State<HeaderControl>
                     leading: const Icon(Icons.info_outline, size: 20),
                     onTap: () => showPlayerInfo(context, player: player),
                   ),
-                ListTile(
-                  dense: true,
-                  onTap: () {
-                    if (!Accounts.main.isLogin) {
-                      SmartDialog.showToast('账号未登录');
-                      return;
-                    }
-                    Get.back();
-                    PageUtils.reportVideo(videoDetailCtr.aid);
-                  },
-                  leading: const Icon(Icons.error_outline, size: 20),
-                  title: const Text('举报', style: titleStyle),
-                ),
+                  ListTile(
+                    dense: true,
+                    onTap: () {
+                      if (!Accounts.main.isLogin) {
+                        SmartDialog.showToast('账号未登录');
+                        return;
+                      }
+                      Get.back();
+                      PageUtils.reportVideo(videoDetailCtr.aid);
+                    },
+                    leading: const Icon(Icons.error_outline, size: 20),
+                    title: const Text('举报', style: titleStyle),
+                  ),
                 ],
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
       maxWidth: Revamp.enabled && isFullScreen
           ? RevampPlayerMetrics.settingsSheetWidth
           : 512,
@@ -1043,43 +1023,36 @@ class HeaderControlState extends State<HeaderControl>
     final List<FormatItem> videoFormat = videoInfo.supportFormats!;
     final availableQa = videoInfo.dash!.video!.availableVideoQualities;
 
-    if (from != null) {
-      PublishRoute.pendingMorph = from;
-    }
     showBottomSheet(
       (context, setState) {
         final theme = Theme.of(context);
-        return Padding(
-          padding: const EdgeInsets.all(12),
-          child: Material(
-            clipBehavior: Clip.hardEdge,
-            color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.all(Radius.circular(12)),
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 45,
-                    child: GestureDetector(
-                      onTap: () => SmartDialog.showToast(
-                        '标灰画质需要bilibili会员（已是会员？请关闭无痕模式）；4k和杜比视界播放效果可能不佳',
-                      ),
-                      child: Row(
-                        spacing: 8,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text('选择画质', style: titleStyle),
-                          Icon(
-                            Icons.info_outline,
-                            size: 16,
-                            color: theme.colorScheme.outline,
-                          ),
-                        ],
-                      ),
+        return wrapPlayerPanel(
+          context,
+          child: Column(
+            children: [
+              playerSheetHeader(
+                context,
+                '选择画质',
+                trailing: [
+                  IconButton(
+                    tooltip: '说明',
+                    onPressed: () => SmartDialog.showToast(
+                      '标灰画质需要bilibili会员（已是会员？请关闭无痕模式）；4k和杜比视界播放效果可能不佳',
+                    ),
+                    icon: Icon(
+                      Icons.info_outline,
+                      size: 20,
+                      color: theme.colorScheme.outline,
                     ),
                   ),
-                ),
-                SliverList.builder(
+                ],
+              ),
+              Expanded(
+                child: ListView.builder(
+                  padding: EdgeInsets.only(
+                    top: 4,
+                    bottom: MediaQuery.viewPaddingOf(context).bottom + 12,
+                  ),
                   itemCount: videoFormat.length,
                   itemBuilder: (context, index) {
                     final item = videoFormat[index];
@@ -1128,8 +1101,8 @@ class HeaderControlState extends State<HeaderControl>
                     );
                   },
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -1140,29 +1113,20 @@ class HeaderControlState extends State<HeaderControl>
   void showSetAudioQa({Rect? from}) {
     final AudioQuality currentAudioQa = videoDetailCtr.currentAudioQa!;
     final List<AudioItem> audio = videoInfo.dash!.audio!;
-    if (from != null) {
-      PublishRoute.pendingMorph = from;
-    }
     showBottomSheet(
       (context, setState) {
         final theme = Theme.of(context);
-        return Padding(
-          padding: const EdgeInsets.all(12),
-          child: Material(
-            clipBehavior: Clip.hardEdge,
-            color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.all(Radius.circular(12)),
-            child: CustomScrollView(
-              slivers: [
-                const SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 45,
-                    child: Center(
-                      child: Text('选择音质', style: titleStyle),
-                    ),
+        return wrapPlayerPanel(
+          context,
+          child: Column(
+            children: [
+              playerSheetHeader(context, '选择音质'),
+              Expanded(
+                child: ListView.builder(
+                  padding: EdgeInsets.only(
+                    top: 4,
+                    bottom: MediaQuery.viewPaddingOf(context).bottom + 12,
                   ),
-                ),
-                SliverList.builder(
                   itemCount: audio.length,
                   itemBuilder: (context, index) {
                     final item = audio[index];
@@ -1210,8 +1174,8 @@ class HeaderControlState extends State<HeaderControl>
                     );
                   },
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -1232,59 +1196,46 @@ class HeaderControlState extends State<HeaderControl>
 
     // 当前选中的解码格式
     final curCodecs = videoDetailCtr.currentDecodeFormats.codes;
-    if (from != null) {
-      PublishRoute.pendingMorph = from;
-    }
     showBottomSheet(
       (context, setState) {
         final colorScheme = ColorScheme.of(context);
-        return Padding(
-          padding: const EdgeInsets.all(12),
-          child: Material(
-            clipBehavior: Clip.hardEdge,
-            color: colorScheme.surface,
-            borderRadius: const BorderRadius.all(Radius.circular(12)),
-            child: Column(
-              children: [
-                const SizedBox(
-                  height: 45,
-                  child: Center(
-                    child: Text('选择解码格式', style: titleStyle),
+        return wrapPlayerPanel(
+          context,
+          child: Column(
+            children: [
+              playerSheetHeader(context, '选择解码格式'),
+              Expanded(
+                child: ListView.builder(
+                  padding: EdgeInsets.only(
+                    top: 4,
+                    bottom: MediaQuery.viewPaddingOf(context).bottom + 12,
                   ),
+                  itemCount: list.length,
+                  itemBuilder: (context, index) {
+                    final item = list[index];
+                    final format = VideoDecodeFormatType.fromString(item);
+                    final isCurr = curCodecs.any(item.startsWith);
+                    return ListTile(
+                      dense: true,
+                      onTap: () {
+                        if (isCurr) return;
+                        Get.back();
+                        videoDetailCtr
+                          ..currentDecodeFormats = format
+                          ..updatePlayer();
+                        SmartDialog.showToast("解码已变为：${format.name}");
+                      },
+                      contentPadding: const .symmetric(horizontal: 20),
+                      title: Text(format.description),
+                      subtitle: Text(item, style: subTitleStyle),
+                      trailing: isCurr
+                          ? Icon(Icons.done, color: colorScheme.primary)
+                          : null,
+                    );
+                  },
                 ),
-                Expanded(
-                  child: CustomScrollView(
-                    slivers: [
-                      SliverList.builder(
-                        itemCount: list.length,
-                        itemBuilder: (context, index) {
-                          final item = list[index];
-                          final format = VideoDecodeFormatType.fromString(item);
-                          final isCurr = curCodecs.any(item.startsWith);
-                          return ListTile(
-                            dense: true,
-                            onTap: () {
-                              if (isCurr) return;
-                              Get.back();
-                              videoDetailCtr
-                                ..currentDecodeFormats = format
-                                ..updatePlayer();
-                              SmartDialog.showToast("解码已变为：${format.name}");
-                            },
-                            contentPadding: const .symmetric(horizontal: 20),
-                            title: Text(format.description),
-                            subtitle: Text(item, style: subTitleStyle),
-                            trailing: isCurr
-                                ? Icon(Icons.done, color: colorScheme.primary)
-                                : null,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -1425,7 +1376,13 @@ class HeaderControlState extends State<HeaderControl>
           trackShape: const MSliderTrackShape(),
           thumbColor: theme.colorScheme.primary,
           activeTrackColor: theme.colorScheme.primary,
-          inactiveTrackColor: theme.colorScheme.onInverseSurface,
+          inactiveTrackColor: Revamp.enabled
+              ? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.2)
+              : theme.colorScheme.onInverseSurface,
+          activeTickMarkColor: Revamp.enabled ? Colors.transparent : null,
+          inactiveTickMarkColor: Revamp.enabled
+              ? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.25)
+              : null,
           thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
         );
 
@@ -1478,24 +1435,22 @@ class HeaderControlState extends State<HeaderControl>
           setState(() {});
         }
 
-        return Padding(
-          padding: const EdgeInsets.all(12),
-          child: Material(
-            clipBehavior: Clip.hardEdge,
-            color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.all(Radius.circular(12)),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: SliderTheme(
-                data: sliderTheme,
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  children: [
-                    const SizedBox(
-                      height: 45,
-                      child: Center(child: Text('字幕设置', style: titleStyle)),
-                    ),
-                    const SizedBox(height: 10),
+        return wrapPlayerPanel(
+          context,
+          child: Column(
+            children: [
+              playerSheetHeader(context, '字幕设置'),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: SliderTheme(
+                    data: sliderTheme,
+                    child: ListView(
+                      padding: EdgeInsets.only(
+                        top: 10,
+                        bottom: MediaQuery.viewPaddingOf(context).bottom + 16,
+                      ),
+                      children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -1634,7 +1589,9 @@ class HeaderControlState extends State<HeaderControl>
               ),
             ),
           ),
-        );
+        ],
+      ),
+    );
       },
     )?.whenComplete(plPlayerController.putSubtitleSettings);
   }
@@ -1643,43 +1600,23 @@ class HeaderControlState extends State<HeaderControl>
     final ctr = plPlayerController.danmakuController;
     if (ctr == null) return;
     showBottomSheet((context, setState) {
-      final theme = Theme.of(context);
-      return Container(
-        margin: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: const BorderRadius.all(Radius.circular(12)),
-        ),
+      return wrapPlayerPanel(
+        context,
         child: Column(
           children: [
-            Container(
-              height: 45,
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
-                  ),
+            playerSheetHeader(
+              context,
+              '弹幕列表',
+              trailing: [
+                iconButton(
+                  onPressed: () => setState(() {}),
+                  icon: const Icon(Icons.refresh, size: 20),
                 ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('弹幕列表'),
-                  iconButton(
-                    onPressed: () => setState(() {}),
-                    icon: const Icon(Icons.refresh),
-                  ),
-                ],
-              ),
+              ],
             ),
             Expanded(
               child: Material(
                 type: .transparency,
-                clipBehavior: .hardEdge,
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(12),
-                ),
                 child: CustomScrollView(
                   slivers: [
                     ?_buildDanmakuList(ctr.staticDanmaku.nonNulls.toList()),
@@ -1687,7 +1624,11 @@ class HeaderControlState extends State<HeaderControl>
                       ctr.scrollDanmaku.expand((e) => e).toList(),
                     ),
                     ?_buildDanmakuList(ctr.specialDanmaku.toList()),
-                    const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: MediaQuery.viewPaddingOf(context).bottom + 12,
+                      ),
+                    ),
                   ],
                 ),
               ),

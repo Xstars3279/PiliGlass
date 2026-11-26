@@ -82,25 +82,31 @@ class RevampFab extends StatelessWidget {
     content = SizedBox(
       height: size,
       width: _extended ? null : size,
-      child: CustomPaint(
-        painter: GlassShadowPainter.of(
-          radius: radius,
-          shadow: UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
+      child: ListenableBuilder(
+        listenable: UiGlass.revision,
+        builder: (context, child) => CustomPaint(
+          painter: GlassShadowPainter.of(
+            radius: radius,
+            shadow: UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
+          ),
+          foregroundPainter: GlassRimPainter(
+            radius: radius,
+            opacity: UiGlass.rim,
+            isDark: isDark,
+            edge: UiGlass.edge(colorScheme),
+          ),
+          child: LiquidGlass(
+            blurSigma: UiGlass.shellBlur,
+            refractionHeight:
+                UiGlass.refraction ? 18 * UiGlass.shellRefractionScale : 0,
+            refractionAmount:
+                UiGlass.refraction ? 20 * UiGlass.shellRefractionScale : 0,
+            saturation: UiGlass.saturation,
+            color: UiGlass.shell(colorScheme),
+            child: child,
+          ),
         ),
-        foregroundPainter: GlassRimPainter(
-          radius: radius,
-          opacity: UiGlass.rim,
-          isDark: isDark,
-          edge: UiGlass.edge(colorScheme),
-        ),
-        child: LiquidGlass(
-          blurSigma: UiGlass.shellBlur,
-          refractionHeight: UiGlass.refraction ? 18 : 0,
-          refractionAmount: UiGlass.refraction ? 20 : 0,
-          saturation: UiGlass.saturation,
-          color: UiGlass.shell(colorScheme),
-          child: content,
-        ),
+        child: content,
       ),
     );
     content = PressableScale(

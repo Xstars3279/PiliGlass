@@ -169,6 +169,11 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
   void initState() {
     super.initState();
     _position.addListener(_wobble);
+    UiGlass.revision.addListener(_onGlassChanged);
+  }
+
+  void _onGlassChanged() {
+    if (mounted) setState(() {});
   }
 
   void _wobble() {
@@ -212,6 +217,7 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
 
   @override
   void dispose() {
+    UiGlass.revision.removeListener(_onGlassChanged);
     _jelly.dispose();
     _position.dispose();
     _press.dispose();
@@ -660,6 +666,7 @@ class _LiquidGlassNavigationRailState extends State<LiquidGlassNavigationRail>
                                 icon: action.icon,
                                 label: action.label,
                                 onTap: action.onTap,
+                                onTapWithContext: action.onTapWithContext,
                               ),
                       ),
                     ],
@@ -727,12 +734,14 @@ class _RoundGlassButton extends StatefulWidget {
     super.key,
     required this.icon,
     required this.label,
-    required this.onTap,
+    this.onTap,
+    this.onTapWithContext,
   });
 
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final ValueChanged<BuildContext>? onTapWithContext;
 
   @override
   State<_RoundGlassButton> createState() => _RoundGlassButtonState();
@@ -764,7 +773,9 @@ class _RoundGlassButtonState extends State<_RoundGlassButton>
         onTapDown: (_) => _scale.animateTo(0.88),
         onTapCancel: () => _scale.animateTo(1),
         onTapUp: (_) => _scale.animateTo(1),
-        onTap: widget.onTap,
+        onTap: widget.onTapWithContext != null
+            ? () => widget.onTapWithContext!(context)
+            : widget.onTap,
         child: ListenableBuilder(
           listenable: _scale,
           builder: (context, child) =>

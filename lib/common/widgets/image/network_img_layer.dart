@@ -53,7 +53,7 @@ class NetworkImgLayer extends StatelessWidget {
     final isAvatar = type == ImageType.avatar;
     if (src?.isNotEmpty == true) {
       Widget child = _buildImage(context, isEmote: isEmote, isAvatar: isAvatar);
-      if (isEmote) {
+      if (isEmote || borderRadius == BorderRadius.zero) {
         return child;
       } else if (isAvatar) {
         return ClipOval(child: child);

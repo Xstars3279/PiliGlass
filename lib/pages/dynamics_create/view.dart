@@ -1,5 +1,6 @@
 import 'dart:math' show max;
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/button/toolbar_icon_button.dart';
@@ -8,6 +9,7 @@ import 'package:PiliPlus/common/widgets/draggable_sheet/dyn.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/text_field.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_sheet.dart';
 import 'package:PiliPlus/common/widgets/pair.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart'
     show platformClampingPhysics;
@@ -73,30 +75,50 @@ class CreateDynPanel extends CommonRichTextPubPage {
     Pair<int, String>? topic,
     ({Object dynId, Object? repostDynId})? editConfig,
     VoidCallback? onSuccess,
-  }) => showModalBottomSheet(
-    context: context,
-    useSafeArea: true,
-    isScrollControlled: true,
-    builder: (context) => DynDraggableScrollableSheet(
-      snap: true,
-      expand: false,
-      initialChildSize: 1,
-      minChildSize: 0,
-      maxChildSize: 1,
-      snapSizes: const [1],
-      builder: (context, scrollController) => CreateDynPanel(
-        scrollController: scrollController,
-        title: title,
-        items: items,
-        pics: pics,
-        topic: topic,
-        isPrivate: isPrivate,
-        editConfig: editConfig,
-        replyOption: replyOption,
-        onSuccess: onSuccess,
+  }) {
+    if (Revamp.enabled) {
+      showGlassSheet(
+        context: context,
+        heightFactor: 1.0,
+        showHandle: true,
+        builder: (context) => CreateDynPanel(
+          title: title,
+          items: items,
+          pics: pics,
+          topic: topic,
+          isPrivate: isPrivate,
+          editConfig: editConfig,
+          replyOption: replyOption,
+          onSuccess: onSuccess,
+        ),
+      );
+      return;
+    }
+    showModalBottomSheet(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      builder: (context) => DynDraggableScrollableSheet(
+        snap: true,
+        expand: false,
+        initialChildSize: 1,
+        minChildSize: 0,
+        maxChildSize: 1,
+        snapSizes: const [1],
+        builder: (context, scrollController) => CreateDynPanel(
+          scrollController: scrollController,
+          title: title,
+          items: items,
+          pics: pics,
+          topic: topic,
+          isPrivate: isPrivate,
+          editConfig: editConfig,
+          replyOption: replyOption,
+          onSuccess: onSuccess,
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {

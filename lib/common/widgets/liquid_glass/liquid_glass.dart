@@ -109,6 +109,7 @@ class _LiquidGlassState extends State<LiquidGlass> {
     return _LiquidGlass(
       program: LiquidGlassShader.isSupported ? LiquidGlassShader.program : null,
       devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+      backdropKey: BackdropGroup.of(context)?.backdropKey,
       radius: widget.radius,
       blurSigma: widget.blurSigma,
       refractionHeight: widget.refractionHeight,
@@ -126,6 +127,7 @@ class _LiquidGlass extends SingleChildRenderObjectWidget {
   const _LiquidGlass({
     required this.program,
     required this.devicePixelRatio,
+    required this.backdropKey,
     required this.radius,
     required this.blurSigma,
     required this.refractionHeight,
@@ -139,6 +141,7 @@ class _LiquidGlass extends SingleChildRenderObjectWidget {
 
   final ui.FragmentProgram? program;
   final double devicePixelRatio;
+  final BackdropKey? backdropKey;
   final double? radius;
   final double blurSigma;
   final double refractionHeight;
@@ -163,6 +166,7 @@ class RenderLiquidGlass extends RenderProxyBox {
   ui.FragmentProgram? _program;
   ui.FragmentShader? _shader;
   double _devicePixelRatio = 1;
+  BackdropKey? _backdropKey;
   double? _radius;
   double _blurSigma = 0;
   double _refractionHeight = 0;
@@ -179,6 +183,7 @@ class RenderLiquidGlass extends RenderProxyBox {
       _shader = _program?.fragmentShader();
     }
     _devicePixelRatio = widget.devicePixelRatio;
+    _backdropKey = widget.backdropKey;
     _radius = widget.radius;
     _blurSigma = widget.blurSigma;
     _refractionHeight = widget.refractionHeight;
@@ -211,14 +216,11 @@ class RenderLiquidGlass extends RenderProxyBox {
         : null;
 
     if (!_hasLens) {
-      if (_saturation == 1) return (blur, null);
-      final vibrancy = ui.ColorFilter.matrix(_saturationMatrix(_saturation));
-      return (
-        blur == null
-            ? vibrancy
-            : ui.ImageFilter.compose(outer: vibrancy, inner: blur),
-        null,
-      );
+      // Avoid an extra offscreen ImageFilter.compose pass when blurring without
+      // the lens shader: sharing one blur pass cuts Vulkan render targets.
+      if (blur != null) return (blur, null);
+      if (_saturation == 1) return (null, null);
+      return (ui.ColorFilter.matrix(_saturationMatrix(_saturation)), null);
     }
 
     // The shader sees physical pixels of the render pass, i.e. the screen.
@@ -282,9 +284,11 @@ class RenderLiquidGlass extends RenderProxyBox {
         paintContent(context, offset);
         return;
       }
+      final canShareFirst = _blurSigma > 0 && (_hasLens || _saturation == 1);
       if (second == null) {
         context.pushLayer(
-          BackdropFilterLayer(filter: first),
+          BackdropFilterLayer(filter: first)
+            ..backdropKey = canShareFirst ? _backdropKey : null,
           paintContent,
           offset,
         );
@@ -295,7 +299,8 @@ class RenderLiquidGlass extends RenderProxyBox {
       // aligned with uRect.
       context
         ..pushLayer(
-          BackdropFilterLayer(filter: first),
+          BackdropFilterLayer(filter: first)
+            ..backdropKey = canShareFirst ? _backdropKey : null,
           (context, offset) {
             context.canvas.drawRect(
               offset & size,

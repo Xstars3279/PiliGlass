@@ -112,45 +112,58 @@ class _HomePageState extends CommonPageState<HomePage>
   /// feed in the same layer, the glass beside it lost its blur in a strip at
   /// its left end while the feed scrolled. 动态 keeps its bar on the appBar
   /// too, and never loses it.
-  Widget _floatingTabs(Widget tabBar) => Scaffold(
-    primary: false,
-    resizeToAvoidBottomInset: false,
-    backgroundColor: Colors.transparent,
-    extendBodyBehindAppBar: true,
-    appBar: PreferredSize(
-      preferredSize: const Size.fromHeight(_floatingTabsHeight),
-      child: tabBar,
-    ),
-    body: Stack(
-      children: [
-        Positioned.fill(
-          child: RevampTopInset(
-            // with a single tab no bar floats there
-            inset: _homeController.tabs.length > 1 ? _floatingTabsHeight : 6,
-            child: onBuild(
-              tabBarView(
-                controller: _homeController.tabController,
-                children: _homeController.tabs.map((e) => e.page).toList(),
+  Widget _floatingTabs(Widget tabBar) {
+    final topPadding = Revamp.topPaddingOf(context);
+    final barExtent = topPadding + _floatingTabsHeight;
+    return Scaffold(
+      primary: false,
+      resizeToAvoidBottomInset: false,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(barExtent),
+        child: Padding(
+          padding: EdgeInsets.only(top: topPadding),
+          child: tabBar,
+        ),
+      ),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: RevampTopInset(
+              // with a single tab no bar floats there
+              inset: _homeController.tabs.length > 1
+                  ? barExtent
+                  : topPadding + 6,
+              child: onBuild(
+                tabBarView(
+                  controller: _homeController.tabController,
+                  children: _homeController.tabs.map((e) => e.page).toList(),
+                ),
               ),
             ),
           ),
-        ),
-        // the feed fades out behind the tabs when solid: the page's color at
-        // the top, nothing 24 below them; transparent glass shows the feed
-        if (_homeController.tabs.length > 1 && !UiGlass.clear)
+          // Soft gradient scrim from the very top edge so the transparent
+          // status bar remains legible while the feed scrolls underneath.
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            height: _floatingTabsHeight + UiSpace.s24,
+            height: barExtent + UiSpace.s24,
             child: IgnorePointer(
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: .topCenter,
                     end: .bottomCenter,
+                    stops: const [0.0, 0.55, 1.0],
                     colors: [
-                      _colorScheme.surface,
+                      _colorScheme.surface.withValues(
+                        alpha: UiGlass.clear ? 0.55 : 0.92,
+                      ),
+                      _colorScheme.surface.withValues(
+                        alpha: UiGlass.clear ? 0.22 : 0.55,
+                      ),
                       _colorScheme.surface.withValues(alpha: 0),
                     ],
                   ),
@@ -158,9 +171,10 @@ class _HomePageState extends CommonPageState<HomePage>
               ),
             ),
           ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 
   /// the room the floating tabs take: their bar and its margins
   static const _floatingTabsHeight = GlassTabBar.extent;
@@ -170,61 +184,63 @@ class _HomePageState extends CommonPageState<HomePage>
   /// The tabs are centred between the account's face and the bell; a page
   /// with a single tab still gets a capsule around it.
   Widget _glassTabBar() {
-    return Padding(
-      // the main page already pads the body below the status bar
-      padding: GlassTabBar.margin,
-      child: SizedBox(
-        height: GlassTabBar.height,
-        child: Row(
-          spacing: 8,
-          children: [
-            // the account's face at the left, on the same glass as the tabs:
-            // a tap goes to 我的, as the avatar on the old top bar did. Only
-            // where the dock is the bar's nav: the side rail already holds
-            // the account on a wide screen, and the face there is enough
-            if (_mainController.bottomNavFor(MediaQuery.sizeOf(context)))
-              _homeAvatar(),
-            Expanded(
-              // the row keeps to what it holds and sits in the middle of
-              // the room between the avatar and the bell, unless the switch
-              // in 设置 › PiliGlass 特性 says to start at the left; a page
-              // with a single tab gets a small capsule with that one tab
-              child: Obx(
-                () => CenteredGlassTabs(
-                  controller: _homeController.tabController,
-                  labels: _homeController.tabs.map((e) => e.label).toList(),
-                  centered: GlassFeatures.centerTabs.value,
-                  onTap: (_) {
-                    if (!_homeController.tabController.indexIsChanging) {
-                      _homeController.animateToTop();
-                    }
-                  },
+    return BackdropGroup(
+      child: Padding(
+        // the main page already pads the body below the status bar
+        padding: GlassTabBar.margin,
+        child: SizedBox(
+          height: GlassTabBar.height,
+          child: Row(
+            spacing: 8,
+            children: [
+              // the account's face at the left, on the same glass as the tabs:
+              // a tap goes to 我的, as the avatar on the old top bar did. Only
+              // where the dock is the bar's nav: the side rail already holds
+              // the account on a wide screen, and the face there is enough
+              if (_mainController.bottomNavFor(MediaQuery.sizeOf(context)))
+                _homeAvatar(),
+              Expanded(
+                // the row keeps to what it holds and sits in the middle of
+                // the room between the avatar and the bell, unless the switch
+                // in 设置 › PiliGlass 特性 says to start at the left; a page
+                // with a single tab gets a small capsule with that one tab
+                child: Obx(
+                  () => CenteredGlassTabs(
+                    controller: _homeController.tabController,
+                    labels: _homeController.tabs.map((e) => e.label).toList(),
+                    centered: GlassFeatures.centerTabs.value,
+                    onTap: (_) {
+                      if (!_homeController.tabController.indexIsChanging) {
+                        _homeController.animateToTop();
+                      }
+                    },
+                  ),
                 ),
               ),
-            ),
-            // on a wide screen the messages are on the rail's glass block,
-            // unless the window is too short for them there
-            Obx(
-              () =>
-                  _mainController.accountService.isLogin.value &&
-                      (_mainController.bottomNavFor(
-                            MediaQuery.sizeOf(context),
-                          ) ||
-                          !_mainController.railMessages.value)
-                  ? LiquidPress(
-                      maxGrowth: 10,
-                      child: GlassCapsule(
-                        refraction: true,
-                        padding: EdgeInsets.zero,
-                        child: SizedBox.square(
-                          dimension: GlassTabBar.height,
-                          child: Center(child: msgBadge(_mainController)),
+              // on a wide screen the messages are on the rail's glass block,
+              // unless the window is too short for them there
+              Obx(
+                () =>
+                    _mainController.accountService.isLogin.value &&
+                        (_mainController.bottomNavFor(
+                              MediaQuery.sizeOf(context),
+                            ) ||
+                            !_mainController.railMessages.value)
+                    ? LiquidPress(
+                        maxGrowth: 10,
+                        child: GlassCapsule(
+                          refraction: true,
+                          padding: EdgeInsets.zero,
+                          child: SizedBox.square(
+                            dimension: GlassTabBar.height,
+                            child: Center(child: msgBadge(_mainController)),
+                          ),
                         ),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          ],
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ),
         ),
       ),
     );

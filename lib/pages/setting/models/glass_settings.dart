@@ -1,6 +1,7 @@
 import 'package:PiliPlus/common/glass_features.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
+import 'package:PiliPlus/pages/setting/pages/extreme_glass_settings.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/slider_dialog.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -80,6 +81,12 @@ const List<(String, List<SettingsModel>)> glassSettingGroups = [
         leading: Icon(Icons.lens_blur_outlined),
         getSubtitle: _glassLevelSubtitle,
         onTap: _showGlassLevelDialog,
+      ),
+      NormalModel(
+        title: '极致液态玻璃微调',
+        leading: Icon(Icons.tune_outlined),
+        getSubtitle: _extremeGlassSubtitle,
+        onTap: _openExtremeGlassPage,
       ),
       SwitchModel(
         title: '玻璃提示框',
@@ -186,6 +193,27 @@ final List<SettingsModel> glassSettings = [
   for (final (_, models) in glassSettingGroups) ...models,
 ];
 
+String _extremeGlassSubtitle() {
+  if (UiGlass.level != UiGlassLevel.extreme) {
+    return '需将「透明效果」设为「极致」并重启后才能进入';
+  }
+  return '壳体模糊 ${UiGlass.extremeShellBlur.toStringAsFixed(1)} · '
+      '不透明 ${(UiGlass.extremeShellAlpha * 100).round()}% · '
+      '折射 ${UiGlass.extremeRefractionScale.toStringAsFixed(1)}x';
+}
+
+Future<void> _openExtremeGlassPage(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  if (UiGlass.level != UiGlassLevel.extreme) {
+    SmartDialog.showToast('请先将“透明效果”设为“极致”并重启软件');
+    return;
+  }
+  await Get.to(() => const ExtremeGlassPage());
+  setState();
+}
+
 /// as set, while [UiGlass.level] keeps what the app started with
 UiGlassLevel _glassLevelNow() =>
     UiGlassLevel.values[(GStorage.setting.get(
@@ -217,6 +245,7 @@ Future<void> _showGlassLevelDialog(
     await GStorage.setting.put(UiGlass.key, res.index);
     SmartDialog.showToast('重启生效');
     setState();
+    Get.forceAppUpdate();
   }
 }
 

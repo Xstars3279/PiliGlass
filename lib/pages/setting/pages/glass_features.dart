@@ -1,6 +1,7 @@
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/pages/setting/models/glass_settings.dart';
+import 'package:PiliPlus/pages/setting/widgets/restart_button.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// 设置 › PiliGlass 特性: the switches of what PiliGlass adds, under small
@@ -34,7 +35,12 @@ class GlassFeaturesPage extends StatelessWidget {
 
     if (!Revamp.enabled) {
       return SimpleScaffold(
-        appBar: showAppBar ? AppBar(title: const Text(title)) : null,
+        appBar: showAppBar
+            ? AppBar(
+                title: const Text(title),
+                actions: SettingRestartButton.actions,
+              )
+            : null,
         body: ListView(
           padding: side.copyWith(bottom: padding.bottom + 100),
           children: [
@@ -49,7 +55,11 @@ class GlassFeaturesPage extends StatelessWidget {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          RevampLargeAppBar(title: title, implyLeading: showAppBar),
+          RevampLargeAppBar(
+            title: title,
+            implyLeading: showAppBar,
+            actions: showAppBar ? SettingRestartButton.actions : null,
+          ),
           for (final (name, models) in glassSettingGroups)
             SliverPadding(
               padding: side,

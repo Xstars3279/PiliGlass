@@ -433,26 +433,43 @@ class _MainAppState extends PopScopeState<MainApp>
 
   @override
   Widget build(BuildContext context) {
+    final fullBleedTop =
+        _mainController.useBottomNav && _mainController.dockSearch;
+    final topPad = _padding.top > 0
+        ? _padding.top
+        : Revamp.topPaddingOf(context);
+    List<Widget> pages() => _mainController.navigationBars.map((i) {
+      if (fullBleedTop &&
+          i != NavigationBarType.home &&
+          i != NavigationBarType.dynamics) {
+        return Padding(
+          padding: EdgeInsets.only(top: topPad),
+          child: i.page,
+        );
+      }
+      return i.page;
+    }).toList();
+
     Widget child;
     if (_mainController.mainTabBarView) {
       child = TabBarView(
         controller: _mainController.controller,
         physics: const NeverScrollableScrollPhysics(),
         scrollDirection: _mainController.useBottomNav ? .horizontal : .vertical,
-        children: _mainController.navigationBars.map((i) => i.page).toList(),
+        children: pages(),
       );
     } else if (Revamp.enabled) {
       child = Obx(
         () => _LazyTabStack(
           index: _mainController.selectedIndex.value,
-          children: _mainController.navigationBars.map((i) => i.page).toList(),
+          children: pages(),
         ),
       );
     } else {
       child = PageView(
         controller: _mainController.controller,
         physics: const NeverScrollableScrollPhysics(),
-        children: _mainController.navigationBars.map((i) => i.page).toList(),
+        children: pages(),
       );
     }
 
@@ -478,13 +495,18 @@ class _MainAppState extends PopScopeState<MainApp>
     } else if (_mainController.useBottomNav) {
       bottomNav = _bottomNav;
       if (bottomNav != null) {
-        bottomNav = MediaQuery.removePadding(
-          context: context,
-          removeTop: true,
-          child: bottomNav,
+        bottomNav = BackdropGroup(
+          child: MediaQuery.removePadding(
+            context: context,
+            removeTop: true,
+            child: bottomNav,
+          ),
         );
       }
-      padding = _padding.copyWith(bottom: 0);
+      padding = _padding.copyWith(
+        top: fullBleedTop ? 0 : null,
+        bottom: 0,
+      );
     } else {
       sideBar = DecoratedBox(
         decoration: BoxDecoration(

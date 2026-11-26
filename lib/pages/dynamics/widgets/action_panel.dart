@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
+import 'package:PiliPlus/common/widgets/grow_from.dart';
 import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:PiliPlus/pages/dynamics_repost/view.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
@@ -48,9 +49,10 @@ class ActionPanel extends StatelessWidget {
           child: Builder(
             builder: (context) {
               return TextButton.icon(
-                onPressed: () => showModalBottomSheet(
+                onPressed: () => showGrowingSheet(
                   context: context,
-                  isScrollControlled: true,
+                  from: morphRectOf(context),
+                  anchor: Alignment.bottomLeft,
                   useSafeArea: true,
                   builder: (_) => RepostPanel(
                     item: item,

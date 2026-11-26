@@ -34,10 +34,8 @@ class _RcmdPageState extends State<RcmdPage>
   Widget build(BuildContext context) {
     super.build(context);
     final colorScheme = ColorScheme.of(context);
-    final child = Container(
-      clipBehavior: .hardEdge,
-      margin: const .symmetric(horizontal: Style.safeSpace),
-      decoration: const BoxDecoration(borderRadius: Style.mdRadius),
+    final scrollView = Padding(
+      padding: const .symmetric(horizontal: Style.safeSpace),
       child: refreshIndicator(
         key: controller.refreshKey,
         onRefresh: controller.onRefresh,
@@ -59,6 +57,13 @@ class _RcmdPageState extends State<RcmdPage>
         ),
       ),
     );
+    final child = Revamp.enabled
+        ? scrollView
+        : Container(
+            clipBehavior: .hardEdge,
+            decoration: const BoxDecoration(borderRadius: Style.mdRadius),
+            child: scrollView,
+          );
     if (PlatformUtils.isDesktop && Pref.showRefreshFAB) {
       return ScaffoldLayout(
         body: child,

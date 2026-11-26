@@ -88,12 +88,14 @@ class LiquidGlassDockAction {
   const LiquidGlassDockAction({
     required this.icon,
     required this.label,
-    required this.onTap,
-  });
+    this.onTap,
+    this.onTapWithContext,
+  }) : assert(onTap != null || onTapWithContext != null);
 
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final ValueChanged<BuildContext>? onTapWithContext;
 }
 
 class LiquidGlassNavigationBar extends StatefulWidget {
@@ -191,6 +193,11 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
   void initState() {
     super.initState();
     _position.addListener(_wobble);
+    UiGlass.revision.addListener(_onGlassChanged);
+  }
+
+  void _onGlassChanged() {
+    if (mounted) setState(() {});
   }
 
   int get _count => widget.destinations.length;
@@ -241,6 +248,7 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
 
   @override
   void dispose() {
+    UiGlass.revision.removeListener(_onGlassChanged);
     _position.dispose();
     _press.dispose();
     _scaleX.dispose();
@@ -432,81 +440,83 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
       Radius.circular(pillRect.height / 2),
     );
     final barScale = lerpDouble(1, 1 + 16 / _width, press)!;
+    final splitLens = UiGlass.refraction && press > 0.001;
+
+    final outerGlass = Transform.translate(
+      offset: Offset(panelOffset, 0),
+      child: Transform(
+        alignment: .center,
+        transform: Matrix4.diagonal3Values(
+          barScale * stretch,
+          barScale,
+          1,
+        ),
+        child: CustomPaint(
+          painter: GlassShadowPainter.of(
+            radius: barRadius,
+            shadow: UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
+          ),
+          foregroundPainter: GlassRimPainter(
+            radius: barRadius,
+            opacity: UiGlass.rim,
+            isDark: isDark,
+            edge: UiGlass.edge(colorScheme),
+            // the light under the finger is the glass's
+            glow: UiGlass.refraction ? press : 0,
+            glowCenter: pillCenter.dx - panelOffset,
+          ),
+          child: LiquidGlass(
+            blurSigma: UiGlass.shellBlur,
+            refractionHeight:
+                UiGlass.refraction ? 24 * UiGlass.shellRefractionScale : 0,
+            refractionAmount:
+                UiGlass.refraction ? 24 * UiGlass.shellRefractionScale : 0,
+            saturation: UiGlass.saturation,
+            color: barTint,
+          ),
+        ),
+      ),
+    );
 
     return Stack(
       clipBehavior: .none,
       children: [
-        // What the pill shows, below the accent tabs: a glass slab
-        // inset from the bar (56 instead of 64 high), seen only
-        // through the pill. Painted before the bar's outer shell so
-        // the shell's lens samples blurred glass across the pill hole.
-        Positioned.fill(
-          child: ClipPath(
-            clipper: _PillClipper(pillRRect),
-            child: Stack(
-              clipBehavior: .none,
-              children: [
-                Positioned.fromRect(
-                  rect: Rect.fromCenter(
-                    center: Offset(
-                      _width / 2 + panelOffset,
-                      _kBarHeight / 2,
+        // Only split the pill backdrop from the outer bar while pressed so the
+        // moving lens sees crisp content behind it; at rest a single glass pass
+        // avoids double-tinting around the pill rim and cuts blur passes.
+        if (splitLens)
+          Positioned.fill(
+            child: ClipPath(
+              clipper: _PillClipper(pillRRect),
+              child: Stack(
+                clipBehavior: .none,
+                children: [
+                  Positioned.fromRect(
+                    rect: Rect.fromCenter(
+                      center: Offset(
+                        _width / 2 + panelOffset,
+                        _kBarHeight / 2,
+                      ),
+                      width: _width * barScale * stretch + 2,
+                      height: _kPillHeight,
                     ),
-                    // a hair wider than the bar, so the bar's edge never
-                    // shows inside the pill as a thinner inner bar
-                    width: _width * barScale * stretch + 2,
-                    height: _kPillHeight,
+                    child: LiquidGlass(
+                      blurSigma: UiGlass.shellBlur,
+                      saturation: UiGlass.saturation,
+                      color: barTint,
+                    ),
                   ),
-                  child: LiquidGlass(
-                    blurSigma: UiGlass.shellBlur,
-                    saturation: UiGlass.saturation,
-                    color: barTint,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        // The bar: only the glass grows when pressed, not the tabs.
-        // It has a hole where the pill is, so the pill's own glass
-        // sees the sharp content behind the bar, not the bar's blur.
-        Positioned.fill(
-          child: ClipPath(
-            clipper: _PillClipper(pillRRect, inverse: true),
-            child: Transform.translate(
-              offset: Offset(panelOffset, 0),
-              child: Transform(
-                alignment: .center,
-                transform: Matrix4.diagonal3Values(
-                  barScale * stretch,
-                  barScale,
-                  1,
-                ),
-                child: CustomPaint(
-                  painter: GlassShadowPainter.of(
-                    radius: barRadius,
-                    shadow: UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
-                  ),
-                  foregroundPainter: GlassRimPainter(
-                    radius: barRadius,
-                    opacity: UiGlass.rim,
-                    isDark: isDark,
-                    edge: UiGlass.edge(colorScheme),
-                    // the light under the finger is the glass's
-                    glow: UiGlass.refraction ? press : 0,
-                    glowCenter: pillCenter.dx - panelOffset,
-                  ),
-                  child: LiquidGlass(
-                    blurSigma: UiGlass.shellBlur,
-                    refractionHeight: UiGlass.refraction ? 24 : 0,
-                    refractionAmount: UiGlass.refraction ? 24 : 0,
-                    saturation: UiGlass.saturation,
-                    color: barTint,
-                  ),
-                ),
+                ],
               ),
             ),
           ),
+        Positioned.fill(
+          child: splitLens
+              ? ClipPath(
+                  clipper: _PillClipper(pillRRect, inverse: true),
+                  child: outerGlass,
+                )
+              : outerGlass,
         ),
         // the selected tab's pill; pressed, almost nothing where the lens
         // of clear glass shows instead (极致), solid everywhere else
@@ -577,8 +587,8 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
                 innerShadow: press,
               ),
               child: LiquidGlass(
-                refractionHeight: 10 * press,
-                refractionAmount: 14 * press,
+                refractionHeight: 10 * press * UiGlass.shellRefractionScale,
+                refractionAmount: 14 * press * UiGlass.shellRefractionScale,
                 depthEffect: true,
                 chromaticAberration: 0.5,
               ),
@@ -619,8 +629,10 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
             ),
             child: LiquidGlass(
               blurSigma: UiGlass.shellBlur,
-              refractionHeight: UiGlass.refraction ? 24 : 0,
-              refractionAmount: UiGlass.refraction ? 24 : 0,
+              refractionHeight:
+                  UiGlass.refraction ? 24 * UiGlass.shellRefractionScale : 0,
+              refractionAmount:
+                  UiGlass.refraction ? 24 * UiGlass.shellRefractionScale : 0,
               saturation: UiGlass.saturation,
               color: barTint,
             ),
@@ -675,9 +687,12 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
       excludeSemantics: true,
       child: LiquidPress(
         maxGrowth: 10,
-        child: GestureDetector(
-          onTap: action?.onTap ?? _openSearch,
-          child: CustomPaint(
+        child: Builder(
+          builder: (actionContext) => GestureDetector(
+            onTap: action?.onTapWithContext != null
+                ? () => action!.onTapWithContext!(actionContext)
+                : (action?.onTap ?? _openSearch),
+            child: CustomPaint(
           painter: GlassShadowPainter.of(
             radius: radius,
             shadow: UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
@@ -690,8 +705,10 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
           ),
           child: LiquidGlass(
             blurSigma: UiGlass.shellBlur,
-            refractionHeight: UiGlass.refraction ? 20 : 0,
-            refractionAmount: UiGlass.refraction ? 20 : 0,
+            refractionHeight:
+                UiGlass.refraction ? 20 * UiGlass.shellRefractionScale : 0,
+            refractionAmount:
+                UiGlass.refraction ? 20 * UiGlass.shellRefractionScale : 0,
             saturation: UiGlass.saturation,
             color: barTint,
             child: Padding(
@@ -739,6 +756,7 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
               ),
             ),
           ),
+        ),
         ),
         ),
       ),

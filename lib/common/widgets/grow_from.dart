@@ -1,5 +1,205 @@
+import 'dart:math' as math;
+
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_box.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:flutter/rendering.dart';
 import 'package:material_ui/material_ui.dart';
+
+/// Shows a bottom sheet that grows out of [from] (when [Revamp.enabled] and
+/// [from] is non-null), falling back to [showModalBottomSheet] otherwise.
+Future<T?> showGrowingSheet<T>({
+  required BuildContext context,
+  Rect? from,
+  Alignment anchor = Alignment.topRight,
+  required WidgetBuilder builder,
+  BoxConstraints? constraints,
+  double? heightFactor,
+  bool useSafeArea = true,
+  bool glass = false,
+  bool press = false,
+  bool pullPastEdges = false,
+  bool useRootNavigator = false,
+}) {
+  if (!Revamp.enabled || from == null) {
+    return showModalBottomSheet<T>(
+      context: context,
+      useSafeArea: useSafeArea,
+      isScrollControlled: true,
+      useRootNavigator: useRootNavigator,
+      constraints: constraints,
+      builder: builder,
+    );
+  }
+  final theme = Theme.of(context);
+  final isDark = theme.brightness == Brightness.dark;
+  final barrierColor =
+      theme.bottomSheetTheme.modalBarrierColor ??
+      Colors.black.withValues(alpha: isDark ? 0.5 : 0.32);
+
+  return Navigator.of(context, rootNavigator: useRootNavigator).push<T>(
+    PageRouteBuilder<T>(
+      opaque: false,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: barrierColor,
+      transitionDuration: const Duration(milliseconds: 420),
+      reverseTransitionDuration: const Duration(milliseconds: 240),
+      pageBuilder: (routeContext, animation, _) {
+        final media = MediaQuery.of(routeContext);
+        final sheetConstraints =
+            constraints ??
+            BoxConstraints(
+              maxWidth: math.min(640, media.size.shortestSide),
+            );
+        Widget content = Builder(builder: builder);
+        if (heightFactor != null) {
+          content = FractionallySizedBox(
+            heightFactor: heightFactor,
+            widthFactor: 1,
+            alignment: Alignment.bottomCenter,
+            child: content,
+          );
+        }
+        if (glass) {
+          content = Material(
+            type: MaterialType.transparency,
+            child: GlassBox(
+              radius: Revamp.sheetRadius,
+              child: content,
+            ),
+          );
+        } else {
+          content = Material(
+            color: theme.colorScheme.surfaceContainerLow,
+            shape: Revamp.shape(
+              const BorderRadius.vertical(
+                top: Radius.circular(Revamp.sheetRadius),
+              ),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: content,
+          );
+        }
+        if (press) {
+          content = LiquidPress(
+            pullPastEdges: pullPastEdges,
+            maxGrowth: 6,
+            child: content,
+          );
+        }
+        if (useSafeArea) {
+          content = SafeArea(
+            bottom: false,
+            child: content,
+          );
+        }
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: ConstrainedBox(
+            constraints: sheetConstraints,
+            child: GrowFromRect(
+              from: from,
+              animation: curved,
+              radius: Revamp.sheetRadius,
+              anchor: anchor,
+              child: content,
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+/// Shows a dialog card that grows out of [from] (when [Revamp.enabled] and
+/// [from] is non-null), falling back to [showDialog] otherwise.
+Future<T?> showGrowingDialog<T>({
+  required BuildContext context,
+  Rect? from,
+  Alignment anchor = Alignment.center,
+  required WidgetBuilder builder,
+  bool glass = false,
+  bool barrierDismissible = true,
+  bool useSafeArea = true,
+  bool useRootNavigator = true,
+}) {
+  if (!Revamp.enabled || from == null) {
+    return showDialog<T>(
+      context: context,
+      barrierDismissible: barrierDismissible,
+      useSafeArea: useSafeArea,
+      useRootNavigator: useRootNavigator,
+      builder: builder,
+    );
+  }
+  final theme = Theme.of(context);
+  final isDark = theme.brightness == Brightness.dark;
+  final barrierColor =
+      theme.dialogTheme.barrierColor ??
+      Colors.black.withValues(alpha: isDark ? 0.54 : 0.4);
+
+  return Navigator.of(context, rootNavigator: useRootNavigator).push<T>(
+    PageRouteBuilder<T>(
+      opaque: false,
+      barrierDismissible: barrierDismissible,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: barrierColor,
+      transitionDuration: const Duration(milliseconds: 380),
+      reverseTransitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (routeContext, animation, _) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        final card = ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 280, maxWidth: 560),
+          child: glass
+              ? Material(
+                  type: MaterialType.transparency,
+                  child: GlassBox(
+                    radius: Revamp.sheetRadius,
+                    child: Builder(builder: builder),
+                  ),
+                )
+              : Material(
+                  color: theme.colorScheme.surfaceContainerHigh,
+                  elevation: theme.dialogTheme.elevation ?? 6,
+                  shape: Revamp.shape(
+                    const BorderRadius.all(
+                      Radius.circular(Revamp.sheetRadius),
+                    ),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Builder(builder: builder),
+                ),
+        );
+        Widget dialog = Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+          child: Center(
+            child: GrowFromRect(
+              from: from,
+              animation: curved,
+              radius: Revamp.sheetRadius,
+              anchor: anchor,
+              child: card,
+            ),
+          ),
+        );
+        if (useSafeArea) {
+          dialog = SafeArea(child: dialog);
+        }
+        return dialog;
+      },
+    ),
+  );
+}
 
 /// The global rect of [context]'s render box, for a panel to grow out of;
 /// null while it has no size yet.

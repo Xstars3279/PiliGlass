@@ -37,8 +37,10 @@ class GlassRefreshIndicator extends StatelessWidget {
           ),
           child: LiquidGlass(
             blurSigma: UiGlass.shellBlur,
-            refractionHeight: UiGlass.refraction ? 12 : 0,
-            refractionAmount: UiGlass.refraction ? 14 : 0,
+            refractionHeight:
+                UiGlass.refraction ? 12 * UiGlass.shellRefractionScale : 0,
+            refractionAmount:
+                UiGlass.refraction ? 14 * UiGlass.shellRefractionScale : 0,
             saturation: UiGlass.saturation,
             color: UiGlass.shell(colorScheme),
             child: Padding(

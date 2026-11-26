@@ -26,21 +26,28 @@ class GlassCapsule extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
     final isDark = colorScheme.brightness == .dark;
-    final lens = refraction && UiGlass.refraction;
+    final content = Padding(padding: padding, child: child);
     // the painters and the glass round off whatever the height
-    return CustomPaint(
-      painter: _StadiumShadow(
-        UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
-      ),
-      foregroundPainter: _StadiumRim(isDark, UiGlass.edge(colorScheme)),
-      child: LiquidGlass(
-        blurSigma: UiGlass.shellBlur,
-        refractionHeight: lens ? 16 : 0,
-        refractionAmount: lens ? 18 : 0,
-        saturation: UiGlass.saturation,
-        color: UiGlass.shell(colorScheme),
-        child: Padding(padding: padding, child: child),
-      ),
+    return ListenableBuilder(
+      listenable: UiGlass.revision,
+      builder: (context, child) {
+        final lens = refraction && UiGlass.refraction;
+        return CustomPaint(
+          painter: _StadiumShadow(
+            UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
+          ),
+          foregroundPainter: _StadiumRim(isDark, UiGlass.edge(colorScheme)),
+          child: LiquidGlass(
+            blurSigma: UiGlass.shellBlur,
+            refractionHeight: lens ? 16 * UiGlass.shellRefractionScale : 0,
+            refractionAmount: lens ? 18 * UiGlass.shellRefractionScale : 0,
+            saturation: UiGlass.saturation,
+            color: UiGlass.shell(colorScheme),
+            child: child,
+          ),
+        );
+      },
+      child: content,
     );
   }
 }

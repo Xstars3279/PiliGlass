@@ -1,14 +1,17 @@
 import 'dart:math' show min;
 
 import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
+import 'package:PiliPlus/common/widgets/grow_from.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/image_viewer/hero.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_menu.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_sheet.dart';
 import 'package:PiliPlus/common/widgets/progress_bar/audio_video_progress_bar.dart';
 import 'package:PiliPlus/common/widgets/progress_bar/segment_progress_bar.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -164,11 +167,13 @@ class _AudioPageState extends State<AudioPage> {
           ),
           if (_controller.isUgc) ...[
             const SizedBox(width: 2),
-            GlassIconButton(
-              tapSize: 44,
-              tooltip: '更多',
-              onTap: _showMore,
-              icon: const Icon(Icons.more_vert),
+            Builder(
+              builder: (btnCtx) => GlassIconButton(
+                tapSize: 44,
+                tooltip: '更多',
+                onTap: () => _showMore(btnCtx),
+                icon: const Icon(Icons.more_vert),
+              ),
             ),
           ],
           const SizedBox(width: 4),
@@ -228,10 +233,14 @@ class _AudioPageState extends State<AudioPage> {
       final scrollController = ScrollController(
         initialScrollOffset: initialScrollOffset,
       );
-      showModalBottomSheet(
+      final heightFactor =
+          PlatformUtils.isMobile && !MediaQuery.isPortraitOf(context)
+          ? 1.0
+          : 0.7;
+      showGlassSheet(
         context: context,
-        useSafeArea: true,
-        isScrollControlled: true,
+        heightFactor: Revamp.enabled ? heightFactor : null,
+        showHandle: true,
         constraints: BoxConstraints(
           maxWidth: min(640, MediaQuery.shortestSideOf(context)),
         ),
@@ -416,14 +425,9 @@ class _AudioPageState extends State<AudioPage> {
               child: child,
             );
           }
-          return FractionallySizedBox(
-            heightFactor:
-                PlatformUtils.isMobile && !MediaQuery.isPortraitOf(context)
-                ? 1.0
-                : 0.7,
-            alignment: Alignment.bottomCenter,
-            child: Column(
-              children: [
+          final content = Column(
+            children: [
+              if (!Revamp.enabled)
                 InkWell(
                   onTap: Get.back,
                   borderRadius: Style.bottomSheetRadius,
@@ -441,35 +445,42 @@ class _AudioPageState extends State<AudioPage> {
                     ),
                   ),
                 ),
-                Expanded(
-                  child: Material(
-                    type: .transparency,
-                    child: child,
-                  ),
+              Expanded(
+                child: Material(
+                  type: .transparency,
+                  child: child,
                 ),
-                Divider(
-                  height: 1,
-                  color: colorScheme.outline.withValues(alpha: 0.1),
+              ),
+              Divider(
+                height: 1,
+                color: colorScheme.outline.withValues(alpha: 0.1),
+              ),
+              Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.viewPaddingOf(context).bottom,
                 ),
-                Padding(
-                  padding: EdgeInsets.only(
-                    bottom: MediaQuery.viewPaddingOf(context).bottom,
-                  ),
-                  child: InkWell(
-                    onTap: Get.back,
-                    child: SizedBox(
-                      height: 45,
-                      child: Center(
-                        child: Text(
-                          '关闭',
-                          style: TextStyle(color: colorScheme.outline),
-                        ),
+                child: InkWell(
+                  onTap: Get.back,
+                  child: SizedBox(
+                    height: 45,
+                    child: Center(
+                      child: Text(
+                        '关闭',
+                        style: TextStyle(color: colorScheme.outline),
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
+          );
+          if (Revamp.enabled) {
+            return content;
+          }
+          return FractionallySizedBox(
+            heightFactor: heightFactor,
+            alignment: Alignment.bottomCenter,
+            child: content,
           );
         },
       ).whenComplete(scrollController.dispose);
@@ -477,10 +488,9 @@ class _AudioPageState extends State<AudioPage> {
   }
 
   void _showPlaySettings() {
-    showModalBottomSheet(
+    showGlassSheet(
       context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
+      showHandle: true,
       constraints: BoxConstraints(
         maxWidth: min(640, MediaQuery.shortestSideOf(context)),
       ),
@@ -490,25 +500,26 @@ class _AudioPageState extends State<AudioPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            InkWell(
-              onTap: Get.back,
-              borderRadius: Style.bottomSheetRadius,
-              child: SizedBox(
-                height: 35,
-                child: Center(
-                  child: Container(
-                    width: 32,
-                    height: 3,
-                    decoration: BoxDecoration(
-                      color: colorScheme.outline,
-                      borderRadius: const BorderRadius.all(
-                        Radius.circular(3),
+            if (!Revamp.enabled)
+              InkWell(
+                onTap: Get.back,
+                borderRadius: Style.bottomSheetRadius,
+                child: SizedBox(
+                  height: 35,
+                  child: Center(
+                    child: Container(
+                      width: 32,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: colorScheme.outline,
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(3),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
             Padding(
               padding: EdgeInsets.only(
                 top: 12,
@@ -608,11 +619,14 @@ class _AudioPageState extends State<AudioPage> {
     );
   }
 
-  void _showMore() {
-    showModalBottomSheet(
+  void _showMore([BuildContext? btnCtx]) {
+    showGrowingSheet(
       context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
+      from: btnCtx == null ? null : morphRectOf(btnCtx),
+      anchor: Alignment.topRight,
+      glass: true,
+      press: true,
+      pullPastEdges: true,
       constraints: BoxConstraints(
         maxWidth: min(640, MediaQuery.shortestSideOf(context)),
       ),

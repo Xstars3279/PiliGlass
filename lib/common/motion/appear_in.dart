@@ -35,7 +35,10 @@ class _AppearInState extends State<AppearIn>
   @override
   void initState() {
     super.initState();
-    if (!_play()) _controller.value = 1;
+    if (!_play()) {
+      _skipped = true;
+      _controller.value = 1;
+    }
   }
 
   /// A refresh brings a new list into the same cards: they rise in again,
@@ -43,7 +46,10 @@ class _AppearInState extends State<AppearIn>
   @override
   void didUpdateWidget(AppearIn oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.since != oldWidget.since) _play();
+    if (widget.since != oldWidget.since) {
+      _skipped = false;
+      if (!_play()) _skipped = true;
+    }
   }
 
   /// Starts the rise if the list arrived just now; false if it did not.
@@ -89,6 +95,7 @@ class _RiseInState extends State<RiseIn>
     final position = Scrollable.maybeOf(context)?.position;
     final still = position != null && !position.isScrollingNotifier.value;
     if (!still || _RiseScope.of(context)) {
+      _skipped = true;
       _controller.value = 1;
       return;
     }
@@ -120,6 +127,7 @@ mixin _Rise<T extends StatefulWidget>
     value: 0,
   );
   Timer? _timer;
+  bool _skipped = false;
 
   void _rise(int index) {
     _timer?.cancel();
@@ -137,7 +145,7 @@ mixin _Rise<T extends StatefulWidget>
   }
 
   Widget _buildRise(BuildContext context, Widget child) {
-    if (!GlassFeatures.riseIn || MediaQuery.disableAnimationsOf(context)) {
+    if (_skipped || !GlassFeatures.riseIn || MediaQuery.disableAnimationsOf(context)) {
       return child;
     }
     return AnimatedBuilder(

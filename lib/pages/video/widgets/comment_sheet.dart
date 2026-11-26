@@ -6,7 +6,6 @@ import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/common/motion/springs.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_painters.dart';
-import 'package:PiliPlus/common/widgets/liquid_glass/liquid_glass.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
@@ -144,6 +143,15 @@ class _CommentSheetState extends State<CommentSheet>
   final List<_Thread> _threads = [];
   final List<AnimationController> _threadIns = [];
   final List<LocalHistoryEntry?> _threadHistories = [];
+  final Set<int> _closingThreads = {};
+
+  int get _activeThreadCount {
+    int count = 0;
+    while (count < _threads.length && !_closingThreads.contains(count)) {
+      count++;
+    }
+    return count;
+  }
 
   /// replies to a thread's first floor, given by its panel
   final List<VoidCallback?> _threadReplies = [];
@@ -303,18 +311,20 @@ class _CommentSheetState extends State<CommentSheet>
         );
     // the still follows the level too: thick glass at 极致, the frosted
     // panel of the redesign elsewhere
-    final sigma = (UiGlass.liquid ? UiGlass.panelBlur : 8) * scale;
+    final sigma = (UiGlass.liquid ? UiGlass.sheetBlur : 8) * scale;
     // the filter on a layer: one on the paint of drawImage is not applied by
     // every backend
     Canvas(recorder)
       ..saveLayer(
         bounds,
         Paint()
-          ..imageFilter = ui.ImageFilter.blur(
-            sigmaX: sigma,
-            sigmaY: sigma,
-            tileMode: .clamp,
-          )
+          ..imageFilter = sigma > 0
+              ? ui.ImageFilter.blur(
+                  sigmaX: sigma,
+                  sigmaY: sigma,
+                  tileMode: .clamp,
+                )
+              : null
           ..colorFilter = ColorFilter.matrix(
             _saturation(UiGlass.liquid ? UiGlass.saturation : 1.7),
           ),
@@ -526,14 +536,23 @@ class _CommentSheetState extends State<CommentSheet>
 
   /// the back button leaves the top thread before closing the sheet
   void _onThreadBack(int level) {
-    if (level >= _threads.length) return;
+    if (level >= _threads.length || _closingThreads.contains(level)) return;
     _threadHistories[level] = null;
+    // Mark closing immediately so header, bottom bar, and scroll gestures
+    // switch back to the underlying list right away without waiting for exit.
+    setState(() => _closingThreads.add(level));
     final controller = _threadIns[level];
-    controller.springTo(0, Springs.smooth).whenCompleteOrCancel(() {
-      if (mounted && controller.value <= 0.001 && level < _threads.length) {
-        setState(() => _clearThreads(level));
-      }
-    });
+    controller
+        .animateTo(
+          0,
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+        )
+        .whenCompleteOrCancel(() {
+          if (mounted && level < _threads.length) {
+            setState(() => _clearThreads(level));
+          }
+        });
   }
 
   /// drops the threads from [level] up
@@ -545,6 +564,7 @@ class _CommentSheetState extends State<CommentSheet>
     _threadIns.removeRange(level, _threadIns.length);
     _threadReplies.removeRange(level, _threadReplies.length);
     _threadHistories.removeRange(level, _threadHistories.length);
+    _closingThreads.removeWhere((i) => i >= level);
   }
 
   void _closeThread() {
@@ -714,7 +734,8 @@ class _CommentSheetState extends State<CommentSheet>
         // the input bar floats over the bottom of the open sheet
         // a 对话列表 has no first floor to reply to
         if (_panel == null &&
-            (_threads.isEmpty || _threads.last.replyTo != null))
+            (_activeThreadCount == 0 ||
+                _threads[_activeThreadCount - 1].replyTo != null))
           ListenableBuilder(
             listenable: _shown,
             builder: (context, child) => Positioned(
@@ -729,11 +750,12 @@ class _CommentSheetState extends State<CommentSheet>
               child: child!,
             ),
             child: _InputBar(
-              label: _threads.isEmpty
+              label: _activeThreadCount == 0
                   ? '发条友善的评论'
-                  : '回复 @${_threads.last.replyTo}',
-              onTap: () =>
-                  _threads.isEmpty ? _reply() : _threadReplies.last?.call(),
+                  : '回复 @${_threads[_activeThreadCount - 1].replyTo}',
+              onTap: () => _activeThreadCount == 0
+                  ? _reply()
+                  : _threadReplies[_activeThreadCount - 1]?.call(),
             ),
           ),
       ],
@@ -777,8 +799,8 @@ class _CommentSheetState extends State<CommentSheet>
                   shown: _shown,
                   height: _height,
                   // the same until the still is ready
-                  base: UiGlass.panel(colorScheme),
-                  color: UiGlass.panel(colorScheme),
+                  base: UiGlass.sheetPanel(colorScheme),
+                  color: UiGlass.sheetPanel(colorScheme),
                 ),
               ),
             ),
@@ -861,8 +883,10 @@ class _CommentSheetState extends State<CommentSheet>
               // the list is level -1; a thread at level i enters with t(i)
               final enter = level < 0 ? 0.0 : width * (1 - t(level));
               final next = t(level + 1);
+              final isClosing = level >= 0 && _closingThreads.contains(level);
+              final blockedByUpper = level + 1 < _activeThreadCount;
               return IgnorePointer(
-                ignoring: level + 1 < _threadIns.length,
+                ignoring: isClosing || blockedByUpper,
                 child: Opacity(
                   opacity: (1 - next).clamp(0.0, 1.0),
                   child: Transform.translate(
@@ -930,8 +954,11 @@ class _CommentSheetState extends State<CommentSheet>
             if (_panel == null)
               Expanded(
                 child: Padding(
-                  padding: .only(left: _threads.isNotEmpty ? 6 : 20, right: 6),
-                  child: _threads.isNotEmpty
+                  padding: .only(
+                    left: _activeThreadCount > 0 ? 6 : 20,
+                    right: 6,
+                  ),
+                  child: _activeThreadCount > 0
                       ? Row(
                           children: [
                             IconButton(
@@ -940,7 +967,9 @@ class _CommentSheetState extends State<CommentSheet>
                               icon: const Icon(Icons.arrow_back_rounded),
                             ),
                             Text(
-                              _threads.last.dialog != null ? '对话列表' : '评论详情',
+                              _threads[_activeThreadCount - 1].dialog != null
+                                  ? '对话列表'
+                                  : '评论详情',
                               style: UiType.title,
                             ),
                             const Spacer(),
@@ -1145,12 +1174,13 @@ class _InputBar extends StatelessWidget {
                     isDark: isDark,
                     edge: UiGlass.edge(colorScheme),
                   ),
-                  child: LiquidGlass(
-                    blurSigma: UiGlass.shellBlur,
-                    refractionHeight: UiGlass.refraction ? 16 : 0,
-                    refractionAmount: UiGlass.refraction ? 18 : 0,
-                    saturation: UiGlass.saturation,
-                    color: UiGlass.input(colorScheme),
+                  child: DecoratedBox(
+                    decoration: ShapeDecoration(
+                      color: UiGlass.panel(
+                        colorScheme,
+                      ).withValues(alpha: UiGlass.clear ? 0.94 : 1.0),
+                      shape: const StadiumBorder(),
+                    ),
                     child: Padding(
                       padding: const .symmetric(horizontal: 18),
                       child: Row(

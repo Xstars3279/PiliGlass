@@ -102,25 +102,31 @@ extension _SearchRevamp on _SearchPageState {
     const radius = Radius.circular(_dockHeight / 2);
     final colorScheme = theme.colorScheme;
     final isDark = colorScheme.brightness == .dark;
-    Widget result = CustomPaint(
-      painter: GlassShadowPainter.of(
-        radius: radius,
-        shadow: UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
+    Widget result = ListenableBuilder(
+      listenable: UiGlass.revision,
+      builder: (context, child) => CustomPaint(
+        painter: GlassShadowPainter.of(
+          radius: radius,
+          shadow: UiGlass.shadowIn(colorScheme, UiGlass.shellShadow),
+        ),
+        foregroundPainter: GlassRimPainter(
+          radius: radius,
+          opacity: UiGlass.rim,
+          isDark: isDark,
+          edge: UiGlass.edge(colorScheme),
+        ),
+        child: LiquidGlass(
+          blurSigma: UiGlass.shellBlur,
+          refractionHeight:
+              UiGlass.refraction ? 20 * UiGlass.shellRefractionScale : 0,
+          refractionAmount:
+              UiGlass.refraction ? 20 * UiGlass.shellRefractionScale : 0,
+          saturation: UiGlass.saturation,
+          color: UiGlass.shell(colorScheme),
+          child: child,
+        ),
       ),
-      foregroundPainter: GlassRimPainter(
-        radius: radius,
-        opacity: UiGlass.rim,
-        isDark: isDark,
-        edge: UiGlass.edge(colorScheme),
-      ),
-      child: LiquidGlass(
-        blurSigma: UiGlass.shellBlur,
-        refractionHeight: UiGlass.refraction ? 20 : 0,
-        refractionAmount: UiGlass.refraction ? 20 : 0,
-        saturation: UiGlass.saturation,
-        color: UiGlass.shell(colorScheme),
-        child: Center(child: child),
-      ),
+      child: Center(child: child),
     );
     if (onTap != null) {
       result = Semantics(

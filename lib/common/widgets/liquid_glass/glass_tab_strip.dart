@@ -319,18 +319,22 @@ class _GlassTabStripState extends State<GlassTabStrip>
   /// shift when the weights swap; a trailing icon is part of the tab.
   List<double> _measure(BuildContext context, TextStyle style) {
     final scaler = MediaQuery.textScalerOf(context);
+    final effectiveStyle = DefaultTextStyle.of(context).style.merge(style);
+    final locale = Localizations.maybeLocaleOf(context);
     final widths = <double>[];
     for (final item in widget.items) {
       final painter = TextPainter(
-        text: TextSpan(text: item.label, style: style),
+        text: TextSpan(text: item.label, style: effectiveStyle),
         textDirection: TextDirection.ltr,
         textScaler: scaler,
+        locale: locale,
         maxLines: 1,
       )..layout();
       widths.add(
-        // a whole number, so the drawn glyphs never outgrow the tab by a
-        // fraction of a pixel and get clipped with an ellipsis
+        // a whole number plus slight breathing room, so bold/fallback glyphs
+        // never get clipped with an ellipsis
         painter.width.ceilToDouble() +
+            4 +
             widget.labelPadding * 2 +
             (item.trailing == null ? 0 : _trailingExtent),
       );
@@ -456,7 +460,8 @@ class _GlassTabStripState extends State<GlassTabStrip>
                     child: Text(
                       item.label,
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                      overflow: TextOverflow.fade,
                       // the colour follows the page with the pill; the
                       // weight swaps at the half way point
                       style: _labelStyle(

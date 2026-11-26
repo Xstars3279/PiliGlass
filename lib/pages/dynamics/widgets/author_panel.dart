@@ -5,6 +5,8 @@ import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
+import 'package:PiliPlus/common/widgets/grow_from.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:PiliPlus/common/widgets/dialog/report.dart';
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
@@ -149,20 +151,37 @@ class AuthorPanel extends StatelessWidget {
     }
     Widget? moreBtn = isSave
         ? null
-        : SizedBox(
-            width: 32,
-            height: 32,
-            child: LiquidPress(
-              maxGrowth: 8,
-              child: IconButton(
-                tooltip: '更多',
-                style: const ButtonStyle(
-                  padding: WidgetStatePropertyAll(EdgeInsets.zero),
+        : Builder(
+            builder: (btnContext) {
+              void openMore() => morePanel(
+                context,
+                from: morphRectOf(btnContext),
+              );
+              if (isDetail && Revamp.enabled) {
+                return GlassIconButton(
+                  icon: const Icon(Icons.more_vert_outlined, size: 18),
+                  size: 34,
+                  tapSize: 40,
+                  tooltip: '更多',
+                  onTap: openMore,
+                );
+              }
+              return SizedBox(
+                width: 32,
+                height: 32,
+                child: LiquidPress(
+                  maxGrowth: 8,
+                  child: IconButton(
+                    tooltip: '更多',
+                    style: const ButtonStyle(
+                      padding: WidgetStatePropertyAll(EdgeInsets.zero),
+                    ),
+                    onPressed: openMore,
+                    icon: const Icon(Icons.more_vert_outlined, size: 18),
+                  ),
                 ),
-                onPressed: () => morePanel(context),
-                icon: const Icon(Icons.more_vert_outlined, size: 18),
-              ),
-            ),
+              );
+            },
           );
     final moduleTagText = !isDetail ? item.modules.moduleTag?.text : null;
     if (moduleTagText != null) {
@@ -252,7 +271,7 @@ class AuthorPanel extends StatelessWidget {
     return header;
   }
 
-  void morePanel(BuildContext context) {
+  void morePanel(BuildContext context, {Rect? from}) {
     String? bvid;
     try {
       String? getBvid(String? type, DynamicMajorModel? major) => switch (type) {
@@ -270,10 +289,14 @@ class AuthorPanel extends StatelessWidget {
     } catch (_) {}
     final commentType = item.basic!.commentType;
 
-    showModalBottomSheet(
+    showGrowingSheet(
       context: context,
+      from: from,
+      anchor: Alignment.topRight,
+      glass: true,
+      press: true,
+      pullPastEdges: true,
       useSafeArea: true,
-      isScrollControlled: true,
       constraints: BoxConstraints(
         maxWidth: min(640, MediaQuery.shortestSideOf(context)),
       ),

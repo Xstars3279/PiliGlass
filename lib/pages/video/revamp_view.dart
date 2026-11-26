@@ -53,39 +53,42 @@ extension _VideoRevamp on _VideoDetailPageVState {
           children: [
             Expanded(
               child: Builder(
-                builder: (barContext) => Material(
-                // the same white as a field straight on the page
-                color: Revamp.onPage(colorScheme),
-                shape: capsule,
-                clipBehavior: .antiAlias,
-                child: InkWell(
-                  onTap: () => videoDetailController.showShootDanmakuSheet(
-                    from: morphRectOf(barContext),
-                  ),
-                  child: Padding(
-                    padding: const .symmetric(horizontal: UiSpace.s12),
-                    child: Row(
-                      spacing: UiSpace.s8,
-                      children: [
-                        Icon(
-                          Icons.edit_outlined,
-                          size: 17,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        Expanded(
-                          child: Text(
-                            '发个友善的弹幕见证当下',
-                            maxLines: 1,
-                            overflow: .ellipsis,
-                            style: UiType.caption.copyWith(
+                builder: (barContext) => SizedBox(
+                  height: 36,
+                  child: Material(
+                    // the same white as a field straight on the page
+                    color: Revamp.onPage(colorScheme),
+                    shape: capsule,
+                    clipBehavior: .antiAlias,
+                    child: InkWell(
+                      onTap: () => videoDetailController.showShootDanmakuSheet(
+                        from: morphRectOf(barContext),
+                      ),
+                      child: Padding(
+                        padding: const .symmetric(horizontal: UiSpace.s12),
+                        child: Row(
+                          spacing: UiSpace.s8,
+                          children: [
+                            Icon(
+                              Icons.edit_outlined,
+                              size: 17,
                               color: colorScheme.onSurfaceVariant,
                             ),
-                          ),
+                            Expanded(
+                              child: Text(
+                                '发个友善的弹幕见证当下',
+                                maxLines: 1,
+                                overflow: .ellipsis,
+                                style: UiType.caption.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
                 ),
               ),
             ),
@@ -100,6 +103,7 @@ extension _VideoRevamp on _VideoDetailPageVState {
                   backgroundColor: Revamp.onPage(colorScheme),
                   fixedSize: const Size.square(36),
                   minimumSize: const Size.square(36),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   padding: EdgeInsets.zero,
                 ),
                 icon: Icon(

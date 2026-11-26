@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/grow_from.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -59,42 +61,63 @@ void showPgcFollowDialog({
   required String type,
   required int followStatus,
   required ValueChanged<int> onUpdateStatus,
+  Rect? from,
 }) {
+  final items = [
+    ...const [
+      (followStatus: 3, title: '看过'),
+      (followStatus: 2, title: '在看'),
+      (followStatus: 1, title: '想看'),
+    ].map(
+      (item) => _statusItem(
+        enabled: followStatus != item.followStatus,
+        text: item.title,
+        onTap: () {
+          Get.back();
+          onUpdateStatus(item.followStatus);
+        },
+      ),
+    ),
+    ListTile(
+      dense: true,
+      title: Padding(
+        padding: const EdgeInsets.only(left: 10),
+        child: Text(
+          '取消$type',
+          style: const TextStyle(fontSize: 14),
+        ),
+      ),
+      onTap: () {
+        Get.back();
+        onUpdateStatus(-1);
+      },
+    ),
+  ];
+  if (Revamp.enabled && from != null) {
+    showGrowingDialog(
+      context: context,
+      from: from,
+      glass: true,
+      anchor: Alignment.bottomLeft,
+      builder: (_) => IntrinsicWidth(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: items,
+          ),
+        ),
+      ),
+    );
+    return;
+  }
   showDialog(
     context: context,
     builder: (context) => SimpleDialog(
       clipBehavior: Clip.hardEdge,
       contentPadding: const EdgeInsets.symmetric(vertical: 12),
-      children: [
-        ...const [
-          (followStatus: 3, title: '看过'),
-          (followStatus: 2, title: '在看'),
-          (followStatus: 1, title: '想看'),
-        ].map(
-          (item) => _statusItem(
-            enabled: followStatus != item.followStatus,
-            text: item.title,
-            onTap: () {
-              Get.back();
-              onUpdateStatus(item.followStatus);
-            },
-          ),
-        ),
-        ListTile(
-          dense: true,
-          title: Padding(
-            padding: const EdgeInsets.only(left: 10),
-            child: Text(
-              '取消$type',
-              style: const TextStyle(fontSize: 14),
-            ),
-          ),
-          onTap: () {
-            Get.back();
-            onUpdateStatus(-1);
-          },
-        ),
-      ],
+      children: items,
     ),
   );
 }

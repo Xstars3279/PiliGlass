@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+import 'dart:ui' show lerpDouble;
+
 import 'package:PiliPlus/common/motion/appear_in.dart';
 import 'package:PiliPlus/common/motion/pressable_scale.dart';
 import 'package:PiliPlus/common/ui_icons.dart';
@@ -33,6 +36,18 @@ abstract final class Revamp {
   /// corner radius of a group
   static const double groupRadius = UiRadius.large;
 
+  static double topPaddingOf(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    if (mq.padding.top > 0) return mq.padding.top;
+    if (mq.viewPadding.top > 0) return mq.viewPadding.top;
+    final view = View.maybeOf(context);
+    if (view != null && mq.devicePixelRatio > 0) {
+      final raw = math.max(view.padding.top, view.viewPadding.top);
+      if (raw > 0) return raw / mq.devicePixelRatio;
+    }
+    return 0;
+  }
+
   /// The redesign's corner: continuous, a superellipse rather than a
   /// circle's quarter, so the edge eases into its turn instead of starting
   /// it all at once, as Apple's corners do. Upstream's round corners where
@@ -50,22 +65,17 @@ abstract final class Revamp {
     BorderSide side = BorderSide.none,
   }) => shape(BorderRadius.all(Radius.circular(radius)), side: side);
 
-  /// [child] clipped to [shape]
+  /// [child] clipped to [shape]. Uses [ClipRRect] for fast scrolling layers
+  /// on Impeller instead of per-card [ClipRSuperellipse] tessellation.
   static Widget clip({
     required BorderRadius radius,
     required Widget child,
     Clip clipBehavior = Clip.antiAlias,
-  }) => enabled
-      ? ClipRSuperellipse(
-          borderRadius: radius,
-          clipBehavior: clipBehavior,
-          child: child,
-        )
-      : ClipRRect(
-          borderRadius: radius,
-          clipBehavior: clipBehavior,
-          child: child,
-        );
+  }) => ClipRRect(
+    borderRadius: radius,
+    clipBehavior: clipBehavior,
+    child: child,
+  );
 
   /// A bar pinned over a list, e.g. the sort bar over the comments: part
   /// of the content, so solid, the page's own gray.
@@ -304,6 +314,10 @@ class RevampLargeAppBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final a = theme.appBarTheme;
+    final toolbarHeight = a.toolbarHeight ?? kToolbarHeight;
+    final hasLeading =
+        implyLeading && (ModalRoute.of(context)?.canPop ?? false);
+    final hasActions = actions != null && actions!.isNotEmpty;
     return Theme(
       data: theme.copyWith(
         appBarTheme: AppBarThemeData(
@@ -321,18 +335,87 @@ class RevampLargeAppBar extends StatelessWidget {
           systemOverlayStyle: a.systemOverlayStyle,
         ),
       ),
-      // medium, not large: its title is the large title's 24, and it sits
-      // just below the bar instead of a bar's height lower
-      // the implicit back arrow gets the PiliGlass coin, and the slot keeps
-      // its width and the bar its height
       child: ActionIconTheme(
         data: glassBackActionIconTheme,
-        child: SliverAppBar.medium(
+        child: SliverAppBar(
+          pinned: true,
           automaticallyImplyLeading: implyLeading,
-          title: Text(title),
           actions: actions,
+          collapsedHeight: toolbarHeight,
+          expandedHeight: toolbarHeight + _RevampFlexibleTitle.expandedExtra,
+          flexibleSpace: _RevampFlexibleTitle(
+            title: title,
+            hasLeading: hasLeading,
+            hasActions: hasActions,
+            toolbarHeight: toolbarHeight,
+            foregroundColor:
+                a.foregroundColor ?? theme.colorScheme.onSurface,
+          ),
         ),
       ),
+    );
+  }
+}
+
+class _RevampFlexibleTitle extends StatelessWidget {
+  const _RevampFlexibleTitle({
+    required this.title,
+    required this.hasLeading,
+    required this.hasActions,
+    required this.toolbarHeight,
+    required this.foregroundColor,
+  });
+
+  final String title;
+  final bool hasLeading;
+  final bool hasActions;
+  final double toolbarHeight;
+  final Color foregroundColor;
+
+  static const expandedExtra = 52.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final settings =
+        context.dependOnInheritedWidgetOfExactType<FlexibleSpaceBarSettings>();
+    final topPadding = MediaQuery.paddingOf(context).top;
+    final double t;
+    if (settings != null && settings.maxExtent > settings.minExtent) {
+      t = ((settings.maxExtent - settings.currentExtent) /
+              (settings.maxExtent - settings.minExtent))
+          .clamp(0.0, 1.0);
+    } else {
+      t = 0.0;
+    }
+    final fontSize = lerpDouble(28.0, 18.0, t)!;
+    final left = lerpDouble(16.0, hasLeading ? 60.0 : 16.0, t)!;
+    final right = hasActions ? lerpDouble(16.0, 64.0, t)! : 16.0;
+    final titleTop = lerpDouble(topPadding + toolbarHeight, topPadding, t)!;
+    final titleHeight = lerpDouble(expandedExtra, toolbarHeight, t)!;
+
+    return Stack(
+      children: [
+        Positioned(
+          left: left,
+          right: right,
+          top: titleTop,
+          height: titleHeight,
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: fontSize,
+                fontWeight: FontWeight.w600,
+                color: foregroundColor,
+                height: 1.2,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

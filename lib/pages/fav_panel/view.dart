@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models_new/fav/fav_folder/list.dart';
@@ -138,13 +140,18 @@ class _FavPanelState extends State<FavPanel> {
     return Column(
       children: [
         AppBar(
+          primary: false,
+          toolbarHeight: Revamp.enabled ? 48 : null,
           backgroundColor: Colors.transparent,
           leading: IconButton(
             tooltip: '关闭',
             onPressed: Get.back,
             icon: const Icon(Icons.close_outlined),
           ),
-          title: const Text('添加到收藏夹'),
+          title: Text(
+            '添加到收藏夹',
+            style: Revamp.enabled ? UiType.title : null,
+          ),
           actions: [
             TextButton.icon(
               onPressed: () => Get.toNamed('/createFav')?.then((data) {

@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/glass_features.dart';
+import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/centered_glass_tabs.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_bar.dart';
@@ -62,31 +63,33 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
   /// The tabs on a capsule of the dock's glass, exactly as the home page's:
   /// sized to what they hold, in the middle unless that switch is off, and
   /// with the pill keeping step with the page as it is swiped.
-  Widget _glassTabs(Widget? leading, Widget actions) => Padding(
-    // the same bar as the home tabs: size, margins and glass
-    padding: GlassTabBar.margin,
-    child: SizedBox(
-      height: GlassTabBar.height,
-      child: Row(
-        spacing: 8,
-        children: [
-          ?leading,
-          Expanded(
-            child: Obx(
-              () => CenteredGlassTabs(
-                controller: _dynamicsController.tabController,
-                labels: DynamicsTabType.values.map((e) => e.label).toList(),
-                centered: GlassFeatures.centerTabs.value,
-                onTap: (index) {
-                  if (!_dynamicsController.tabController.indexIsChanging) {
-                    _dynamicsController.animateToTop();
-                  }
-                },
+  Widget _glassTabs(Widget? leading, Widget actions) => BackdropGroup(
+    child: Padding(
+      // the same bar as the home tabs: size, margins and glass
+      padding: GlassTabBar.margin,
+      child: SizedBox(
+        height: GlassTabBar.height,
+        child: Row(
+          spacing: 8,
+          children: [
+            ?leading,
+            Expanded(
+              child: Obx(
+                () => CenteredGlassTabs(
+                  controller: _dynamicsController.tabController,
+                  labels: DynamicsTabType.values.map((e) => e.label).toList(),
+                  centered: GlassFeatures.centerTabs.value,
+                  onTap: (index) {
+                    if (!_dynamicsController.tabController.indexIsChanging) {
+                      _dynamicsController.animateToTop();
+                    }
+                  },
+                ),
               ),
             ),
-          ),
-          if (actions is! SizedBox) actions,
-        ],
+            if (actions is! SizedBox) actions,
+          ],
+        ),
       ),
     ),
   );
@@ -249,9 +252,12 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
       }
     }
 
+    final topPadding = Revamp.enabled ? Revamp.topPaddingOf(context) : 0.0;
+    final barExtent = topPadding + _barHeight;
+
     // the redesign: the posts run on under the tabs, which float on glass
     if (Revamp.enabled) {
-      child = RevampTopInset(inset: _barHeight, child: child);
+      child = RevampTopInset(inset: barExtent, child: child);
     }
     return Scaffold(
       primary: false,
@@ -259,9 +265,12 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: Revamp.enabled,
       appBar: PreferredSize(
-        preferredSize: .fromHeight(Revamp.enabled ? _barHeight : 50),
+        preferredSize: .fromHeight(Revamp.enabled ? barExtent : 50),
         child: Revamp.enabled
-            ? _glassTabs(leading, actions)
+            ? Padding(
+                padding: EdgeInsets.only(top: topPadding),
+                child: _glassTabs(leading, actions),
+              )
             : Row(
                 children: [
                   ?leading,
@@ -297,7 +306,39 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
       ),
       drawer: drawer,
       endDrawer: endDrawer,
-      body: onBuild(child),
+      body: Revamp.enabled
+          ? Stack(
+              children: [
+                Positioned.fill(child: onBuild(child)),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: barExtent + UiSpace.s24,
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: .topCenter,
+                          end: .bottomCenter,
+                          stops: const [0.0, 0.55, 1.0],
+                          colors: [
+                            colorScheme.surface.withValues(
+                              alpha: UiGlass.clear ? 0.55 : 0.92,
+                            ),
+                            colorScheme.surface.withValues(
+                              alpha: UiGlass.clear ? 0.22 : 0.55,
+                            ),
+                            colorScheme.surface.withValues(alpha: 0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : onBuild(child),
     );
   }
 }

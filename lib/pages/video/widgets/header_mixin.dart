@@ -1,4 +1,6 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_sheet.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/widgets/menu_row.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/danmaku_options.dart';
@@ -30,12 +32,56 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
       context,
       maxWidth: maxWidth,
       padding: padding,
-      child: theme != null
+      sheetTheme: Revamp.enabled ? theme : null,
+      child: Revamp.enabled
+          ? StatefulBuilder(builder: builder)
+          : theme != null
           ? Theme(
               data: theme,
               child: StatefulBuilder(builder: builder),
             )
           : StatefulBuilder(builder: builder),
+    );
+  }
+
+  Widget wrapPlayerPanel(BuildContext context, {required Widget child}) {
+    if (Revamp.enabled) {
+      return child;
+    }
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Material(
+        clipBehavior: Clip.hardEdge,
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        child: child,
+      ),
+    );
+  }
+
+  Widget playerSheetHeader(
+    BuildContext context,
+    String title, {
+    List<Widget>? trailing,
+  }) {
+    if (Revamp.enabled) {
+      return GlassSheetHeader(
+        title: title,
+        trailing: trailing,
+        onClose: Get.back,
+      );
+    }
+    return SizedBox(
+      height: 45,
+      child: Row(
+        children: [
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(title, style: const TextStyle(fontSize: 14)),
+          ),
+          ...?trailing,
+        ],
+      ),
     );
   }
 
@@ -84,7 +130,13 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
           trackShape: const MSliderTrackShape(),
           thumbColor: theme.colorScheme.primary,
           activeTrackColor: theme.colorScheme.primary,
-          inactiveTrackColor: theme.colorScheme.onInverseSurface,
+          inactiveTrackColor: Revamp.enabled
+              ? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.2)
+              : theme.colorScheme.onInverseSurface,
+          activeTickMarkColor: Revamp.enabled ? Colors.transparent : null,
+          inactiveTickMarkColor: Revamp.enabled
+              ? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.25)
+              : null,
           thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
         );
 
@@ -161,26 +213,22 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
           setOptions();
         }
 
-        return Padding(
-          padding: const EdgeInsets.all(12),
-          child: Material(
-            clipBehavior: Clip.hardEdge,
-            color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.all(Radius.circular(12)),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: SliderTheme(
-                data: sliderTheme,
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  children: [
-                    const SizedBox(
-                      height: 45,
-                      child: Center(
-                        child: Text('弹幕设置', style: TextStyle(fontSize: 14)),
+        return wrapPlayerPanel(
+          context,
+          child: Column(
+            children: [
+              playerSheetHeader(context, '弹幕设置'),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: SliderTheme(
+                    data: sliderTheme,
+                    child: ListView(
+                      padding: EdgeInsets.only(
+                        top: 10,
+                        bottom: MediaQuery.viewPaddingOf(context).bottom + 16,
                       ),
-                    ),
-                    const SizedBox(height: 10),
+                      children: [
                     if (!isLive) ...[
                       Row(
                         mainAxisAlignment: .spaceBetween,
@@ -442,21 +490,23 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                         resetBtn(theme, 1.6, () => updateLineHeight(1.6)),
                       ],
                     ),
-                    Padding(
-                      padding: sliderPadding,
-                      child: Slider(
-                        min: 1.0,
-                        max: 3.0,
-                        value: DanmakuOptions.danmakuLineHeight,
-                        onChanged: updateLineHeight,
+                      Padding(
+                        padding: sliderPadding,
+                        child: Slider(
+                          min: 1.0,
+                          max: 3.0,
+                          value: DanmakuOptions.danmakuLineHeight,
+                          onChanged: updateLineHeight,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        );
+          ],
+        ),
+      );
       },
     )?.whenComplete(
       () => DanmakuOptions.save(plPlayerController.danmakuOpacity.value),
