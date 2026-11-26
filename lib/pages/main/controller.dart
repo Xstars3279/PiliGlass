@@ -316,7 +316,7 @@ class MainController extends GetxController
       selectedIndex.value = value;
       if (mainTabBarView) {
         controller.animateTo(value);
-      } else {
+      } else if ((controller as PageController).hasClients) {
         controller.jumpToPage(value);
       }
       if (currentNav == NavigationBarType.home) {

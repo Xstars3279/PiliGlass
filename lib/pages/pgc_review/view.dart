@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -52,50 +53,63 @@ class _PgcReviewPageState extends State<PgcReviewPage>
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            dividerHeight: 0,
-            indicatorWeight: 0,
-            overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-            splashFactory: NoSplash.splashFactory,
-            padding: const EdgeInsets.only(left: 6),
-            // the redesign takes the app's tabs from the theme: a raised
-            // pill, bold labels
-            indicatorPadding: Revamp.enabled
-                ? EdgeInsets.zero
-                : const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
-            indicator: Revamp.enabled
-                ? null
-                : BoxDecoration(
-                    color: theme.colorScheme.secondaryContainer,
-                    borderRadius: const BorderRadius.all(Radius.circular(20)),
-                  ),
-            indicatorSize: TabBarIndicatorSize.tab,
-            labelColor: Revamp.enabled
-                ? null
-                : theme.colorScheme.onSecondaryContainer,
-            unselectedLabelColor: Revamp.enabled
-                ? null
-                : theme.colorScheme.outline,
-            labelStyle: Revamp.enabled
-                ? null
-                : TabBarTheme.of(context).labelStyle?.copyWith(fontSize: 13) ??
-                      const TextStyle(fontSize: 13),
-            dividerColor: Colors.transparent,
-            tabs: PgcReviewType.values.map((e) => Tab(text: e.label)).toList(),
-            onTap: (index) {
-              try {
-                if (!_tabController.indexIsChanging) {
+          if (Revamp.enabled)
+            GlassTabStrip(
+              items: [
+                for (final e in PgcReviewType.values) GlassTabItem(e.label),
+              ],
+              controller: _tabController,
+              capsule: true,
+              centered: false,
+              drag: GlassTabDrag.scrub,
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+              onSelected: (index) {
+                if (index != _tabController.index) return;
+                try {
                   final item = PgcReviewType.values[index];
                   Get.find<PgcReviewController>(
                     tag: '${widget.mediaId}${item.name}',
                   ).scrollController.animToTop();
-                }
-              } catch (_) {}
-            },
-          ),
+                } catch (_) {}
+              },
+            )
+          else
+            TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              dividerHeight: 0,
+              indicatorWeight: 0,
+              overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+              splashFactory: NoSplash.splashFactory,
+              padding: const EdgeInsets.only(left: 6),
+              indicatorPadding: const EdgeInsets.symmetric(
+                horizontal: 3,
+                vertical: 8,
+              ),
+              indicator: BoxDecoration(
+                color: theme.colorScheme.secondaryContainer,
+                borderRadius: const BorderRadius.all(Radius.circular(20)),
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              labelColor: theme.colorScheme.onSecondaryContainer,
+              unselectedLabelColor: theme.colorScheme.outline,
+              labelStyle:
+                  TabBarTheme.of(context).labelStyle?.copyWith(fontSize: 13) ??
+                  const TextStyle(fontSize: 13),
+              dividerColor: Colors.transparent,
+              tabs: PgcReviewType.values.map((e) => Tab(text: e.label)).toList(),
+              onTap: (index) {
+                try {
+                  if (!_tabController.indexIsChanging) {
+                    final item = PgcReviewType.values[index];
+                    Get.find<PgcReviewController>(
+                      tag: '${widget.mediaId}${item.name}',
+                    ).scrollController.animToTop();
+                  }
+                } catch (_) {}
+              },
+            ),
           Expanded(
             child: TabBarView(
               controller: _tabController,

@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/pages/fav/note/child_view.dart';
 import 'package:PiliPlus/pages/fav/note/controller.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
@@ -44,54 +45,76 @@ class _FavNotePageState extends State<FavNotePage>
         Row(
           children: [
             Expanded(
-              child: TabBar(
-                overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-                splashFactory: NoSplash.splashFactory,
-                isScrollable: true,
-                tabAlignment: TabAlignment.start,
-                controller: _tabController,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                dividerHeight: 0,
-                indicatorWeight: 0,
-                // the redesign takes the app's tabs from the theme: a raised
-                // pill, bold labels
-                indicatorPadding: Revamp.enabled
-                    ? EdgeInsets.zero
-                    : const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
-                indicator: Revamp.enabled
-                    ? null
-                    : BoxDecoration(
-                        color: theme.colorScheme.secondaryContainer,
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(20),
-                        ),
-                      ),
-                indicatorSize: TabBarIndicatorSize.tab,
-                labelStyle: Revamp.enabled
-                    ? null
-                    : TabBarTheme.of(context).labelStyle
-                              ?.copyWith(fontSize: 14) ??
-                          const TextStyle(fontSize: 14),
-                labelColor: Revamp.enabled
-                    ? null
-                    : theme.colorScheme.onSecondaryContainer,
-                unselectedLabelColor: Revamp.enabled
-                    ? null
-                    : theme.colorScheme.outline,
-                tabs: const [
-                  Tab(text: '未发布笔记'),
-                  Tab(text: '公开笔记'),
-                ],
-                onTap: (index) {
-                  try {
-                    if (!_tabController.indexIsChanging) {
-                      Get.find<FavNoteController>(
-                        tag: index == 0 ? 'false' : 'true',
-                      ).scrollController.animToTop();
-                    }
-                  } catch (_) {}
-                },
-              ),
+              child: Revamp.enabled
+                  ? GlassTabStrip(
+                      items: const [
+                        GlassTabItem('未发布笔记'),
+                        GlassTabItem('公开笔记'),
+                      ],
+                      controller: _tabController,
+                      capsule: false,
+                      refraction: false,
+                      centered: false,
+                      drag: GlassTabDrag.scrub,
+                      padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                      onSelected: (index) {
+                        if (index == _tabController.index) {
+                          try {
+                            Get.find<FavNoteController>(
+                              tag: index == 0 ? 'false' : 'true',
+                            ).scrollController.animToTop();
+                          } catch (_) {}
+                        }
+                      },
+                    )
+                  : TabBar(
+                      overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+                      splashFactory: NoSplash.splashFactory,
+                      isScrollable: true,
+                      tabAlignment: TabAlignment.start,
+                      controller: _tabController,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      dividerHeight: 0,
+                      indicatorWeight: 0,
+                      // the redesign takes the app's tabs from the theme: a raised
+                      // pill, bold labels
+                      indicatorPadding: Revamp.enabled
+                          ? EdgeInsets.zero
+                          : const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
+                      indicator: Revamp.enabled
+                          ? null
+                          : BoxDecoration(
+                              color: theme.colorScheme.secondaryContainer,
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(20),
+                              ),
+                            ),
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      labelStyle: Revamp.enabled
+                          ? null
+                          : TabBarTheme.of(context).labelStyle
+                                    ?.copyWith(fontSize: 14) ??
+                                const TextStyle(fontSize: 14),
+                      labelColor: Revamp.enabled
+                          ? null
+                          : theme.colorScheme.onSecondaryContainer,
+                      unselectedLabelColor: Revamp.enabled
+                          ? null
+                          : theme.colorScheme.outline,
+                      tabs: const [
+                        Tab(text: '未发布笔记'),
+                        Tab(text: '公开笔记'),
+                      ],
+                      onTap: (index) {
+                        try {
+                          if (!_tabController.indexIsChanging) {
+                            Get.find<FavNoteController>(
+                              tag: index == 0 ? 'false' : 'true',
+                            ).scrollController.animToTop();
+                          }
+                        } catch (_) {}
+                      },
+                    ),
             ),
             // TextButton(
             //   style: TextButton.styleFrom(

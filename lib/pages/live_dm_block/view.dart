@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
@@ -30,13 +32,26 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
   @override
   Widget build(BuildContext context) {
     padding = MediaQuery.viewPaddingOf(context);
-    Widget tabBar = TabBar(
-      controller: _controller.tabController,
-      tabs: const [
-        Tab(text: '关键词'),
-        Tab(text: '用户'),
-      ],
-    );
+    Widget tabBar = Revamp.enabled
+        ? GlassTabStrip(
+            items: const [
+              GlassTabItem('关键词'),
+              GlassTabItem('用户'),
+            ],
+            controller: _controller.tabController,
+            capsule: true,
+            refraction: false,
+            centered: true,
+            drag: GlassTabDrag.scrub,
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+          )
+        : TabBar(
+            controller: _controller.tabController,
+            tabs: const [
+              Tab(text: '关键词'),
+              Tab(text: '用户'),
+            ],
+          );
 
     Widget view = tabBarView(
       hitTestBehavior: .translucent,

@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_action_bar.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
@@ -60,69 +61,67 @@ class _FavPageState extends State<FavPage> with SingleTickerProviderStateMixin {
         actions: [
           Obx(
             () => _showVideoFavMenu.value
-                ? IconButton(
-                    onPressed: () => Get.toNamed('/createFav')?.then(
-                      (data) {
-                        if (data != null) {
-                          final list =
-                              _favController.loadingState.value.dataOrNull;
-                          if (list != null && list.isNotEmpty) {
-                            list.insert(1, data);
-                            _favController.loadingState.refresh();
-                          } else {
-                            _favController.loadingState.value = Success([data]);
+                ? GlassActionBar(
+                    actions: [
+                      IconButton(
+                        onPressed: () => Get.toNamed('/createFav')?.then(
+                          (data) {
+                            if (data != null) {
+                              final list =
+                                  _favController.loadingState.value.dataOrNull;
+                              if (list != null && list.isNotEmpty) {
+                                list.insert(1, data);
+                                _favController.loadingState.refresh();
+                              } else {
+                                _favController.loadingState.value = Success([
+                                  data,
+                                ]);
+                              }
+                            }
+                          },
+                        ),
+                        icon: const Icon(Icons.add),
+                        tooltip: '新建收藏夹',
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          if (_favController.loadingState.value.isSuccess) {
+                            if (!_favController.isEnd) {
+                              SmartDialog.showToast('加载全部收藏夹再排序');
+                              return;
+                            }
+                            Get.to(
+                              FavFolderSortPage(favController: _favController),
+                            );
                           }
-                        }
-                      },
-                    ),
-                    icon: const Icon(Icons.add),
-                    tooltip: '新建收藏夹',
-                  )
-                : const SizedBox.shrink(),
-          ),
-          Obx(
-            () => _showVideoFavMenu.value
-                ? IconButton(
-                    onPressed: () {
-                      if (_favController.loadingState.value.isSuccess) {
-                        if (!_favController.isEnd) {
-                          SmartDialog.showToast('加载全部收藏夹再排序');
-                          return;
-                        }
-                        Get.to(
-                          FavFolderSortPage(favController: _favController),
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.sort),
-                    tooltip: '收藏夹排序',
-                  )
-                : const SizedBox.shrink(),
-          ),
-          Obx(
-            () => _showVideoFavMenu.value
-                ? IconButton(
-                    onPressed: () {
-                      if (_favController.loadingState.value case Success(
-                        :final response,
-                      )) {
-                        try {
-                          final item = response!.first;
-                          Get.toNamed(
-                            '/favSearch',
-                            arguments: {
-                              'type': 1,
-                              'mediaId': item.id,
-                              'title': item.title,
-                              'count': item.mediaCount,
-                              'isOwner': true,
-                            },
-                          );
-                        } catch (_) {}
-                      }
-                    },
-                    icon: const Icon(Icons.search_outlined),
-                    tooltip: '搜索',
+                        },
+                        icon: const Icon(Icons.sort),
+                        tooltip: '收藏夹排序',
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          if (_favController.loadingState.value case Success(
+                            :final response,
+                          )) {
+                            try {
+                              final item = response!.first;
+                              Get.toNamed(
+                                '/favSearch',
+                                arguments: {
+                                  'type': 1,
+                                  'mediaId': item.id,
+                                  'title': item.title,
+                                  'count': item.mediaCount,
+                                  'isOwner': true,
+                                },
+                              );
+                            } catch (_) {}
+                          }
+                        },
+                        icon: const Icon(Icons.search_outlined),
+                        tooltip: '搜索',
+                      ),
+                    ],
                   )
                 : const SizedBox.shrink(),
           ),

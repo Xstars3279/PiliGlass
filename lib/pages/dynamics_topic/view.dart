@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_menu.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
@@ -314,14 +316,17 @@ class _DynTopicPageState extends State<DynTopicPage>
           ),
         ),
         actions: [
-          IconButton(
-            onPressed: () => ShareUtils.shareText(
+          GlassIconButton(
+            tapSize: 44,
+            tooltip: '分享',
+            onTap: () => ShareUtils.shareText(
               '${_controller.topicName} https://m.bilibili.com/topic-detail?topic_id=${_controller.topicId}',
             ),
             // https://www.bilibili.com/v/topic/detail?topic_id=${_controller.topicId}
             icon: const Icon(MdiIcons.share),
           ),
-          PopupMenuButton(
+          const SizedBox(width: 2),
+          GlassPopupAnchor<Object?>(
             itemBuilder: (context) {
               return [
                 PopupMenuItem(
@@ -344,6 +349,12 @@ class _DynTopicPageState extends State<DynTopicPage>
                 ),
               ];
             },
+            targetBuilder: (open) => GlassIconButton(
+              tapSize: 44,
+              tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+              onTap: open,
+              icon: const Icon(Icons.more_vert),
+            ),
           ),
           const SizedBox(width: 4),
         ],

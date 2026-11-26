@@ -1,6 +1,8 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
@@ -83,12 +85,24 @@ class _LiveAreaPageState extends State<LiveAreaPage> {
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TabBar(
-                    isScrollable: true,
-                    tabAlignment: TabAlignment.start,
-                    controller: _controller.tabController,
-                    tabs: response.map((e) => Tab(text: e.name)).toList(),
-                  ),
+                  if (Revamp.enabled)
+                    GlassTabStrip(
+                      items: [
+                        for (final e in response) GlassTabItem(e.name ?? ''),
+                      ],
+                      controller: _controller.tabController,
+                      capsule: true,
+                      centered: false,
+                      drag: GlassTabDrag.scrub,
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                    )
+                  else
+                    TabBar(
+                      isScrollable: true,
+                      tabAlignment: TabAlignment.start,
+                      controller: _controller.tabController,
+                      tabs: response.map((e) => Tab(text: e.name)).toList(),
+                    ),
                   Expanded(
                     child: tabBarView(
                       controller: _controller.tabController,

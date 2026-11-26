@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:PiliPlus/common/widgets/appbar/appbar.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/view_sliver_safe_area.dart';
@@ -157,9 +158,10 @@ class _DownloadPagePageState extends State<DownloadPagePage>
             child: AppBar(
               title: Text(widget.seasonInfo.title),
               actions: [
-                IconButton(
+                GlassIconButton(
+                  tapSize: 44,
                   tooltip: '多选',
-                  onPressed: () {
+                  onTap: () {
                     if (enableMultiSelect) {
                       handleSelect();
                     } else {
@@ -168,7 +170,7 @@ class _DownloadPagePageState extends State<DownloadPagePage>
                   },
                   icon: const Icon(Icons.edit_note),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
               ],
             ),
           ),

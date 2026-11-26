@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -96,12 +97,13 @@ class _DLNAPageState extends State<DLNAPage> {
       appBar: AppBar(
         title: const Text('投屏'),
         actions: [
-          IconButton(
+          GlassIconButton(
+            tapSize: 44,
             tooltip: '搜索',
-            onPressed: _onSearch,
+            onTap: _onSearch,
             icon: const Icon(Icons.refresh),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 4),
         ],
       ),
       body: CustomScrollView(

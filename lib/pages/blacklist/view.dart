@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/skeleton/msg_feed_top.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
@@ -74,10 +76,19 @@ class _BlackListPageState extends State<BlackListPage>
       appBar: AppBar(title: const Text('黑名单管理')),
       body: Column(
         children: [
-          TabBar(
-            controller: _tabController,
-            tabs: _BlockType.values.map((e) => Tab(text: e.label)).toList(),
-          ),
+          if (Revamp.enabled)
+            GlassTabStrip(
+              items: [for (final e in _BlockType.values) GlassTabItem(e.label)],
+              controller: _tabController,
+              capsule: true,
+              drag: GlassTabDrag.scrub,
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            )
+          else
+            TabBar(
+              controller: _tabController,
+              tabs: _BlockType.values.map((e) => Tab(text: e.label)).toList(),
+            ),
           Expanded(
             child: tabBarView(
               controller: _tabController,

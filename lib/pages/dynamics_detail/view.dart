@@ -5,6 +5,7 @@ import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/dyn_tab_bar.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart';
 import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart';
@@ -289,6 +290,52 @@ class _DynamicDetailPageState extends CommonDynPageMultiState<DynamicDetailPage>
   );
 
   Widget _buildTabBar() {
+    if (Revamp.enabled) {
+      return Obx(
+        () => GlassTabStrip(
+          items: [
+            for (final e in DynType.values)
+              () {
+                final count = switch (e) {
+                  .repost => _repostController.count.value,
+                  .reply => controller.count.value,
+                  .like => _likeController.count.value,
+                };
+                return GlassTabItem(
+                  '${e.label}${count < 0 ? '' : ' ${NumUtils.numFormat(count)}'}',
+                );
+              }(),
+          ],
+          controller: tabController,
+          capsule: false,
+          refraction: false,
+          centered: false,
+          drag: GlassTabDrag.scrub,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          onSelected: (value) {
+            if (value == tabController.index) {
+              final positions = PrimaryScrollController.of(context).positions;
+              if (positions.length == 1) {
+                final postion = positions.single;
+                if (postion.pixels >= postion.maxScrollExtent) {
+                  postion.jumpTo(postion.pixels);
+                }
+                switch (value) {
+                  case 0:
+                    _onRefresh(_repostController.onRefresh());
+                  case 1:
+                    _onRefresh(controller.onRefresh());
+                  case 2:
+                    _onRefresh(_likeController.onRefresh());
+                }
+              } else if (positions.length > 1) {
+                positions.elementAt(1).jumpTo(0);
+              }
+            }
+          },
+        ),
+      );
+    }
     return SizedBox(
       height: 40,
       child: DynTabBar(

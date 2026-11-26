@@ -1,5 +1,8 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
 import 'package:PiliPlus/http/loading_state.dart';
@@ -48,11 +51,13 @@ class _LiveAreaDetailPageState extends State<LiveAreaDetailPage> {
       appBar: AppBar(
         title: Text(widget.parentName),
         actions: [
-          IconButton(
-            onPressed: () => Get.to(const LiveSearchPage()),
+          GlassIconButton(
+            tapSize: 44,
+            tooltip: '搜索',
+            onTap: () => Get.to(const LiveSearchPage()),
             icon: const Icon(Icons.search),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 4),
         ],
       ),
       body: Padding(
@@ -80,26 +85,51 @@ class _LiveAreaDetailPageState extends State<LiveAreaDetailPage> {
                   Row(
                     children: [
                       Expanded(
-                        child: TabBar(
-                          dividerHeight: 0,
-                          isScrollable: true,
-                          tabAlignment: TabAlignment.start,
-                          dividerColor: Colors.transparent,
-                          controller: _controller.tabController,
-                          tabs: response
-                              .map((e) => Tab(text: e.name ?? ''))
-                              .toList(),
-                          onTap: (index) {
-                            try {
-                              if (!_controller.tabController!.indexIsChanging) {
-                                final item = response[index];
-                                Get.find<LiveAreaChildController>(
-                                  tag: '${item.id}${item.parentId}',
-                                ).animateToTop();
-                              }
-                            } catch (_) {}
-                          },
-                        ),
+                        child: Revamp.enabled
+                            ? GlassTabStrip(
+                                items: [
+                                  for (final e in response)
+                                    GlassTabItem(e.name ?? ''),
+                                ],
+                                controller: _controller.tabController,
+                                capsule: true,
+                                centered: false,
+                                drag: GlassTabDrag.scrub,
+                                padding: const EdgeInsets.fromLTRB(12, 8, 4, 4),
+                                onSelected: (index) {
+                                  if (index != _controller.tabController!.index) {
+                                    return;
+                                  }
+                                  try {
+                                    final item = response[index];
+                                    Get.find<LiveAreaChildController>(
+                                      tag: '${item.id}${item.parentId}',
+                                    ).animateToTop();
+                                  } catch (_) {}
+                                },
+                              )
+                            : TabBar(
+                                dividerHeight: 0,
+                                isScrollable: true,
+                                tabAlignment: TabAlignment.start,
+                                dividerColor: Colors.transparent,
+                                controller: _controller.tabController,
+                                tabs: response
+                                    .map((e) => Tab(text: e.name ?? ''))
+                                    .toList(),
+                                onTap: (index) {
+                                  try {
+                                    if (!_controller
+                                        .tabController!
+                                        .indexIsChanging) {
+                                      final item = response[index];
+                                      Get.find<LiveAreaChildController>(
+                                        tag: '${item.id}${item.parentId}',
+                                      ).animateToTop();
+                                    }
+                                  } catch (_) {}
+                                },
+                              ),
                       ),
                       iconButton(
                         iconSize: 20,

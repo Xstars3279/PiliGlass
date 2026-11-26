@@ -2,6 +2,9 @@ import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/skeleton/whisper_item.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_action_bar.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_menu.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/grpc/bilibili/app/im/v1.pb.dart';
@@ -33,24 +36,32 @@ class _WhisperPageState extends State<WhisperPage> {
       appBar: AppBar(
         title: const Text('消息'),
         actions: [
-          IconButton(
-            tooltip: '新增粉丝',
-            onPressed: () => Get.toNamed(
+          Obx(() {
+            void openNewFans() => Get.toNamed(
               '/webview',
               parameters: {
                 'url':
                     'https://www.bilibili.com/h5/follow/newFans?navhide=1&${ThemeUtils.themeUrl(theme.isDark)}',
               },
-            ),
-            icon: const Icon(Icons.account_circle_outlined),
-          ),
-          Obx(() {
+            );
             final outsideItem = _controller.outsideItem.value;
-            if (outsideItem != null && outsideItem.isNotEmpty) {
-              return Row(
-                mainAxisSize: .min,
-                children: outsideItem.map((e) {
-                  return IconButton(
+            if (outsideItem == null || outsideItem.isEmpty) {
+              return GlassIconButton(
+                tapSize: 44,
+                tooltip: '新增粉丝',
+                onTap: openNewFans,
+                icon: const Icon(Icons.account_circle_outlined),
+              );
+            }
+            return GlassActionBar(
+              actions: [
+                IconButton(
+                  tooltip: '新增粉丝',
+                  onPressed: openNewFans,
+                  icon: const Icon(Icons.account_circle_outlined),
+                ),
+                for (final e in outsideItem)
+                  IconButton(
                     tooltip: e.hasTitle() ? e.title : null,
                     onPressed: () => e.type.action(
                       context: context,
@@ -58,40 +69,47 @@ class _WhisperPageState extends State<WhisperPage> {
                       item: e,
                     ),
                     icon: e.type.icon,
-                  );
-                }).toList(),
-              );
-            }
-            return const SizedBox.shrink();
+                  ),
+              ],
+            );
           }),
           Obx(() {
             final threeDotItems = _controller.threeDotItems.value;
             if (threeDotItems != null && threeDotItems.isNotEmpty) {
-              return PopupMenuButton(
-                itemBuilder: (context) {
-                  return threeDotItems
-                      .map(
-                        (e) => PopupMenuItem(
-                          onTap: () => e.type.action(
-                            context: context,
-                            controller: _controller,
-                            item: e,
+              return Padding(
+                padding: const EdgeInsets.only(left: 2),
+                child: GlassPopupAnchor<Object?>(
+                  itemBuilder: (context) {
+                    return threeDotItems
+                        .map(
+                          (e) => PopupMenuItem(
+                            onTap: () => e.type.action(
+                              context: context,
+                              controller: _controller,
+                              item: e,
+                            ),
+                            child: Row(
+                              children: [
+                                e.type.icon,
+                                Text('  ${e.title}'),
+                              ],
+                            ),
                           ),
-                          child: Row(
-                            children: [
-                              e.type.icon,
-                              Text('  ${e.title}'),
-                            ],
-                          ),
-                        ),
-                      )
-                      .toList();
-                },
+                        )
+                        .toList();
+                  },
+                  targetBuilder: (open) => GlassIconButton(
+                    tapSize: 44,
+                    tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+                    onTap: open,
+                    icon: const Icon(Icons.more_vert),
+                  ),
+                ),
               );
             }
             return const SizedBox.shrink();
           }),
-          const SizedBox(width: 5),
+          const SizedBox(width: 4),
         ],
       ),
       body: refreshIndicator(

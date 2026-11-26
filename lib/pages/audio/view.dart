@@ -7,6 +7,8 @@ import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/image_viewer/hero.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_menu.dart';
 import 'package:PiliPlus/common/widgets/progress_bar/audio_video_progress_bar.dart';
 import 'package:PiliPlus/common/widgets/progress_bar/segment_progress_bar.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -104,48 +106,72 @@ class _AudioPageState extends State<AudioPage> {
           if (_controller.isUgc && _controller.enableSponsorBlock)
             Obx(() {
               if (_controller.segmentProgressList.isNotEmpty) {
-                return IconButton(
-                  tooltip: '片段信息',
-                  onPressed: _controller.showSBDetail,
-                  icon: const Icon(MdiIcons.advertisements, size: 22),
+                return Padding(
+                  padding: const EdgeInsets.only(right: 2),
+                  child: GlassIconButton(
+                    tapSize: 44,
+                    tooltip: '片段信息',
+                    onTap: _controller.showSBDetail,
+                    icon: const Icon(MdiIcons.advertisements),
+                  ),
                 );
               }
               return const SizedBox.shrink();
             }),
-          Builder(
-            builder: (context) {
-              return PopupMenuButton<ListOrder>(
-                tooltip: '排序',
-                icon: const Icon(Icons.sort, size: 22),
-                initialValue: _controller.order,
-                onSelected: (value) {
-                  _controller.onChangeOrder(value);
-                  (context as Element).markNeedsBuild();
-                },
+          StatefulBuilder(
+            builder: (context, setMenuState) {
+              return GlassPopupAnchor<ListOrder>(
                 itemBuilder: (context) => ListOrder.values
-                    .map((e) => PopupMenuItem(value: e, child: Text(e.title)))
+                    .map(
+                      (e) => PopupMenuItem(
+                        value: e,
+                        onTap: () {
+                          _controller.onChangeOrder(e);
+                          setMenuState(() {});
+                        },
+                        child: Row(
+                          children: [
+                            Text(e.title),
+                            const Spacer(),
+                            if (_controller.order == e)
+                              const Icon(Icons.done, size: 18),
+                          ],
+                        ),
+                      ),
+                    )
                     .toList(),
+                targetBuilder: (open) => GlassIconButton(
+                  tapSize: 44,
+                  tooltip: '排序',
+                  onTap: open,
+                  icon: const Icon(Icons.sort),
+                ),
               );
             },
           ),
-          IconButton(
+          const SizedBox(width: 2),
+          GlassIconButton(
+            tapSize: 44,
             tooltip: '定时关闭',
-            onPressed: () => shutdownTimerService
+            onTap: () => shutdownTimerService
               ..onPause ??= _controller.onPause
               ..isPlaying ??= _controller.isPlaying
               ..showScheduleExitDialog(
                 context,
                 isFullScreen: false,
               ),
-            icon: const Icon(Icons.schedule, size: 22),
+            icon: const Icon(Icons.schedule),
           ),
-          if (_controller.isUgc)
-            IconButton(
+          if (_controller.isUgc) ...[
+            const SizedBox(width: 2),
+            GlassIconButton(
+              tapSize: 44,
               tooltip: '更多',
-              onPressed: _showMore,
-              icon: const Icon(Icons.more_vert, size: 22),
+              onTap: _showMore,
+              icon: const Icon(Icons.more_vert),
             ),
-          const SizedBox(width: 5),
+          ],
+          const SizedBox(width: 4),
         ],
       ),
       body: Padding(

@@ -1296,9 +1296,9 @@ class RenderGlassMenuMorph extends RenderProxyBox {
     );
   }
 
-  ui.ImageFilter? _filterFor(Rect platter, double radius) {
+  (ui.ImageFilter?, ui.ImageFilter?) _filtersFor(Rect platter, double radius) {
     if (!UiGlass.clear || platter.width <= 0) {
-      return null;
+      return (null, null);
     }
     ui.ImageFilter? blur;
     if (UiGlass.panelBlur > 0) {
@@ -1332,20 +1332,21 @@ class RenderGlassMenuMorph extends RenderProxyBox {
         ..setFloat(13, 0)
         ..setFloat(14, UiGlass.saturation);
       final lens = ui.ImageFilter.shader(shader);
-      // lens first, then the blur, as in LiquidGlass: see there
-      return blur == null
-          ? lens
-          : ui.ImageFilter.compose(outer: blur, inner: lens);
+      // Blur first, then refract in a second BackdropFilterLayer: see LiquidGlass.
+      return blur == null ? (lens, null) : (blur, lens);
     }
     if (UiGlass.saturation == 1) {
-      return blur;
+      return (blur, null);
     }
     final vibrancy = ui.ColorFilter.matrix(
       _saturationMatrix(UiGlass.saturation),
     );
-    return blur == null
-        ? vibrancy
-        : ui.ImageFilter.compose(outer: vibrancy, inner: blur);
+    return (
+      blur == null
+          ? vibrancy
+          : ui.ImageFilter.compose(outer: vibrancy, inner: blur),
+      null,
+    );
   }
 
   void _paintShadow(
@@ -1387,7 +1388,7 @@ class RenderGlassMenuMorph extends RenderProxyBox {
     _MorphFrame frame,
     Path path,
   ) {
-    final filter = _filterFor(frame.platter, frame.radius);
+    final (first, second) = _filtersFor(frame.platter, frame.radius);
     void paintTint(PaintingContext context, Offset offset) {
       context.canvas.drawPath(
         path.shift(offset),
@@ -1401,12 +1402,30 @@ class RenderGlassMenuMorph extends RenderProxyBox {
       path.getBounds(),
       path,
       (context, offset) {
-        if (filter == null) {
+        if (first == null) {
           paintTint(context, offset);
           return;
         }
+        if (second == null) {
+          context.pushLayer(
+            BackdropFilterLayer(filter: first),
+            paintTint,
+            offset,
+          );
+          return;
+        }
         context.pushLayer(
-          BackdropFilterLayer(filter: filter),
+          BackdropFilterLayer(filter: first),
+          (context, offset) {
+            context.canvas.drawRect(
+              path.getBounds().shift(offset),
+              Paint()..color = const Color(0x00000000),
+            );
+          },
+          offset,
+        );
+        context.pushLayer(
+          BackdropFilterLayer(filter: second),
           paintTint,
           offset,
         );

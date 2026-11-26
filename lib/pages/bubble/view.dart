@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
@@ -151,17 +153,35 @@ class _BubblePageState extends State<BubblePage>
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TabBar(
-                isScrollable: true,
-                tabAlignment: .start,
-                controller: _controller.tabController,
-                onTap: (index) {
-                  if (!_controller.tabController!.indexIsChanging) {
-                    currCtr().scrollController.animToTop();
-                  }
-                },
-                tabs: tabs.map((item) => Tab(text: item.name!)).toList(),
-              ),
+              if (Revamp.enabled)
+                GlassTabStrip(
+                  items: [
+                    for (final item in tabs) GlassTabItem(item.name!),
+                  ],
+                  controller: _controller.tabController,
+                  capsule: true,
+                  refraction: false,
+                  centered: false,
+                  drag: GlassTabDrag.scrub,
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                  onSelected: (index) {
+                    if (index == _controller.tabController!.index) {
+                      currCtr().scrollController.animToTop();
+                    }
+                  },
+                )
+              else
+                TabBar(
+                  isScrollable: true,
+                  tabAlignment: .start,
+                  controller: _controller.tabController,
+                  onTap: (index) {
+                    if (!_controller.tabController!.indexIsChanging) {
+                      currCtr().scrollController.animToTop();
+                    }
+                  },
+                  tabs: tabs.map((item) => Tab(text: item.name!)).toList(),
+                ),
               Expanded(
                 child: tabBarView(
                   controller: _controller.tabController,

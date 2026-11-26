@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
@@ -55,18 +57,34 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
       appBar: AppBar(title: const Text('弹幕屏蔽')),
       body: Column(
         children: [
-          TabBar(
-            controller: _controller.tabController,
-            tabs: DmBlockType.values
-                .map(
-                  (e) => Obx(
-                    () => Tab(
-                      text: '${e.label}(${_controller.rules[e.index].length})',
+          if (Revamp.enabled)
+            Obx(
+              () => GlassTabStrip(
+                items: [
+                  for (final e in DmBlockType.values)
+                    GlassTabItem('${e.label}(${_controller.rules[e.index].length})'),
+                ],
+                controller: _controller.tabController,
+                capsule: true,
+                refraction: false,
+                centered: true,
+                drag: GlassTabDrag.scrub,
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+              ),
+            )
+          else
+            TabBar(
+              controller: _controller.tabController,
+              tabs: DmBlockType.values
+                  .map(
+                    (e) => Obx(
+                      () => Tab(
+                        text: '${e.label}(${_controller.rules[e.index].length})',
+                      ),
                     ),
-                  ),
-                )
-                .toList(),
-          ),
+                  )
+                  .toList(),
+            ),
           Expanded(
             child: tabBarView(
               controller: _controller.tabController,

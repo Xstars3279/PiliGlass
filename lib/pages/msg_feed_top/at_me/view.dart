@@ -5,6 +5,7 @@ import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/grpc/bilibili/app/im/v1.pbenum.dart'
@@ -37,19 +38,20 @@ class _AtMePageState extends State<AtMePage> {
     final appBar = AppBar(
       title: const Text('@我的'),
       actions: [
-        IconButton(
-          onPressed: () => Get.to(
+        GlassIconButton(
+          tapSize: 44,
+          tooltip: '设置',
+          onTap: () => Get.to(
             const WhisperSettingsPage(
               imSettingType: IMSettingType.SETTING_TYPE_OLD_AT_ME,
             ),
           ),
           icon: Icon(
-            size: 20,
             Icons.settings,
             color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 4),
       ],
     );
     return SimpleScaffold(

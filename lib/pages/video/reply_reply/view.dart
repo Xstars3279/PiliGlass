@@ -3,6 +3,7 @@ import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/mini_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -82,13 +83,16 @@ class VideoReplyReplyPanel extends CommonSlidePage {
         appBar: AppBar(
           title: const Text('评论详情'),
           actions: [
-            IconButton(
+            GlassIconButton(
+              tapSize: 44,
               tooltip: '前往',
-              onPressed: uri == null
+              enabled: uri != null,
+              onTap: uri == null
                   ? null
                   : () => PiliScheme.routePush(uri, businessId: type),
               icon: const Icon(Icons.open_in_browser),
             ),
+            const SizedBox(width: 4),
           ],
         ),
         body: ViewSafeArea(

@@ -436,6 +436,37 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
     return Stack(
       clipBehavior: .none,
       children: [
+        // What the pill shows, below the accent tabs: a glass slab
+        // inset from the bar (56 instead of 64 high), seen only
+        // through the pill. Painted before the bar's outer shell so
+        // the shell's lens samples blurred glass across the pill hole.
+        Positioned.fill(
+          child: ClipPath(
+            clipper: _PillClipper(pillRRect),
+            child: Stack(
+              clipBehavior: .none,
+              children: [
+                Positioned.fromRect(
+                  rect: Rect.fromCenter(
+                    center: Offset(
+                      _width / 2 + panelOffset,
+                      _kBarHeight / 2,
+                    ),
+                    // a hair wider than the bar, so the bar's edge never
+                    // shows inside the pill as a thinner inner bar
+                    width: _width * barScale * stretch + 2,
+                    height: _kPillHeight,
+                  ),
+                  child: LiquidGlass(
+                    blurSigma: UiGlass.shellBlur,
+                    saturation: UiGlass.saturation,
+                    color: barTint,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         // The bar: only the glass grows when pressed, not the tabs.
         // It has a hole where the pill is, so the pill's own glass
         // sees the sharp content behind the bar, not the bar's blur.
@@ -474,42 +505,6 @@ class _LiquidGlassNavigationBarState extends State<LiquidGlassNavigationBar>
                   ),
                 ),
               ),
-            ),
-          ),
-        ),
-        // What the pill shows, below the accent tabs: a glass slab
-        // inset from the bar (56 instead of 64 high), seen only
-        // through the pill. Pressed, the pill grows past the slab,
-        // and the parts outside it are clear glass over the
-        // content, while the slab keeps the tabs readable. This is
-        // SukiSU's invisible `tabsBackdrop` row.
-        // Its ends line up with the bar's ends (also while the bar
-        // grows), so inside the pill there is no second rounded end
-        // a few dp inside the bar's outline.
-        Positioned.fill(
-          child: ClipPath(
-            clipper: _PillClipper(pillRRect),
-            child: Stack(
-              clipBehavior: .none,
-              children: [
-                Positioned.fromRect(
-                  rect: Rect.fromCenter(
-                    center: Offset(
-                      _width / 2 + panelOffset,
-                      _kBarHeight / 2,
-                    ),
-                    // a hair wider than the bar, so the bar's edge never
-                    // shows inside the pill as a thinner inner bar
-                    width: _width * barScale * stretch + 2,
-                    height: _kPillHeight,
-                  ),
-                  child: LiquidGlass(
-                    blurSigma: UiGlass.shellBlur,
-                    saturation: UiGlass.saturation,
-                    color: barTint,
-                  ),
-                ),
-              ],
             ),
           ),
         ),

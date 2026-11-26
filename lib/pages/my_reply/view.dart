@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/dialog/export_import.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_action_bar.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/view_sliver_safe_area.dart';
@@ -78,15 +79,19 @@ class _MyReplyState extends State<MyReply> with DynMixin {
               icon: const Icon(Icons.refresh),
             ),
           ],
-          IconButton(
-            tooltip: '导出',
-            onPressed: _showExportDialog,
-            icon: const Icon(Icons.file_upload_outlined),
-          ),
-          IconButton(
-            tooltip: '导入',
-            onPressed: _showImportDialog,
-            icon: const Icon(Icons.file_download_outlined),
+          GlassActionBar(
+            actions: [
+              IconButton(
+                tooltip: '导出',
+                onPressed: _showExportDialog,
+                icon: const Icon(Icons.file_upload_outlined),
+              ),
+              IconButton(
+                tooltip: '导入',
+                onPressed: _showImportDialog,
+                icon: const Icon(Icons.file_download_outlined),
+              ),
+            ],
           ),
           const SizedBox(width: 6),
         ],

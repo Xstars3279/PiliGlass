@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:PiliPlus/common/widgets/appbar/appbar.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_action_bar.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/models_new/download/bili_download_entry_info.dart';
@@ -177,25 +178,29 @@ class _DownloadPageState extends State<DownloadPage>
             child: AppBar(
               title: const Text('离线缓存'),
               actions: [
-                IconButton(
-                  tooltip: '搜索',
-                  onPressed: () async {
-                    await downloadService.waitForInitialization;
-                    if (!mounted) return;
-                    Get.to(DownloadSearchPage(progress: _progress));
-                  },
-                  icon: const Icon(Icons.search),
-                ),
-                IconButton(
-                  tooltip: '多选',
-                  onPressed: () {
-                    if (enableMultiSelect) {
-                      _controller.handleSelect();
-                    } else {
-                      _controller.enableMultiSelect.value = true;
-                    }
-                  },
-                  icon: const Icon(Icons.edit_note),
+                GlassActionBar(
+                  actions: [
+                    IconButton(
+                      tooltip: '搜索',
+                      onPressed: () async {
+                        await downloadService.waitForInitialization;
+                        if (!mounted) return;
+                        Get.to(DownloadSearchPage(progress: _progress));
+                      },
+                      icon: const Icon(Icons.search),
+                    ),
+                    IconButton(
+                      tooltip: '多选',
+                      onPressed: () {
+                        if (enableMultiSelect) {
+                          _controller.handleSelect();
+                        } else {
+                          _controller.enableMultiSelect.value = true;
+                        }
+                      },
+                      icon: const Icon(Icons.edit_note),
+                    ),
+                  ],
                 ),
                 const SizedBox(width: 6),
               ],

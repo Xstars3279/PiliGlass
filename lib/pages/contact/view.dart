@@ -1,3 +1,6 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
 import 'package:PiliPlus/pages/fan/view.dart';
@@ -44,8 +47,10 @@ class _ContactPageState extends State<ContactPage>
       appBar: AppBar(
         title: const Text('通讯录'),
         actions: [
-          IconButton(
-            onPressed: () async {
+          GlassIconButton(
+            tapSize: 44,
+            tooltip: '搜索',
+            onTap: () async {
               final UserModel? userModel = await Navigator.of(context).push(
                 GetPageRoute(
                   page: () => FollowSearchPage(
@@ -60,18 +65,30 @@ class _ContactPageState extends State<ContactPage>
             },
             icon: const Icon(Icons.search),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 4),
         ],
       ),
       body: Column(
         children: [
-          TabBar(
-            controller: _controller,
-            tabs: const [
-              Tab(text: '我的关注'),
-              Tab(text: '我的粉丝'),
-            ],
-          ),
+          if (Revamp.enabled)
+            GlassTabStrip(
+              items: const [
+                GlassTabItem('我的关注'),
+                GlassTabItem('我的粉丝'),
+              ],
+              controller: _controller,
+              capsule: true,
+              drag: GlassTabDrag.scrub,
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            )
+          else
+            TabBar(
+              controller: _controller,
+              tabs: const [
+                Tab(text: '我的关注'),
+                Tab(text: '我的粉丝'),
+              ],
+            ),
           Expanded(
             child: tabBarView(
               controller: _controller,

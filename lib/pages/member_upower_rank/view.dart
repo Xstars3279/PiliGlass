@@ -1,7 +1,9 @@
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -117,7 +119,45 @@ class _UpowerRankPageState extends State<UpowerRankPage>
                         builder: (context) {
                           return Column(
                             children: [
-                              TabBar(
+                              if (Revamp.enabled)
+                                GlassTabStrip(
+                                  items: [
+                                    for (final e in tabs)
+                                      GlassTabItem(
+                                        '${e.name!}(${e.memberTotal ?? 0})',
+                                      ),
+                                  ],
+                                  controller: DefaultTabController.of(context),
+                                  capsule: true,
+                                  refraction: false,
+                                  centered: false,
+                                  drag: GlassTabDrag.scrub,
+                                  padding: const EdgeInsets.fromLTRB(
+                                    12,
+                                    8,
+                                    12,
+                                    4,
+                                  ),
+                                  onSelected: (index) {
+                                    if (index ==
+                                        DefaultTabController.of(
+                                          context,
+                                        ).index) {
+                                      try {
+                                        if (index == 0) {
+                                          _controller.animateToTop();
+                                        } else {
+                                          Get.find<UpowerRankController>(
+                                            tag:
+                                                '$_upMid${tabs[index].privilegeType}',
+                                          ).animateToTop();
+                                        }
+                                      } catch (_) {}
+                                    }
+                                  },
+                                )
+                              else
+                                TabBar(
                                 isScrollable: true,
                                 tabAlignment: TabAlignment.start,
                                 tabs: tabs

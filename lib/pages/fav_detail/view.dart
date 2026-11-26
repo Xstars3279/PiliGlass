@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_action_bar.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_menu.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
@@ -176,63 +177,83 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
   }
 
   List<Widget> _actions(ThemeData theme) {
+    void openSearch() {
+      final folderInfo = controller.folderInfo.value;
+      Get.toNamed(
+        '/favSearch',
+        arguments: {
+          'type': 0,
+          'mediaId': int.parse(mediaId),
+          'title': folderInfo.title,
+          'count': folderInfo.mediaCount,
+          'isOwner': controller.isOwner,
+        },
+      );
+    }
+
     return [
-      // search, share, sort and ⋯; the page-order toggle lives in ⋯ so the
-      // row still fits beside the title on a 360dp phone
-      GlassActionBar(
-        refraction: false,
-        actions: [
-          IconButton(
+      // search & share (merged when public), with sort and ⋯ as separate
+      // glass coins for their popup menus
+      Obx(() {
+        final attr = controller.folderInfo.value.attr;
+        final isPublic = attr != -1 && BiliUtils.isPublicFav(attr);
+        if (!isPublic) {
+          return GlassIconButton(
+            tapSize: 44,
             tooltip: '搜索',
-            onPressed: () {
-              final folderInfo = controller.folderInfo.value;
-              Get.toNamed(
-                '/favSearch',
-                arguments: {
-                  'type': 0,
-                  'mediaId': int.parse(mediaId),
-                  'title': folderInfo.title,
-                  'count': folderInfo.mediaCount,
-                  'isOwner': controller.isOwner,
-                },
-              );
-            },
+            onTap: openSearch,
             icon: const Icon(Icons.search_outlined),
+          );
+        }
+        return GlassActionBar(
+          actions: [
+            IconButton(
+              tooltip: '搜索',
+              onPressed: openSearch,
+              icon: const Icon(Icons.search_outlined),
+            ),
+            IconButton(
+              iconSize: 22,
+              tooltip: '分享',
+              onPressed: () => ShareUtils.shareText(
+                'https://www.bilibili.com/medialist/detail/ml${controller.mediaId}',
+              ),
+              icon: const Icon(Icons.share),
+            ),
+          ],
+        );
+      }),
+      const SizedBox(width: 2),
+      Obx(() {
+        final currentOrder = controller.order.value;
+        return GlassPopupAnchor<FavOrderType>(
+          itemBuilder: (context) => FavOrderType.values
+              .map(
+                (e) => PopupMenuItem(
+                  value: e,
+                  onTap: () => controller
+                    ..order.value = e
+                    ..onReload(),
+                  child: Row(
+                    children: [
+                      Text(e.label),
+                      const Spacer(),
+                      if (currentOrder == e) const Icon(Icons.done, size: 18),
+                    ],
+                  ),
+                ),
+              )
+              .toList(),
+          targetBuilder: (open) => GlassIconButton(
+            tapSize: 44,
+            tooltip: '排序方式',
+            onTap: open,
+            icon: const Icon(Icons.sort),
           ),
-          Obx(() {
-            final attr = controller.folderInfo.value.attr;
-            return attr == -1 || !BiliUtils.isPublicFav(attr)
-                ? const SizedBox.shrink()
-                : IconButton(
-                    iconSize: 22,
-                    tooltip: '分享',
-                    onPressed: () => ShareUtils.shareText(
-                      'https://www.bilibili.com/medialist/detail/ml${controller.mediaId}',
-                    ),
-                    icon: const Icon(Icons.share),
-                  );
-          }),
-          Obx(
-            () {
-              return PopupMenuButton<FavOrderType>(
-                icon: const Icon(Icons.sort),
-                initialValue: controller.order.value,
-                tooltip: '排序方式',
-                onSelected: (value) => controller
-                  ..order.value = value
-                  ..onReload(),
-                itemBuilder: (context) => FavOrderType.values
-                    .map(
-                      (e) => PopupMenuItem(
-                        value: e,
-                        child: Text(e.label),
-                      ),
-                    )
-                    .toList(),
-              );
-            },
-          ),
-          GlassPopupAnchor<Object?>(
+        );
+      }),
+      const SizedBox(width: 2),
+      GlassPopupAnchor<Object?>(
             itemBuilder: (context) {
               final isOwner = controller.isOwner;
               final folderInfo = controller.folderInfo.value;
@@ -334,15 +355,14 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
                 ),
               ];
             },
-            targetBuilder: (open) => IconButton(
+            targetBuilder: (open) => GlassIconButton(
+              tapSize: 44,
               tooltip: MaterialLocalizations.of(context).showMenuTooltip,
-              onPressed: open,
+              onTap: open,
               icon: const Icon(Icons.more_vert),
             ),
           ),
-        ],
-      ),
-      const SizedBox(width: 10),
+      const SizedBox(width: 4),
     ];
   }
 

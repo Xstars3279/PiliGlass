@@ -441,6 +441,13 @@ class _MainAppState extends PopScopeState<MainApp>
         scrollDirection: _mainController.useBottomNav ? .horizontal : .vertical,
         children: _mainController.navigationBars.map((i) => i.page).toList(),
       );
+    } else if (Revamp.enabled) {
+      child = Obx(
+        () => _LazyTabStack(
+          index: _mainController.selectedIndex.value,
+          children: _mainController.navigationBars.map((i) => i.page).toList(),
+        ),
+      );
     } else {
       child = PageView(
         controller: _mainController.controller,
@@ -561,6 +568,53 @@ class _MainAppState extends PopScopeState<MainApp>
           ),
           onPressed: () => Get.toNamed('/search'),
         ),
+      ],
+    );
+  }
+}
+
+class _LazyTabStack extends StatefulWidget {
+  const _LazyTabStack({required this.index, required this.children});
+
+  final int index;
+  final List<Widget> children;
+
+  @override
+  State<_LazyTabStack> createState() => _LazyTabStackState();
+}
+
+class _LazyTabStackState extends State<_LazyTabStack> {
+  late List<bool> _built = _initBuilt();
+
+  List<bool> _initBuilt() => List<bool>.generate(
+    widget.children.length,
+    (i) => i == widget.index,
+  );
+
+  @override
+  void didUpdateWidget(covariant _LazyTabStack oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.children.length != widget.children.length) {
+      _built = _initBuilt();
+    } else if (widget.index >= 0 && widget.index < _built.length) {
+      _built[widget.index] = true;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        for (var i = 0; i < widget.children.length; i++)
+          if (_built[i])
+            Offstage(
+              offstage: i != widget.index,
+              child: TickerMode(
+                enabled: i == widget.index,
+                child: widget.children[i],
+              ),
+            ),
       ],
     );
   }

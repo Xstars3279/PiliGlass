@@ -1,6 +1,8 @@
 import 'package:PiliPlus/common/skeleton/whisper_item.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_menu.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/grpc/bilibili/app/im/v1.pb.dart';
@@ -46,26 +48,35 @@ class _WhisperSecPageState extends State<WhisperSecPage> {
           Obx(() {
             final threeDotItems = _controller.threeDotItems.value;
             if (threeDotItems != null && threeDotItems.isNotEmpty) {
-              return PopupMenuButton(
-                itemBuilder: (context) {
-                  return threeDotItems
-                      .map(
-                        (e) => PopupMenuItem(
-                          onTap: () => e.type.action(
-                            context: context,
-                            controller: _controller,
-                            item: e,
+              return Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: GlassPopupAnchor<Object?>(
+                  itemBuilder: (context) {
+                    return threeDotItems
+                        .map(
+                          (e) => PopupMenuItem(
+                            onTap: () => e.type.action(
+                              context: context,
+                              controller: _controller,
+                              item: e,
+                            ),
+                            child: Row(
+                              children: [
+                                e.type.icon,
+                                Text('  ${e.title}'),
+                              ],
+                            ),
                           ),
-                          child: Row(
-                            children: [
-                              e.type.icon,
-                              Text('  ${e.title}'),
-                            ],
-                          ),
-                        ),
-                      )
-                      .toList();
-                },
+                        )
+                        .toList();
+                  },
+                  targetBuilder: (open) => GlassIconButton(
+                    tapSize: 44,
+                    tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+                    onTap: open,
+                    icon: const Icon(Icons.more_vert),
+                  ),
+                ),
               );
             }
             return const SizedBox.shrink();

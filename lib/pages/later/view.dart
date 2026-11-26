@@ -1,4 +1,6 @@
 import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_menu.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/revamp_fab.dart';
 import 'package:PiliPlus/common/widgets/appbar/appbar.dart';
@@ -17,7 +19,6 @@ import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:material_ui/material_ui.dart';
 
 class LaterPage extends StatefulWidget {
@@ -185,7 +186,6 @@ class _LaterPageState extends State<LaterPage>
 
   PreferredSizeWidget _buildAppbar(bool enableMultiSelect) {
     final theme = Theme.of(context);
-    Color color = theme.colorScheme.secondary;
     final btnStyle = TextButton.styleFrom(visualDensity: .compact);
     final textStyle = TextStyle(color: theme.colorScheme.onSurfaceVariant);
     return MultiSelectAppBarWidget(
@@ -224,9 +224,10 @@ class _LaterPageState extends State<LaterPage>
       child: AppBar(
         title: const Text('稍后再看'),
         actions: [
-          IconButton(
+          GlassIconButton(
+            tapSize: 44,
             tooltip: '搜索',
-            onPressed: () {
+            onTap: () {
               final mid = Accounts.main.mid;
               Get.toNamed(
                 '/laterSearch',
@@ -241,83 +242,51 @@ class _LaterPageState extends State<LaterPage>
             },
             icon: const Icon(Icons.search),
           ),
+          const SizedBox(width: 2),
           Builder(
             key: _sortKey,
             builder: (context) {
               final value = currCtr().asc.value;
-              return PopupMenuButton(
-                initialValue: value,
-                tooltip: '排序',
-                onSelected: (value) => currCtr()
-                  ..asc.value = value
-                  ..onReload(),
-                borderRadius: const .all(.circular(20)),
-                child: Padding(
-                  padding: const .symmetric(horizontal: 12, vertical: 6),
-                  child: Text.rich(
-                    style: TextStyle(fontSize: 14, height: 1, color: color),
-                    strutStyle: const StrutStyle(
-                      leading: 0,
-                      height: 1,
-                      fontSize: 14,
-                    ),
-                    TextSpan(
-                      children: [
-                        TextSpan(text: value ? '最早添加' : '最近添加'),
-                        WidgetSpan(
-                          alignment: .middle,
-                          child: Icon(
-                            size: 14,
-                            MdiIcons.unfoldMoreHorizontal,
-                            color: color,
-                          ),
-                        ),
-                      ],
-                      style: TextStyle(color: color),
-                    ),
-                  ),
-                ),
+              return GlassPopupAnchor<bool>(
                 itemBuilder: (_) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: false,
-                    child: Text('最近添加'),
+                    onTap: () => currCtr()
+                      ..asc.value = false
+                      ..onReload(),
+                    child: Row(
+                      children: [
+                        const Text('最近添加'),
+                        const Spacer(),
+                        if (!value) const Icon(Icons.done, size: 18),
+                      ],
+                    ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: true,
-                    child: Text('最早添加'),
+                    onTap: () => currCtr()
+                      ..asc.value = true
+                      ..onReload(),
+                    child: Row(
+                      children: [
+                        const Text('最早添加'),
+                        const Spacer(),
+                        if (value) const Icon(Icons.done, size: 18),
+                      ],
+                    ),
                   ),
                 ],
+                targetBuilder: (open) => GlassIconButton(
+                  tapSize: 44,
+                  tooltip: '排序',
+                  onTap: open,
+                  icon: const Icon(Icons.sort),
+                ),
               );
             },
           ),
-          PopupMenuButton(
-            tooltip: '清空',
-            borderRadius: const .all(.circular(20)),
-            child: Padding(
-              padding: const .symmetric(horizontal: 12, vertical: 6),
-              child: Text.rich(
-                style: TextStyle(fontSize: 14, height: 1, color: color),
-                strutStyle: const StrutStyle(
-                  leading: 0,
-                  height: 1,
-                  fontSize: 14,
-                ),
-                TextSpan(
-                  children: [
-                    const TextSpan(text: '清空'),
-                    WidgetSpan(
-                      alignment: .middle,
-                      child: Icon(
-                        size: 14,
-                        MdiIcons.unfoldMoreHorizontal,
-                        color: color,
-                      ),
-                    ),
-                  ],
-                  style: TextStyle(color: color),
-                ),
-              ),
-            ),
+          const SizedBox(width: 2),
+          GlassPopupAnchor<Object?>(
             itemBuilder: (_) => [
               PopupMenuItem(
                 onTap: () => currCtr().toViewClear(context, 1),
@@ -332,8 +301,14 @@ class _LaterPageState extends State<LaterPage>
                 child: const Text('清空全部'),
               ),
             ],
+            targetBuilder: (open) => GlassIconButton(
+              tapSize: 44,
+              tooltip: '清空',
+              onTap: open,
+              icon: const Icon(Icons.delete_outline),
+            ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
         ],
       ),
     );

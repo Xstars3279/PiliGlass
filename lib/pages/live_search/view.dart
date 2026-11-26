@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
@@ -62,32 +64,61 @@ class _LiveSearchPageState extends State<LiveSearchPage> {
             opacity: _controller.hasData.value ? 1 : 0,
             child: Column(
               children: [
-                TabBar(
-                  controller: _controller.tabController,
-                  tabs: [
-                    Obx(
-                      () => Tab(
-                        text:
-                            '正在直播 ${_controller.counts[0] != -1 ? _controller.counts[0] : ''}',
-                      ),
+                if (Revamp.enabled)
+                  Obx(
+                    () => GlassTabStrip(
+                      items: [
+                        GlassTabItem(
+                          '正在直播 ${_controller.counts[0] != -1 ? _controller.counts[0] : ''}',
+                        ),
+                        GlassTabItem(
+                          '主播 ${_controller.counts[1] != -1 ? _controller.counts[1] : ''}',
+                        ),
+                      ],
+                      controller: _controller.tabController,
+                      capsule: true,
+                      refraction: false,
+                      centered: true,
+                      drag: GlassTabDrag.scrub,
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                      onSelected: (index) {
+                        if (index == _controller.tabController.index) {
+                          if (index == 0) {
+                            _controller.roomCtr.animateToTop();
+                          } else {
+                            _controller.userCtr.animateToTop();
+                          }
+                        }
+                      },
                     ),
-                    Obx(
-                      () => Tab(
-                        text:
-                            '主播 ${_controller.counts[1] != -1 ? _controller.counts[1] : ''}',
+                  )
+                else
+                  TabBar(
+                    controller: _controller.tabController,
+                    tabs: [
+                      Obx(
+                        () => Tab(
+                          text:
+                              '正在直播 ${_controller.counts[0] != -1 ? _controller.counts[0] : ''}',
+                        ),
                       ),
-                    ),
-                  ],
-                  onTap: (index) {
-                    if (!_controller.tabController.indexIsChanging) {
-                      if (index == 0) {
-                        _controller.roomCtr.animateToTop();
-                      } else {
-                        _controller.userCtr.animateToTop();
+                      Obx(
+                        () => Tab(
+                          text:
+                              '主播 ${_controller.counts[1] != -1 ? _controller.counts[1] : ''}',
+                        ),
+                      ),
+                    ],
+                    onTap: (index) {
+                      if (!_controller.tabController.indexIsChanging) {
+                        if (index == 0) {
+                          _controller.roomCtr.animateToTop();
+                        } else {
+                          _controller.userCtr.animateToTop();
+                        }
                       }
-                    }
-                  },
-                ),
+                    },
+                  ),
                 Expanded(
                   child: tabBarView(
                     controller: _controller.tabController,

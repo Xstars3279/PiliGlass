@@ -363,14 +363,12 @@ class _MemberPageState extends State<MemberPage> {
   List<Widget> _actions(ColorScheme theme) => [
     Row(
       mainAxisSize: MainAxisSize.min,
-      spacing: 8,
+      spacing: 2,
       children: [
         if (_userController.reserves?.isNotEmpty ?? false)
           _reserveBtn(_userController.reserves!, theme),
         GlassIconButton(
-          size: 46,
-          tapSize: 48,
-          iconSize: 22,
+          tapSize: 44,
           tooltip: '搜索',
           onTap: () => Get.toNamed(
             '/memberSearch?mid=$_mid&uname=${_userController.username}',
@@ -612,9 +610,7 @@ class _MemberPageState extends State<MemberPage> {
               ],
           ],
           targetBuilder: (open) => GlassIconButton(
-            size: 46,
-            tapSize: 48,
-            iconSize: 22,
+            tapSize: 44,
             tooltip: MaterialLocalizations.of(context).showMenuTooltip,
             onTap: open,
             icon: const Icon(Icons.more_vert),

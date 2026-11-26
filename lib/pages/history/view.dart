@@ -4,6 +4,8 @@ import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_menu.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -188,12 +190,14 @@ class _HistoryPageState extends State<HistoryPage>
   AppBar get _buildAppBar => AppBar(
     title: const Text('观看记录'),
     actions: [
-      IconButton(
+      GlassIconButton(
+        tapSize: 44,
         tooltip: '搜索',
-        onPressed: () => Get.toNamed('/historySearch'),
+        onTap: () => Get.toNamed('/historySearch'),
         icon: const Icon(Icons.search_outlined),
       ),
-      PopupMenuButton(
+      const SizedBox(width: 2),
+      GlassPopupAnchor<Object?>(
         itemBuilder: (_) => [
           PopupMenuItem(
             onTap: () => _historyController.baseCtr.onPauseHistory(context),
@@ -228,8 +232,14 @@ class _HistoryPageState extends State<HistoryPage>
             child: const Text('删除已看记录'),
           ),
         ],
+        targetBuilder: (open) => GlassIconButton(
+          tapSize: 44,
+          tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+          onTap: open,
+          icon: const Icon(Icons.more_vert),
+        ),
       ),
-      const SizedBox(width: 6),
+      const SizedBox(width: 4),
     ],
   );
 

@@ -10,9 +10,12 @@ extension _MineRevamp on _MediaPageState {
   Widget _headerGroup(Widget row) => _modern
       ? Padding(
           padding: const .only(right: 12),
-          child: GlassCapsule(
-            padding: const .symmetric(horizontal: 4, vertical: 2),
-            child: row,
+          child: LiquidPress(
+            maxGrowth: 8,
+            child: GlassCapsule(
+              padding: const .symmetric(horizontal: 4, vertical: 2),
+              child: row,
+            ),
           ),
         )
       : row;

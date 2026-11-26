@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/hit_test.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/models/common/member/contribute_type.dart';
 import 'package:PiliPlus/models_new/space/space/tab2.dart';
@@ -58,44 +59,57 @@ class _MemberContributeState extends State<MemberContribute>
             crossAxisAlignment: .stretch,
             children: [
               HitTestWidget(
-                child: TabBar(
-                  overlayColor: const WidgetStatePropertyAll(
-                    Colors.transparent,
-                  ),
-                  splashFactory: NoSplash.splashFactory,
-                  padding: const .symmetric(horizontal: 8),
-                  isScrollable: true,
-                  tabs: _controller.tabs!,
-                  tabAlignment: .start,
-                  controller: _controller.tabController,
-                  dividerHeight: 0,
-                  indicatorWeight: 0,
-                  // the redesign takes the app's tabs from the theme: a
-                  // raised pill, bold labels
-                  indicatorPadding: Revamp.enabled
-                      ? EdgeInsets.zero
-                      : const .symmetric(horizontal: 3, vertical: 8),
-                  indicator: Revamp.enabled
-                      ? null
-                      : BoxDecoration(
-                          color: theme.colorScheme.secondaryContainer,
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(20),
-                          ),
+                child: Revamp.enabled
+                    ? GlassTabStrip(
+                        items: [
+                          for (final item in _controller.items!)
+                            GlassTabItem(item.title ?? ''),
+                        ],
+                        controller: _controller.tabController,
+                        capsule: false,
+                        refraction: false,
+                        centered: false,
+                        drag: GlassTabDrag.scrub,
+                        padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                      )
+                    : TabBar(
+                        overlayColor: const WidgetStatePropertyAll(
+                          Colors.transparent,
                         ),
-                  indicatorSize: .tab,
-                  labelStyle: Revamp.enabled
-                      ? null
-                      : TabBarTheme.of(context).labelStyle
-                                ?.copyWith(fontSize: 14) ??
-                            const TextStyle(fontSize: 14),
-                  labelColor: Revamp.enabled
-                      ? null
-                      : theme.colorScheme.onSecondaryContainer,
-                  unselectedLabelColor: Revamp.enabled
-                      ? null
-                      : theme.colorScheme.outline,
-                ),
+                        splashFactory: NoSplash.splashFactory,
+                        padding: const .symmetric(horizontal: 8),
+                        isScrollable: true,
+                        tabs: _controller.tabs!,
+                        tabAlignment: .start,
+                        controller: _controller.tabController,
+                        dividerHeight: 0,
+                        indicatorWeight: 0,
+                        // the redesign takes the app's tabs from the theme: a
+                        // raised pill, bold labels
+                        indicatorPadding: Revamp.enabled
+                            ? EdgeInsets.zero
+                            : const .symmetric(horizontal: 3, vertical: 8),
+                        indicator: Revamp.enabled
+                            ? null
+                            : BoxDecoration(
+                                color: theme.colorScheme.secondaryContainer,
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(20),
+                                ),
+                              ),
+                        indicatorSize: .tab,
+                        labelStyle: Revamp.enabled
+                            ? null
+                            : TabBarTheme.of(context).labelStyle
+                                      ?.copyWith(fontSize: 14) ??
+                                  const TextStyle(fontSize: 14),
+                        labelColor: Revamp.enabled
+                            ? null
+                            : theme.colorScheme.onSecondaryContainer,
+                        unselectedLabelColor: Revamp.enabled
+                            ? null
+                            : theme.colorScheme.outline,
+                      ),
               ),
               Expanded(
                 child: TabBarView(

@@ -6,7 +6,7 @@ import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
-import 'package:PiliPlus/common/widgets/liquid_glass/glass_action_bar.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_menu.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/mini_scaffold.dart';
@@ -367,87 +367,85 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage>
     actions: [
       const SizedBox(width: 4),
       if (!isPortrait) ratioWidget(maxWidth),
-      GlassActionBar(
-        refraction: false,
-        actions: [
-          IconButton(
-            tooltip: '浏览器打开',
-            onPressed: () => PageUtils.inAppWebview(controller.url),
-            icon: const Icon(Icons.open_in_browser_outlined, size: 19),
-          ),
-          GlassPopupAnchor<Object?>(
-            itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-              PopupMenuItem(
-                onTap: () => ShareUtils.shareText(controller.url),
-                child: const Row(
-                  spacing: 10,
-                  mainAxisSize: .min,
-                  children: [
-                    Icon(Icons.share_outlined, size: 19),
-                    Text('分享'),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                onTap: () => Utils.copyText(controller.url),
-                child: const Row(
-                  spacing: 10,
-                  mainAxisSize: .min,
-                  children: [
-                    Icon(Icons.copy_rounded, size: 19),
-                    Text('复制链接'),
-                  ],
-                ),
-              ),
-              if (controller.commentType == 12 &&
-                  controller.stats.value != null &&
-                  controller.opusData?.modules.moduleBlocked == null)
-                PopupMenuItem(
-                  onTap: () async {
-                    final summary = controller.summary;
-                    try {
-                      if (summary.cover == null) {
-                        if (!await controller.getArticleInfo(true)) {
-                          return;
-                        }
-                      }
-                      if (mounted) {
-                        PageUtils.pmShare(
-                          this.context,
-                          content: {
-                            "id": controller.commentId,
-                            "title": "- 哔哩哔哩专栏",
-                            "headline": summary.title!, // throw
-                            "source": 6,
-                            "thumb": summary.cover!,
-                            "author": summary.author!.name,
-                            "author_id": summary.author!.mid.toString(),
-                          },
-                        );
-                      }
-                    } catch (e) {
-                      SmartDialog.showToast(e.toString());
-                    }
-                  },
-                  child: const Row(
-                    spacing: 10,
-                    mainAxisSize: .min,
-                    children: [
-                      Icon(Icons.forward_to_inbox, size: 19),
-                      Text('分享至消息'),
-                    ],
-                  ),
-                ),
-            ],
-            targetBuilder: (open) => IconButton(
-              tooltip: MaterialLocalizations.of(context).showMenuTooltip,
-              onPressed: open,
-              icon: const Icon(Icons.more_vert, size: 19),
+      GlassIconButton(
+        tapSize: 44,
+        tooltip: '浏览器打开',
+        onTap: () => PageUtils.inAppWebview(controller.url),
+        icon: const Icon(Icons.open_in_browser_outlined),
+      ),
+      const SizedBox(width: 2),
+      GlassPopupAnchor<Object?>(
+        itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+          PopupMenuItem(
+            onTap: () => ShareUtils.shareText(controller.url),
+            child: const Row(
+              spacing: 10,
+              mainAxisSize: .min,
+              children: [
+                Icon(Icons.share_outlined, size: 19),
+                Text('分享'),
+              ],
             ),
           ),
+          PopupMenuItem(
+            onTap: () => Utils.copyText(controller.url),
+            child: const Row(
+              spacing: 10,
+              mainAxisSize: .min,
+              children: [
+                Icon(Icons.copy_rounded, size: 19),
+                Text('复制链接'),
+              ],
+            ),
+          ),
+          if (controller.commentType == 12 &&
+              controller.stats.value != null &&
+              controller.opusData?.modules.moduleBlocked == null)
+            PopupMenuItem(
+              onTap: () async {
+                final summary = controller.summary;
+                try {
+                  if (summary.cover == null) {
+                    if (!await controller.getArticleInfo(true)) {
+                      return;
+                    }
+                  }
+                  if (mounted) {
+                    PageUtils.pmShare(
+                      this.context,
+                      content: {
+                        "id": controller.commentId,
+                        "title": "- 哔哩哔哩专栏",
+                        "headline": summary.title!, // throw
+                        "source": 6,
+                        "thumb": summary.cover!,
+                        "author": summary.author!.name,
+                        "author_id": summary.author!.mid.toString(),
+                      },
+                    );
+                  }
+                } catch (e) {
+                  SmartDialog.showToast(e.toString());
+                }
+              },
+              child: const Row(
+                spacing: 10,
+                mainAxisSize: .min,
+                children: [
+                  Icon(Icons.forward_to_inbox, size: 19),
+                  Text('分享至消息'),
+                ],
+              ),
+            ),
         ],
+        targetBuilder: (open) => GlassIconButton(
+          tapSize: 44,
+          tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+          onTap: open,
+          icon: const Icon(Icons.more_vert),
+        ),
       ),
-      const SizedBox(width: 6),
+      const SizedBox(width: 4),
     ],
   );
 

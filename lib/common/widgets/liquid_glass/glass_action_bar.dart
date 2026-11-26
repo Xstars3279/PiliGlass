@@ -11,7 +11,7 @@ class GlassActionBar extends StatelessWidget {
     required this.actions,
     this.padding = const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
     this.spacing = 5,
-    this.refraction = true,
+    this.refraction = false,
     this.maxGrowth = 8,
   });
 
@@ -22,21 +22,33 @@ class GlassActionBar extends StatelessWidget {
   /// Whether the feed or page passes under it, so the rim bends it.
   final bool refraction;
 
-  /// How far one button swells on a full press, in dp.
+  /// How far the capsule swells on a full press, in dp.
   final double maxGrowth;
 
   @override
   Widget build(BuildContext context) {
-    return GlassCapsule(
-      refraction: refraction,
-      padding: padding,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        spacing: spacing,
-        children: [
-          for (final action in actions)
-            LiquidPress(maxGrowth: maxGrowth, child: action),
-        ],
+    return LiquidPress(
+      maxGrowth: maxGrowth,
+      child: GlassCapsule(
+        refraction: refraction,
+        padding: padding,
+        child: IconButtonTheme(
+          data: IconButtonThemeData(
+            style: IconButton.styleFrom(
+              fixedSize: const Size.square(38),
+              minimumSize: const Size.square(38),
+              maximumSize: const Size.square(38),
+              padding: EdgeInsets.zero,
+              iconSize: 21,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            spacing: spacing,
+            children: actions,
+          ),
+        ),
       ),
     );
   }

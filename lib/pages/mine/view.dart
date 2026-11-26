@@ -162,9 +162,9 @@ class _MediaPageState extends CommonPageState<MinePage>
     const iconSize = 22.0;
     const padding = EdgeInsets.all(8);
     const style = ButtonStyle(tapTargetSize: .shrinkWrap);
-    // each button swells under its own finger, not the whole capsule
+    // in modern mode, the whole capsule swells and drags together via _headerGroup
     Widget press(Widget child) =>
-        LiquidPress(maxGrowth: 8, child: child);
+        _modern ? child : LiquidPress(maxGrowth: 8, child: child);
     return PlayerBar(
       left: widget.showBackBtn
           ? const Padding(

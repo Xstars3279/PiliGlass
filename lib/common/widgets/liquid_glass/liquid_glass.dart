@@ -71,6 +71,8 @@ class LiquidGlass extends StatefulWidget {
 }
 
 class _LiquidGlassState extends State<LiquidGlass> {
+  ScrollPosition? _scrollPosition;
+
   @override
   void initState() {
     super.initState();
@@ -79,6 +81,27 @@ class _LiquidGlassState extends State<LiquidGlass> {
         if (mounted) setState(() {});
       });
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final position = Scrollable.maybeOf(context)?.position;
+    if (!identical(position, _scrollPosition)) {
+      _scrollPosition?.removeListener(_onAncestorScroll);
+      _scrollPosition = position;
+      _scrollPosition?.addListener(_onAncestorScroll);
+    }
+  }
+
+  void _onAncestorScroll() {
+    context.findRenderObject()?.markNeedsPaint();
+  }
+
+  @override
+  void dispose() {
+    _scrollPosition?.removeListener(_onAncestorScroll);
+    super.dispose();
   }
 
   @override
@@ -178,7 +201,7 @@ class RenderLiquidGlass extends RenderProxyBox {
   bool get _hasLens =>
       _shader != null && _refractionHeight > 0 && _refractionAmount > 0;
 
-  ui.ImageFilter? _buildFilter() {
+  (ui.ImageFilter?, ui.ImageFilter?) _buildFilters() {
     final blur = _blurSigma > 0
         ? ui.ImageFilter.blur(
             sigmaX: _blurSigma,
@@ -188,11 +211,14 @@ class RenderLiquidGlass extends RenderProxyBox {
         : null;
 
     if (!_hasLens) {
-      if (_saturation == 1) return blur;
+      if (_saturation == 1) return (blur, null);
       final vibrancy = ui.ColorFilter.matrix(_saturationMatrix(_saturation));
-      return blur == null
-          ? vibrancy
-          : ui.ImageFilter.compose(outer: vibrancy, inner: blur);
+      return (
+        blur == null
+            ? vibrancy
+            : ui.ImageFilter.compose(outer: vibrancy, inner: blur),
+        null,
+      );
     }
 
     // The shader sees physical pixels of the render pass, i.e. the screen.
@@ -202,6 +228,9 @@ class RenderLiquidGlass extends RenderProxyBox {
       getTransformTo(null),
       Offset.zero & size,
     );
+    if (!rect.isFinite || size.width <= 0) {
+      return (blur, null);
+    }
     final scale = rect.width / size.width * _devicePixelRatio;
     final radius = _effectiveRadius * scale;
     final shader = _shader!
@@ -221,14 +250,11 @@ class RenderLiquidGlass extends RenderProxyBox {
       ..setFloat(13, _chromaticAberration)
       ..setFloat(14, _saturation);
     final lens = ui.ImageFilter.shader(shader);
-    // The lens reads the backdrop itself and the blur frosts what it bent.
-    // Under a blur, Impeller re-rasterizes the lens's input from an origin
-    // taken from the layer's transform; a home page shown again by a jump of
-    // its PageView keeps its layers, that origin lands ~70px to the right,
-    // and a strip at each glass's left end is left unfiltered.
-    return blur == null
-        ? lens
-        : ui.ImageFilter.compose(outer: blur, inner: lens);
+    // Blur first, then refract in a second BackdropFilterLayer instead of
+    // ImageFilter.compose: composing blur inside lens shifts Impeller's
+    // sub-pass origin after PageView jumps (leaving the left strip sharp),
+    // while composing blur outside lens smears out the edge refraction.
+    return blur == null ? (lens, null) : (blur, lens);
   }
 
   @override
@@ -251,16 +277,38 @@ class RenderLiquidGlass extends RenderProxyBox {
         super.paint(context, offset);
       }
 
-      final filter = _buildFilter();
-      if (filter == null) {
+      final (first, second) = _buildFilters();
+      if (first == null) {
         paintContent(context, offset);
         return;
       }
-      context.pushLayer(
-        BackdropFilterLayer(filter: filter),
-        paintContent,
-        offset,
-      );
+      if (second == null) {
+        context.pushLayer(
+          BackdropFilterLayer(filter: first),
+          paintContent,
+          offset,
+        );
+        return;
+      }
+      // Sibling BackdropFilterLayers so [second] (lens) stays in the render
+      // pass instead of inside [first]'s saveLayer, keeping FlutterFragCoord
+      // aligned with uRect.
+      context
+        ..pushLayer(
+          BackdropFilterLayer(filter: first),
+          (context, offset) {
+            context.canvas.drawRect(
+              offset & size,
+              Paint()..color = const Color(0x00000000),
+            );
+          },
+          offset,
+        )
+        ..pushLayer(
+          BackdropFilterLayer(filter: second),
+          paintContent,
+          offset,
+        );
     });
   }
 
