@@ -1,4 +1,5 @@
 import 'package:PiliPlus/pages/setting/models/glass_settings.dart';
+import 'package:PiliPlus/pages/setting/models/download_settings.dart';
 import 'package:PiliPlus/pages/setting/models/dm_settings.dart';
 import 'package:PiliPlus/pages/setting/models/dyn_settings.dart';
 import 'package:PiliPlus/pages/setting/models/extra_settings.dart';
@@ -16,6 +17,7 @@ enum SettingType {
   videoSetting('音视频设置'),
   playSetting('播放器设置'),
   dmSetting('弹幕设置'),
+  downloadSetting('下载设置'),
   replySetting('评论设置'),
   dynSetting('动态设置'),
   styleSetting('外观设置'),
@@ -34,6 +36,7 @@ enum SettingType {
     .videoSetting => videoSettings,
     .playSetting => playSettings,
     .dmSetting => dmSettings,
+    .downloadSetting => downloadSettings,
     .dynSetting => dynSettings,
     .replySetting => replySettings,
     .styleSetting => styleSettings,

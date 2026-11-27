@@ -40,7 +40,12 @@ import 'package:PiliPlus/common/widgets/grow_from.dart';
 import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/pages/search/widgets/search_text.dart';
 import 'package:PiliPlus/pages/sponsor_block/block_mixin.dart';
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_sheet.dart';
+import 'package:PiliPlus/pages/video/download_panel/mp4_view.dart';
 import 'package:PiliPlus/pages/video/download_panel/view.dart';
+import 'package:PiliPlus/services/download/mp4_download_service.dart';
+import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/pages/video/introduction/pgc/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/controller.dart';
 import 'package:PiliPlus/pages/video/medialist/view.dart';
@@ -1491,7 +1496,12 @@ class VideoDetailController extends GetxController
     );
   }
 
-  Future<void> onDownload(BuildContext context) async {
+  (
+    VideoDetailData? videoDetail,
+    List<ugc.BaseEpisodeItem>? episodes,
+    PgcInfoModel? pgcItem,
+  )
+  _collectDownloadTargets() {
     VideoDetailData? videoDetail;
     List<ugc.BaseEpisodeItem>? episodes;
     PgcInfoModel? pgcItem;
@@ -1523,6 +1533,11 @@ class VideoDetailController extends GetxController
         }
       }
     }
+    return (videoDetail, episodes, pgcItem);
+  }
+
+  Future<void> onDownload(BuildContext context) async {
+    final (videoDetail, episodes, pgcItem) = _collectDownloadTargets();
     if (episodes != null && episodes.isNotEmpty) {
       final downloadService = Get.find<DownloadService>();
       await downloadService.waitForInitialization;
@@ -1559,7 +1574,7 @@ class VideoDetailController extends GetxController
               index: index,
               videoDetail: videoDetail,
               pgcItem: pgcItem,
-              episodes: episodes!,
+              episodes: episodes,
               scrollController: scrollController,
               videoDetailController: this,
               heroTag: heroTag,
@@ -1570,6 +1585,69 @@ class VideoDetailController extends GetxController
         },
       );
     }
+  }
+
+  Future<void> onDownloadMp4(BuildContext context) async {
+    final (videoDetail, episodes, pgcItem) = _collectDownloadTargets();
+    if (episodes == null || episodes.isEmpty) {
+      return;
+    }
+    final mp4Service = Get.putOrFind(Mp4DownloadService.new);
+    await mp4Service.waitForInitialization;
+    if (!context.mounted) {
+      return;
+    }
+    final targetCid = isUgc ? ugcIntroCtr.seasonCid ?? cid.value : cid.value;
+    final index = episodes.indexWhere((e) => e.cid == targetCid);
+    final factor = PlatformUtils.isMobile && !MediaQuery.isPortraitOf(context)
+        ? 1.0
+        : 0.7;
+    final constraints = BoxConstraints(
+      maxWidth: min(640, MediaQuery.shortestSideOf(context)),
+    );
+
+    if (Revamp.enabled) {
+      await showGlassSheet<void>(
+        context: context,
+        heightFactor: factor,
+        showHandle: true,
+        useRootNavigator: true,
+        constraints: constraints,
+        builder: (_) => Mp4DownloadPanel(
+          index: index,
+          videoDetail: videoDetail,
+          pgcItem: pgcItem,
+          episodes: episodes,
+          videoDetailController: this,
+          ugcIntroController: isUgc ? ugcIntroCtr : null,
+        ),
+      );
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      constraints: constraints,
+      builder: (context) => DraggableScrollableSheet(
+        snap: true,
+        expand: false,
+        minChildSize: 0,
+        snapSizes: [factor],
+        maxChildSize: factor,
+        initialChildSize: factor,
+        builder: (context, scrollController) => Mp4DownloadPanel(
+          index: index,
+          videoDetail: videoDetail,
+          pgcItem: pgcItem,
+          episodes: episodes,
+          scrollController: scrollController,
+          videoDetailController: this,
+          ugcIntroController: isUgc ? ugcIntroCtr : null,
+        ),
+      ),
+    );
   }
 
   void editPlayUrl() {

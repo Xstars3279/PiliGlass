@@ -16,6 +16,7 @@ class PagePanel extends StatefulWidget {
     this.cover,
 
     this.cidSet,
+    this.selectedCids,
     this.onDownload,
 
     this.onBack,
@@ -30,6 +31,7 @@ class PagePanel extends StatefulWidget {
   final List<Part>? parts;
 
   final Set<int>? cidSet;
+  final Set<int>? selectedCids;
   final bool Function(Part part)? onDownload;
 
   final bool showList; // ugc side panel
@@ -194,11 +196,16 @@ class _PagePanelState extends State<PagePanel> {
   Widget _buildItem(int index) {
     final isCurr = _isCurr && _index == index;
     final item = _parts[index];
+    final isDownloaded = widget.cidSet?.contains(item.cid) ?? false;
+    final isSelected =
+        !isDownloaded && (widget.selectedCids?.contains(item.cid) ?? false);
     return Container(
       width: kPageItemExtent,
       margin: index != _parts.length - 1 ? const .only(right: 10) : null,
       child: Material(
-        color: Revamp.tile(colorScheme),
+        color: isSelected
+            ? colorScheme.primary.withValues(alpha: 0.14)
+            : Revamp.tile(colorScheme),
         shape: Revamp.tileShape,
         child: InkWell(
           customBorder: Revamp.tileShape,
@@ -274,7 +281,7 @@ class _PagePanelState extends State<PagePanel> {
                               ),
                             ),
                           )
-                        else if (widget.cidSet?.contains(item.cid) ?? false)
+                        else if (isDownloaded)
                           WidgetSpan(
                             alignment: .middle,
                             child: Icon(
@@ -283,6 +290,18 @@ class _PagePanelState extends State<PagePanel> {
                                 alpha: .8,
                               ),
                               FontAwesomeIcons.circleDown,
+                            ),
+                          )
+                        else if (isSelected)
+                          WidgetSpan(
+                            alignment: .middle,
+                            child: Padding(
+                              padding: const .only(right: 4),
+                              child: Icon(
+                                size: 14,
+                                color: colorScheme.primary,
+                                Icons.check_circle_rounded,
+                              ),
                             ),
                           ),
                         TextSpan(text: item.part),

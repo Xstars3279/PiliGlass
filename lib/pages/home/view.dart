@@ -159,10 +159,10 @@ class _HomePageState extends CommonPageState<HomePage>
                     stops: const [0.0, 0.55, 1.0],
                     colors: [
                       _colorScheme.surface.withValues(
-                        alpha: UiGlass.clear ? 0.55 : 0.92,
+                        alpha: UiGlass.clear ? 0.82 : 0.95,
                       ),
                       _colorScheme.surface.withValues(
-                        alpha: UiGlass.clear ? 0.22 : 0.55,
+                        alpha: UiGlass.clear ? 0.48 : 0.62,
                       ),
                       _colorScheme.surface.withValues(alpha: 0),
                     ],

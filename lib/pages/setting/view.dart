@@ -80,6 +80,11 @@ class _SettingPageState extends State<SettingPage> {
       icon: Icon(CustomIcons.dm_settings),
     ),
     _SettingsModel(
+      type: .downloadSetting,
+      subtitle: '默认下载路径、MP4合并导出说明',
+      icon: Icon(Icons.download_outlined),
+    ),
+    _SettingsModel(
       type: .replySetting,
       subtitle: '过滤、屏蔽、记录、默认展示等',
       icon: Icon(Icons.comment_outlined),
@@ -212,7 +217,12 @@ class _SettingPageState extends State<SettingPage> {
           .replySetting,
           .dynSetting,
         ]),
-        section('播放', const [.videoSetting, .playSetting, .dmSetting]),
+        section('播放与下载', const [
+          .videoSetting,
+          .playSetting,
+          .dmSetting,
+          .downloadSetting,
+        ]),
         section('外观与其他', const [
           .styleSetting,
           .extraSetting,

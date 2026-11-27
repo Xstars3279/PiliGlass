@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_back_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_menu.dart';
 import 'package:PiliPlus/common/widgets/route_aware_mixin.dart'
     show routeObserver;
 import 'package:PiliPlus/common/widgets/selection_text.dart';
@@ -99,30 +102,46 @@ class _WebviewPageState extends State<WebviewPage> with RouteAware {
   }
 
   List<Widget> get _actions {
-    return [
-      PopupMenuButton<WebviewMenuItem>(
-        onSelected: _handleMenuItem,
-        itemBuilder: (context) => <PopupMenuEntry<WebviewMenuItem>>[
-          ...WebviewMenuItem.values
-              .take(WebviewMenuItem.values.length - 1)
-              .map(
-                (item) => PopupMenuItem(
-                  value: item,
-                  child: Text(item.title),
-                ),
-              ),
-          const PopupMenuDivider(),
-          PopupMenuItem(
-            value: WebviewMenuItem.goBack,
-            child: Text(
-              WebviewMenuItem.goBack.title,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
-              ),
+    List<PopupMenuEntry<WebviewMenuItem>> buildItems(BuildContext context) => [
+      ...WebviewMenuItem.values
+          .take(WebviewMenuItem.values.length - 1)
+          .map(
+            (item) => PopupMenuItem<WebviewMenuItem>(
+              value: item,
+              onTap: () => _handleMenuItem(item),
+              child: Text(item.title),
             ),
           ),
-        ],
+      const PopupMenuDivider(),
+      PopupMenuItem<WebviewMenuItem>(
+        value: WebviewMenuItem.goBack,
+        onTap: () => _handleMenuItem(WebviewMenuItem.goBack),
+        child: Text(
+          WebviewMenuItem.goBack.title,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.error,
+          ),
+        ),
       ),
+    ];
+    if (!Revamp.enabled) {
+      return [
+        PopupMenuButton<WebviewMenuItem>(
+          itemBuilder: buildItems,
+        ),
+      ];
+    }
+    return [
+      GlassPopupAnchor<WebviewMenuItem>(
+        itemBuilder: buildItems,
+        targetBuilder: (open) => GlassIconButton(
+          tapSize: 44,
+          tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+          onTap: open,
+          icon: const Icon(Icons.more_vert),
+        ),
+      ),
+      const SizedBox(width: 4),
     ];
   }
 

@@ -19,6 +19,7 @@ import 'package:PiliPlus/models/common/mine_tab_type.dart';
 import 'package:PiliPlus/models/common/nav_bar_config.dart';
 import 'package:PiliPlus/pages/about/view.dart';
 import 'package:PiliPlus/pages/common/common_page.dart';
+import 'package:PiliPlus/pages/download/mp4_download_page.dart';
 import 'package:PiliPlus/pages/home/view.dart';
 import 'package:PiliPlus/pages/login/controller.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
@@ -113,6 +114,7 @@ class _MediaPageState extends CommonPageState<MinePage>
                         .history => Obx(_buildHistory),
                         .later => Obx(_buildLater),
                         .sub => Obx(_buildSub),
+                        .download => _buildMyDownload(),
                       },
                   ],
                 ),
@@ -540,6 +542,42 @@ class _MediaPageState extends CommonPageState<MinePage>
       onPushDetail: () => Get.toNamed(
         '/subscription',
       )?.whenComplete(() => _autoRefresh(controller.subCtr!)),
+    );
+  }
+
+  Widget _buildMyDownload() {
+    final secondary = theme.colorScheme.secondary;
+    return Column(
+      children: [
+        Divider(
+          height: 20,
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+        ),
+        ListTile(
+          dense: true,
+          onTap: () => Get.to(() => const Mp4DownloadPage()),
+          title: Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  const TextSpan(
+                    text: '我的下载  ',
+                    style: TextStyle(fontSize: 16, fontWeight: .bold),
+                  ),
+                  WidgetSpan(
+                    child: Icon(
+                      Icons.arrow_forward_ios,
+                      size: 18,
+                      color: secondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

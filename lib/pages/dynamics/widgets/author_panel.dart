@@ -5,8 +5,8 @@ import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
-import 'package:PiliPlus/common/widgets/grow_from.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_sheet.dart';
 import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:PiliPlus/common/widgets/dialog/report.dart';
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
@@ -153,10 +153,7 @@ class AuthorPanel extends StatelessWidget {
         ? null
         : Builder(
             builder: (btnContext) {
-              void openMore() => morePanel(
-                context,
-                from: morphRectOf(btnContext),
-              );
+              void openMore() => morePanel(context);
               if (isDetail && Revamp.enabled) {
                 return GlassIconButton(
                   icon: const Icon(Icons.more_vert_outlined, size: 18),
@@ -271,7 +268,7 @@ class AuthorPanel extends StatelessWidget {
     return header;
   }
 
-  void morePanel(BuildContext context, {Rect? from}) {
+  void morePanel(BuildContext context) {
     String? bvid;
     try {
       String? getBvid(String? type, DynamicMajorModel? major) => switch (type) {
@@ -289,13 +286,9 @@ class AuthorPanel extends StatelessWidget {
     } catch (_) {}
     final commentType = item.basic!.commentType;
 
-    showGrowingSheet(
+    showGlassSheet(
       context: context,
-      from: from,
-      anchor: Alignment.topRight,
-      glass: true,
-      press: true,
-      pullPastEdges: true,
+      showHandle: true,
       useSafeArea: true,
       constraints: BoxConstraints(
         maxWidth: min(640, MediaQuery.shortestSideOf(context)),
@@ -310,23 +303,24 @@ class AuthorPanel extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              InkWell(
-                onTap: Get.back,
-                borderRadius: Style.bottomSheetRadius,
-                child: SizedBox(
-                  height: 35,
-                  child: Center(
-                    child: Container(
-                      width: 32,
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.outline,
-                        borderRadius: const .all(.circular(1.5)),
+              if (!Revamp.enabled)
+                InkWell(
+                  onTap: Get.back,
+                  borderRadius: Style.bottomSheetRadius,
+                  child: SizedBox(
+                    height: 35,
+                    child: Center(
+                      child: Container(
+                        width: 32,
+                        height: 3,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.outline,
+                          borderRadius: const .all(.circular(1.5)),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
               if (bvid != null)
                 ListTile(
                   onTap: () {

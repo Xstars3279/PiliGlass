@@ -387,6 +387,16 @@ abstract final class UiGlass {
   static Color sheetPanel(ColorScheme colorScheme) =>
       colorScheme.surfaceContainerLow.withValues(alpha: sheetAlpha);
 
+  static double get dialogAlpha => switch (level) {
+    UiGlassLevel.none => 1.0,
+    UiGlassLevel.standard => 0.90,
+    UiGlassLevel.enhanced => 0.80,
+    UiGlassLevel.extreme => 0.72,
+  };
+  static Color dialog(ColorScheme colorScheme) => colorScheme.brightness.isDark
+      ? panel(colorScheme)
+      : Colors.white.withValues(alpha: dialogAlpha);
+
   /// A menu floats over the content and is read at a glance, so it takes
   /// more of what is behind it as the glass gets deeper: solid at 无, nearly
   /// solid at 标准, and clearly liquid at 极致.
@@ -450,15 +460,19 @@ abstract final class UiGlass {
   static BoxShadow? shadowIn(ColorScheme colorScheme, BoxShadow shadow) =>
       colorScheme.brightness.isDark ? null : shadow;
 
-  /// the outline in the dark, none in the light
-  static Color? edge(ColorScheme colorScheme) =>
-      colorScheme.brightness.isDark ? colorScheme.outlineVariant : null;
+  /// a subtle light-gray rim in the light and outlineVariant in the dark
+  static Color? edge(ColorScheme colorScheme) => colorScheme.brightness.isDark
+      ? colorScheme.outlineVariant
+      : colorScheme.outlineVariant.withValues(alpha: 0.75);
 
-  /// the dark outline as a side, for a shape
+  /// the glass outline as a side, for a shape
   static BorderSide side(ColorScheme colorScheme) => switch (edge(
     colorScheme,
   )) {
-    final color? => BorderSide(color: color),
+    final color? => BorderSide(
+      color: color,
+      width: colorScheme.brightness.isDark ? 1.0 : 0.8,
+    ),
     null => BorderSide.none,
   };
 

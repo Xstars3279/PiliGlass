@@ -12,12 +12,18 @@ abstract final class UrlUtils {
   static Future<String?> parseRedirectUrl(String url) async {
     String? redirectUrl;
     try {
-      final response = await Request.dio.head(
+      final response = await Request.http11Dio.head(
         url.endsWith('/') ? url : '$url/',
         options: Options(
           followRedirects: false,
+          connectTimeout: const Duration(seconds: 3),
+          receiveTimeout: const Duration(seconds: 3),
           validateStatus: (status) => 200 <= status! && status < 400,
-          extra: {'account': AnonymousAccount()},
+          extra: {
+            'account': AnonymousAccount(),
+            'silent': true,
+            '_rt': 999,
+          },
         ),
       );
       redirectUrl = response.headers['location']?.firstOrNull;

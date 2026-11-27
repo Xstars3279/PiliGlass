@@ -15,6 +15,7 @@ class ActionItem extends StatelessWidget {
     required this.icon,
     this.selectIcon,
     this.iconSize,
+    this.fontSize,
     this.onTap,
     this.onLongPress,
     this.text,
@@ -30,6 +31,7 @@ class ActionItem extends StatelessWidget {
   final Icon icon;
   final Icon? selectIcon;
   final double? iconSize;
+  final double? fontSize;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final String? text;
@@ -116,23 +118,31 @@ class ActionItem extends StatelessWidget {
 
   Widget _buildText(ThemeData theme) {
     final hasText = text != null;
-    final child = Text(
-      hasText ? text! : '-',
-      key: hasText ? ValueKey(text!) : null,
-      style: Revamp.enabled
-          // 11 / 500 in the gray of secondary text, the accent only while
-          // the action is on
-          ? UiType.label.copyWith(
-              color: selectStatus
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurfaceVariant,
-            )
-          : TextStyle(
-              color: selectStatus
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.outline,
-              fontSize: theme.textTheme.labelSmall!.fontSize,
-            ),
+    final baseStyle = Revamp.enabled
+        // 11 / 500 in the gray of secondary text, the accent only while
+        // the action is on
+        ? UiType.label.copyWith(
+            color: selectStatus
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant,
+          )
+        : TextStyle(
+            color: selectStatus
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outline,
+            fontSize: theme.textTheme.labelSmall!.fontSize,
+          );
+    final child = FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        hasText ? text! : '-',
+        key: hasText ? ValueKey(text!) : null,
+        maxLines: 1,
+        softWrap: false,
+        style: fontSize != null
+            ? baseStyle.copyWith(fontSize: fontSize)
+            : baseStyle,
+      ),
     );
     if (hasText) {
       return AnimatedSwitcher(

@@ -865,24 +865,16 @@ List<double> _saturationMatrix(double s) {
 /// platter and the droplet are poured back into the anchor.
 class RenderGlassMenuMorph extends RenderProxyBox {
   RenderGlassMenuMorph({
-    required Rect anchor,
-    required Animation<double> animation,
-    required ValueListenable<ui.Image?> snapshot,
-    required Color panelColor,
-    required BoxShadow? shadow,
-    required double rimOpacity,
-    required Color? edge,
-    required bool isDark,
-    required double devicePixelRatio,
-  }) : _anchor = anchor,
-       _animation = animation,
-       _snapshot = snapshot,
-       _panelColor = panelColor,
-       _shadow = shadow,
-       _rimOpacity = rimOpacity,
-       _edge = edge,
-       _isDark = isDark,
-       _devicePixelRatio = devicePixelRatio;
+    required this._anchor,
+    required this._animation,
+    required this._snapshot,
+    required this._panelColor,
+    required this._shadow,
+    required this._rimOpacity,
+    required this._edge,
+    required this._isDark,
+    required this._devicePixelRatio,
+  });
 
   static final _open = SpringSimulation(
     SpringDescription.withDampingRatio(
@@ -1463,7 +1455,7 @@ class RenderGlassMenuMorph extends RenderProxyBox {
         path,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
+          ..strokeWidth = _isDark ? 1 : 0.8
           ..color = edge.withValues(alpha: edge.a * frame.settled),
       );
     }

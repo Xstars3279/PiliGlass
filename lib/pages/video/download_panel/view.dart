@@ -1,9 +1,10 @@
 import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
-import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_menu.dart';
 import 'package:PiliPlus/common/widgets/stat/stat.dart';
 import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/models/common/stat_type.dart';
@@ -66,6 +67,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
   final ListController _listController = ListController();
 
   late final cidSet = widget.cidSet;
+  final Set<int> _selectedCids = <int>{};
   VideoQuality _quality = VideoQuality.fromCode(Pref.defaultVideoQa);
   AudioQuality _audioQuality = AudioQuality.fromCode(Pref.defaultAudioQa);
 
@@ -123,40 +125,28 @@ class _DownloadPanelState extends State<DownloadPanel> {
               children: [
                 Text('画质', style: textStyle),
                 Builder(
-                  builder: (context) => PopupMenuButton<VideoQuality>(
-                    initialValue: _quality,
+                  builder: (context) => _buildMenuAnchor<VideoQuality>(
+                    value: _quality,
+                    label: _quality.desc,
+                    items: VideoQuality.values,
+                    itemLabel: (e) => e.desc,
                     onSelected: (value) {
                       _quality = value;
                       (context as Element).markNeedsBuild();
                     },
-                    itemBuilder: (context) => VideoQuality.values
-                        .map(
-                          (e) => PopupMenuItem(
-                            value: e,
-                            child: Text(e.desc),
-                          ),
-                        )
-                        .toList(),
-                    child: _buildPopupMenuChild(_quality.desc),
                   ),
                 ),
                 Text('音质', style: textStyle),
                 Builder(
-                  builder: (context) => PopupMenuButton<AudioQuality>(
-                    initialValue: _audioQuality,
+                  builder: (context) => _buildMenuAnchor<AudioQuality>(
+                    value: _audioQuality,
+                    label: _audioQuality.desc,
+                    items: AudioQuality.values,
+                    itemLabel: (e) => e.desc,
                     onSelected: (value) {
                       _audioQuality = value;
                       (context as Element).markNeedsBuild();
                     },
-                    itemBuilder: (context) => AudioQuality.values
-                        .map(
-                          (e) => PopupMenuItem(
-                            value: e,
-                            child: Text(e.desc),
-                          ),
-                        )
-                        .toList(),
-                    child: _buildPopupMenuChild(_audioQuality.desc),
                   ),
                 ),
               ],
@@ -214,6 +204,60 @@ class _DownloadPanelState extends State<DownloadPanel> {
     );
   }
 
+  Widget _buildMenuAnchor<T>({
+    required T value,
+    required String label,
+    required List<T> items,
+    required String Function(T) itemLabel,
+    required ValueChanged<T> onSelected,
+  }) {
+    final trigger = _buildPopupMenuChild(label);
+    if (!Revamp.enabled) {
+      return PopupMenuButton<T>(
+        initialValue: value,
+        onSelected: onSelected,
+        itemBuilder: (context) => items
+            .map(
+              (e) => PopupMenuItem<T>(
+                value: e,
+                child: Text(itemLabel(e)),
+              ),
+            )
+            .toList(),
+        child: trigger,
+      );
+    }
+    return GlassPopupAnchor<T>(
+      alignEnd: false,
+      minWidth: 160,
+      itemBuilder: (context) => items
+          .map(
+            (e) => PopupMenuItem<T>(
+              value: e,
+              onTap: () => onSelected(e),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(itemLabel(e)),
+                  if (e == value)
+                    Icon(
+                      Icons.check_rounded,
+                      size: 16,
+                      color: colorScheme.primary,
+                    ),
+                ],
+              ),
+            ),
+          )
+          .toList(),
+      targetBuilder: (open) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: open,
+        child: trigger,
+      ),
+    );
+  }
+
   Widget _buildPopupMenuChild(String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -235,6 +279,137 @@ class _DownloadPanelState extends State<DownloadPanel> {
     );
   }
 
+  List<int> _collectSelectableCids() {
+    final result = <int>[];
+    for (final episode in widget.episodes) {
+      if (episode is ugc.EpisodeItem && episode.pages!.length > 1) {
+        for (final p in episode.pages!) {
+          final cid = p.cid;
+          if (cid != null && !cidSet.contains(cid)) {
+            result.add(cid);
+          }
+        }
+      } else {
+        final cid = episode.cid;
+        if (cid != null && !cidSet.contains(cid)) {
+          result.add(cid);
+        }
+      }
+    }
+    return result;
+  }
+
+  bool _isEpisodeDownloaded(ugc.BaseEpisodeItem episode) {
+    if (episode is ugc.EpisodeItem && episode.pages!.length > 1) {
+      final pages = episode.pages!;
+      return pages.isNotEmpty &&
+          pages.every((p) => p.cid != null && cidSet.contains(p.cid));
+    }
+    return episode.cid != null && cidSet.contains(episode.cid);
+  }
+
+  bool _isEpisodeSelected(ugc.BaseEpisodeItem episode) {
+    if (episode is ugc.EpisodeItem && episode.pages!.length > 1) {
+      final selectable = episode.pages!
+          .map((p) => p.cid)
+          .whereType<int>()
+          .where((c) => !cidSet.contains(c))
+          .toList();
+      return selectable.isNotEmpty &&
+          selectable.every(_selectedCids.contains);
+    }
+    final cid = episode.cid;
+    return cid != null &&
+        !cidSet.contains(cid) &&
+        _selectedCids.contains(cid);
+  }
+
+  void _toggleEpisodeSelection(ugc.BaseEpisodeItem episode) {
+    if (episode is ugc.EpisodeItem && episode.pages!.length > 1) {
+      final selectable = episode.pages!
+          .map((p) => p.cid)
+          .whereType<int>()
+          .where((c) => !cidSet.contains(c))
+          .toList();
+      if (selectable.isEmpty) {
+        SmartDialog.showToast('已全部缓存');
+        return;
+      }
+      setState(() {
+        if (selectable.every(_selectedCids.contains)) {
+          _selectedCids.removeAll(selectable);
+        } else {
+          _selectedCids.addAll(selectable);
+        }
+      });
+      return;
+    }
+    final cid = episode.cid;
+    if (cid == null) {
+      SmartDialog.showToast('null cid');
+      return;
+    }
+    if (cidSet.contains(cid)) {
+      SmartDialog.showToast('已缓存');
+      return;
+    }
+    setState(() {
+      if (!_selectedCids.add(cid)) {
+        _selectedCids.remove(cid);
+      }
+    });
+  }
+
+  bool _togglePartSelection(Part part) {
+    final cid = part.cid;
+    if (cid == null) {
+      SmartDialog.showToast('null cid');
+      return false;
+    }
+    if (cidSet.contains(cid)) {
+      SmartDialog.showToast('已缓存');
+      return false;
+    }
+    setState(() {
+      if (!_selectedCids.add(cid)) {
+        _selectedCids.remove(cid);
+      }
+    });
+    return true;
+  }
+
+  void _downloadSelected() {
+    final selectable = _collectSelectableCids().toSet();
+    final toDownload = _selectedCids.intersection(selectable);
+    if (toDownload.isEmpty) {
+      SmartDialog.showToast('请先选择要缓存的视频');
+      return;
+    }
+    var count = 0;
+    for (int i = 0; i < widget.episodes.length; i++) {
+      final episode = widget.episodes[i];
+      if (episode is ugc.EpisodeItem && episode.pages!.length > 1) {
+        for (final p in episode.pages!) {
+          if (p.cid != null && toDownload.contains(p.cid)) {
+            if (_onDownload(indexInSeason: i, episode: p, parent: episode)) {
+              count++;
+            }
+          }
+        }
+      } else if (episode.cid != null && toDownload.contains(episode.cid)) {
+        if (_onDownload(indexInSeason: i, episode: episode)) {
+          count++;
+        }
+      }
+    }
+    setState(() {
+      _selectedCids.removeAll(toDownload);
+    });
+    if (count > 0) {
+      SmartDialog.showToast('已将 $count 项加入缓存队列');
+    }
+  }
+
   Widget _buildBody() {
     final episodes = widget.episodes;
     return Expanded(
@@ -254,7 +429,6 @@ class _DownloadPanelState extends State<DownloadPanel> {
                       episode is ugc.EpisodeItem && episode.pages!.length > 1;
                   Widget child = _buildItem(
                     index: index,
-                    hasParts: hasParts,
                     episode: episode,
                     isCurrentIndex: index == widget.index,
                   );
@@ -275,11 +449,8 @@ class _DownloadPanelState extends State<DownloadPanel> {
                             ugcIntroController: widget.ugcIntroController!,
                             bvid: episode.bvid ?? IdUtils.av2bv(episode.aid!),
                             cidSet: cidSet,
-                            onDownload: (part) => _onDownload(
-                              indexInSeason: index,
-                              episode: part,
-                              parent: episode,
-                            ),
+                            selectedCids: _selectedCids,
+                            onDownload: _togglePartSelection,
                           ),
                         ),
                       ],
@@ -380,7 +551,6 @@ class _DownloadPanelState extends State<DownloadPanel> {
 
   Widget _buildItem({
     required int index,
-    required bool hasParts,
     required bool isCurrentIndex,
     required ugc.BaseEpisodeItem episode,
   }) {
@@ -390,14 +560,12 @@ class _DownloadPanelState extends State<DownloadPanel> {
     int? view;
     int? danmaku;
     bool? isCharging;
-    int? cid;
 
     String? cover;
     bool? cacheWidth;
 
     switch (episode) {
       case Part part:
-        cid = part.cid;
         cover = part.firstFrame ?? widget.videoDetail?.pic;
         title = part.part ?? widget.videoDetail!.title!;
         duration = part.duration;
@@ -405,7 +573,6 @@ class _DownloadPanelState extends State<DownloadPanel> {
         cacheWidth = part.dimension?.cacheWidth;
         break;
       case ugc.EpisodeItem item:
-        cid = item.cid;
         title = item.title!;
         if (item.arc case final arc?) {
           cover = arc.pic;
@@ -422,7 +589,6 @@ class _DownloadPanelState extends State<DownloadPanel> {
         }
         break;
       case pgc.EpisodeItem item:
-        cid = item.cid;
         title = item.showTitle ?? item.title!;
         cover = item.cover;
         if (item.from == 'pugv') {
@@ -436,179 +602,190 @@ class _DownloadPanelState extends State<DownloadPanel> {
         break;
     }
     late final primary = colorScheme.primary;
+    final isDownloaded = _isEpisodeDownloaded(episode);
+    final isSelected = _isEpisodeSelected(episode);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
       child: SizedBox(
         height: 110,
-        child: Builder(
-          builder: (context) {
-            return Material(
-              type: MaterialType.transparency,
-              child: InkWell(
-                onTap: () {
-                  if (_onDownload(
-                    indexInSeason: index,
-                    episode: episode,
-                    isFromList: true,
-                  )) {
-                    (context as Element).markNeedsBuild();
-                  }
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: Style.safeSpace,
-                    vertical: 5,
-                  ),
-                  child: Row(
-                    spacing: 10,
-                    children: [
-                      if (cover?.isNotEmpty == true)
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            NetworkImgLayer(
-                              src: cover,
-                              width: 160,
-                              height: 100,
-                              cacheWidth: cacheWidth,
-                            ),
-                            if (duration != null && duration > 0)
-                              PBadge(
-                                text: DurationUtils.formatDuration(duration),
-                                right: 6.0,
-                                bottom: 6.0,
-                                type: PBadgeType.gray,
-                              ),
-                            if (isCharging == true)
-                              const PBadge(
-                                text: '充电专属',
-                                top: 6,
-                                right: 6,
-                                type: PBadgeType.error,
-                              )
-                            else if (episode.badge != null)
-                              PBadge(
-                                text: episode.badge,
-                                top: 6,
-                                right: 6,
-                                type: episode.badgeType,
-                              ),
-                          ],
-                        )
-                      else if (isCurrentIndex)
-                        Image.asset(
-                          Assets.livingStatic,
-                          color: primary,
-                          height: 12,
-                          cacheHeight: 12.cacheSize(context),
-                          semanticLabel: '正在播放：',
-                        ),
-                      Expanded(
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    title,
-                                    textAlign: TextAlign.start,
-                                    style: TextStyle(
-                                      height: 1.42,
-                                      letterSpacing: 0.3,
-                                      fontWeight: isCurrentIndex
-                                          ? FontWeight.bold
-                                          : null,
-                                      color: isCurrentIndex ? primary : null,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                if (pubdate != null)
-                                  Text(
-                                    DateFormatUtils.format(pubdate),
-                                    maxLines: 1,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      height: 1,
-                                      color: colorScheme.outline,
-                                      overflow: TextOverflow.clip,
-                                    ),
-                                  ),
-                                const SizedBox(height: 2),
-                                Row(
-                                  spacing: 8,
-                                  children: [
-                                    if (view != null)
-                                      StatWidget(
-                                        value: view,
-                                        type: StatType.play,
-                                      ),
-                                    if (danmaku != null)
-                                      StatWidget(
-                                        value: danmaku,
-                                        type: StatType.danmaku,
-                                      ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            if (!hasParts && cidSet.contains(cid))
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: Icon(
-                                  size: 13,
-                                  color: colorScheme.secondary.withValues(
-                                    alpha: 0.8,
-                                  ),
-                                  FontAwesomeIcons.circleDown,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+        child: Material(
+          color: isSelected
+              ? primary.withValues(alpha: 0.08)
+              : Colors.transparent,
+          child: InkWell(
+            onTap: () => _toggleEpisodeSelection(episode),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Style.safeSpace,
+                vertical: 5,
               ),
-            );
-          },
+              child: Row(
+                spacing: 10,
+                children: [
+                  if (cover?.isNotEmpty == true)
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        NetworkImgLayer(
+                          src: cover,
+                          width: 160,
+                          height: 100,
+                          cacheWidth: cacheWidth,
+                        ),
+                        if (duration != null && duration > 0)
+                          PBadge(
+                            text: DurationUtils.formatDuration(duration),
+                            right: 6.0,
+                            bottom: 6.0,
+                            type: PBadgeType.gray,
+                          ),
+                        if (isCharging == true)
+                          const PBadge(
+                            text: '充电专属',
+                            top: 6,
+                            right: 6,
+                            type: PBadgeType.error,
+                          )
+                        else if (episode.badge != null)
+                          PBadge(
+                            text: episode.badge,
+                            top: 6,
+                            right: 6,
+                            type: episode.badgeType,
+                          ),
+                      ],
+                    )
+                  else if (isCurrentIndex)
+                    Image.asset(
+                      Assets.livingStatic,
+                      color: primary,
+                      height: 12,
+                      cacheHeight: 12.cacheSize(context),
+                      semanticLabel: '正在播放：',
+                    ),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            title,
+                            textAlign: TextAlign.start,
+                            style: TextStyle(
+                              height: 1.42,
+                              letterSpacing: 0.3,
+                              fontWeight: isCurrentIndex
+                                  ? FontWeight.bold
+                                  : null,
+                              color: isCurrentIndex ? primary : null,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (pubdate != null)
+                          Text(
+                            DateFormatUtils.format(pubdate),
+                            maxLines: 1,
+                            style: TextStyle(
+                              fontSize: 12,
+                              height: 1,
+                              color: colorScheme.outline,
+                              overflow: TextOverflow.clip,
+                            ),
+                          ),
+                        const SizedBox(height: 2),
+                        Row(
+                          spacing: 8,
+                          children: [
+                            if (view != null)
+                              StatWidget(
+                                value: view,
+                                type: StatType.play,
+                              ),
+                            if (danmaku != null)
+                              StatWidget(
+                                value: danmaku,
+                                type: StatType.danmaku,
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    width: 24,
+                    child: Center(
+                      child: isDownloaded
+                          ? Icon(
+                              size: 16,
+                              color: colorScheme.secondary.withValues(
+                                alpha: 0.8,
+                              ),
+                              FontAwesomeIcons.circleDown,
+                            )
+                          : Icon(
+                              isSelected
+                                  ? Icons.check_circle_rounded
+                                  : Icons.radio_button_unchecked_rounded,
+                              size: 22,
+                              color: isSelected
+                                  ? primary
+                                  : colorScheme.outline.withValues(alpha: 0.5),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildFooter(Color dividerColor) {
+    final selectable = _collectSelectableCids();
+    final selectedCount = selectable.where(_selectedCids.contains).length;
+    final isAllSelected =
+        selectable.isNotEmpty && selectedCount == selectable.length;
     return Ink(
-      color: colorScheme.surfaceContainer,
+      color: Revamp.enabled ? Colors.transparent : colorScheme.surfaceContainer,
       padding: EdgeInsets.only(
         bottom: MediaQuery.viewPaddingOf(context).bottom,
       ),
       child: Row(
         children: [
           _buildBottomBtn(
-            text: '缓存全部',
+            text: isAllSelected ? '取消全选' : '全选',
             onTap: () {
-              showConfirmDialog(
-                context: context,
-                title: const Text('确定缓存全部？'),
-                onConfirm: () {
-                  for (int i = 0; i < widget.episodes.length; i++) {
-                    _onDownload(
-                      indexInSeason: i,
-                      episode: widget.episodes[i],
-                      isDownloadAll: true,
-                    );
-                  }
-                  if (mounted) setState(() {});
-                },
-              );
+              if (selectable.isEmpty) {
+                SmartDialog.showToast('暂无可选视频');
+                return;
+              }
+              setState(() {
+                if (isAllSelected) {
+                  _selectedCids.removeAll(selectable);
+                } else {
+                  _selectedCids.addAll(selectable);
+                }
+              });
             },
+          ),
+          SizedBox(
+            height: 20,
+            child: VerticalDivider(
+              width: 1,
+              color: dividerColor,
+            ),
+          ),
+          _buildBottomBtn(
+            text: '缓存所选($selectedCount项)',
+            color: selectedCount > 0 ? colorScheme.primary : null,
+            fontWeight: selectedCount > 0 ? FontWeight.w600 : null,
+            onTap: _downloadSelected,
           ),
           SizedBox(
             height: 20,
@@ -631,6 +808,8 @@ class _DownloadPanelState extends State<DownloadPanel> {
   Widget _buildBottomBtn({
     required String text,
     required VoidCallback onTap,
+    Color? color,
+    FontWeight? fontWeight,
   }) {
     return Expanded(
       child: InkWell(
@@ -638,10 +817,21 @@ class _DownloadPanelState extends State<DownloadPanel> {
         child: SizedBox(
           height: 40,
           width: double.infinity,
-          child: Center(
-            child: Text(
-              text,
-              textAlign: TextAlign.center,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  text,
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: color ?? colorScheme.onSurfaceVariant,
+                    fontWeight: fontWeight,
+                  ),
+                ),
+              ),
             ),
           ),
         ),

@@ -492,9 +492,10 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
     UgcIntroController introController,
     VideoStat? stat,
   ) {
+    final compactIconSize = Revamp.enabled ? 20.0 : 19.0;
+    const compactFontSize = 10.0;
     return SizedBox(
-      // 56 high, the five split evenly: one of the page's heaviest rows made
-      // light, see 6.4 of the plan
+      // 56 high, evenly split across the action items
       height: 56,
       child: Row(
         crossAxisAlignment: .center,
@@ -504,6 +505,8 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
               animation: introController.tripleAnimation,
               icon: const Icon(FontAwesomeIcons.thumbsUp),
               selectIcon: const Icon(FontAwesomeIcons.solidThumbsUp),
+              iconSize: compactIconSize,
+              fontSize: compactFontSize,
               selectStatus: introController.hasLike.value,
               semanticsLabel: '点赞',
               text: !isLoading ? NumUtils.numFormat(stat!.like) : null,
@@ -515,6 +518,8 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
             () => ActionItem(
               icon: const Icon(FontAwesomeIcons.thumbsDown),
               selectIcon: const Icon(FontAwesomeIcons.solidThumbsDown),
+              iconSize: compactIconSize,
+              fontSize: compactFontSize,
               onTap: () => introController.handleAction(
                 introController.actionDislikeVideo,
               ),
@@ -528,6 +533,8 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
               animation: introController.tripleAnimation,
               icon: const Icon(FontAwesomeIcons.b),
               selectIcon: const Icon(FontAwesomeIcons.b),
+              iconSize: compactIconSize,
+              fontSize: compactFontSize,
               onTap: introController.actionCoinVideo,
               selectStatus: introController.hasCoin,
               semanticsLabel: '投币',
@@ -539,6 +546,8 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
               animation: introController.tripleAnimation,
               icon: const Icon(FontAwesomeIcons.star),
               selectIcon: const Icon(FontAwesomeIcons.solidStar),
+              iconSize: compactIconSize,
+              fontSize: compactFontSize,
               onTap: () => introController.showFavBottomSheet(context),
               onLongPress: () => introController.showFavBottomSheet(
                 context,
@@ -553,6 +562,8 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
           if (!Revamp.enabled) ...[
             ActionItem(
               icon: const Icon(CustomIcons.download),
+              iconSize: compactIconSize,
+              fontSize: compactFontSize,
               onTap: () => videoDetailCtr.onDownload(context),
               text: '缓存',
               semanticsLabel: '缓存',
@@ -561,6 +572,8 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
               () => ActionItem(
                 icon: const Icon(FontAwesomeIcons.clock),
                 selectIcon: const Icon(FontAwesomeIcons.solidClock),
+                iconSize: compactIconSize,
+                fontSize: compactFontSize,
                 onTap: () =>
                     introController.handleAction(introController.viewLater),
                 selectStatus: introController.hasLater.value,
@@ -571,10 +584,20 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
           ],
           ActionItem(
             icon: const Icon(FontAwesomeIcons.shareFromSquare),
+            iconSize: compactIconSize,
+            fontSize: compactFontSize,
             onTap: () => introController.actionShareVideo(context),
             selectStatus: false,
             semanticsLabel: '分享',
             text: !isLoading ? NumUtils.numFormat(stat!.share!) : null,
+          ),
+          ActionItem(
+            icon: const Icon(Icons.download_rounded),
+            iconSize: compactIconSize,
+            fontSize: compactFontSize,
+            onTap: () => videoDetailCtr.onDownloadMp4(context),
+            text: '下载视频',
+            semanticsLabel: '下载视频',
           ),
         ],
       ),

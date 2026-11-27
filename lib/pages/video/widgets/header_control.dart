@@ -528,7 +528,7 @@ class HeaderControlState extends State<HeaderControl>
                     leading: const Icon(Icons.note_alt_outlined, size: 20),
                     title: const Text('查看笔记', style: titleStyle),
                   ),
-                if (!isFileSource)
+                if (!isFileSource) ...[
                   ListTile(
                     dense: true,
                     onTap: () {
@@ -541,6 +541,19 @@ class HeaderControlState extends State<HeaderControl>
                     ),
                     title: const Text('离线缓存', style: titleStyle),
                   ),
+                  ListTile(
+                    dense: true,
+                    onTap: () {
+                      Get.back();
+                      videoDetailCtr.onDownloadMp4(this.context);
+                    },
+                    leading: const Icon(
+                      Icons.download_rounded,
+                      size: 20,
+                    ),
+                    title: const Text('下载视频', style: titleStyle),
+                  ),
+                ],
                 if (widget.videoDetailCtr.cover.value.isNotEmpty)
                   ListTile(
                     dense: true,

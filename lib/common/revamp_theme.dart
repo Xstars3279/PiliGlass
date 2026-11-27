@@ -32,6 +32,7 @@ abstract final class RevampTheme {
     final shadow = isDark ? Colors.transparent : Colors.black;
     // what dims the page under a menu, a sheet or a dialog
     final barrier = Colors.black.withValues(alpha: isDark ? 0.5 : 0.32);
+    final dialogBarrier = Colors.black.withValues(alpha: isDark ? 0.5 : 0.12);
 
     // every size snapped to one of UiType's five; bodyMedium, the default
     // of a Text and the size of a video card's title, stays as it is
@@ -102,7 +103,7 @@ abstract final class RevampTheme {
       // translucent like the menus, and blurred by the same kind of patch
       // (tool/patches/material-ui_glass_sheet.patch)
       dialogTheme: theme.dialogTheme.copyWith(
-        backgroundColor: panel,
+        backgroundColor: UiGlass.dialog(colorScheme),
         elevation: 6,
         shadowColor: shadow,
         shape: Revamp.rounded(Revamp.sheetRadius, side: rim),
@@ -116,7 +117,7 @@ abstract final class RevampTheme {
           vertical: UiSpace.s24,
         ),
         constraints: const BoxConstraints(minWidth: 280, maxWidth: 360),
-        barrierColor: barrier,
+        barrierColor: dialogBarrier,
       ),
       bottomSheetTheme: theme.bottomSheetTheme.copyWith(
         backgroundColor: panel,

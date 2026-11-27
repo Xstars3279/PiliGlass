@@ -107,6 +107,8 @@ class MineController extends GetxController with AccountMixin {
           laterCtr = LaterCtr();
         case .sub:
           subCtr = SubCtr();
+        case .download:
+          break;
       }
     }
   }

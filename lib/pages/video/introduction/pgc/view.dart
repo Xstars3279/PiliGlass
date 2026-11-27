@@ -504,6 +504,8 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
               animation: introController.tripleAnimation,
               icon: const Icon(FontAwesomeIcons.thumbsUp),
               selectIcon: const Icon(FontAwesomeIcons.solidThumbsUp),
+              iconSize: Revamp.enabled ? 20.0 : 19.0,
+              fontSize: 10.0,
               selectStatus: introController.hasLike.value,
               semanticsLabel: '点赞',
               text: NumUtils.numFormat(stat.like),
@@ -516,6 +518,8 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
               animation: introController.tripleAnimation,
               icon: const Icon(FontAwesomeIcons.b),
               selectIcon: const Icon(FontAwesomeIcons.b),
+              iconSize: Revamp.enabled ? 20.0 : 19.0,
+              fontSize: 10.0,
               onTap: introController.actionCoinVideo,
               selectStatus: introController.hasCoin,
               semanticsLabel: '投币',
@@ -527,6 +531,8 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
               animation: introController.tripleAnimation,
               icon: const Icon(FontAwesomeIcons.star),
               selectIcon: const Icon(FontAwesomeIcons.solidStar),
+              iconSize: Revamp.enabled ? 20.0 : 19.0,
+              fontSize: 10.0,
               onTap: () => introController.showFavBottomSheet(context),
               onLongPress: () => introController.showFavBottomSheet(
                 context,
@@ -541,6 +547,8 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
           if (!Revamp.enabled) ...[
             ActionItem(
               icon: const Icon(CustomIcons.download),
+              iconSize: 19.0,
+              fontSize: 10.0,
               onTap: () => videoDetailCtr.onDownload(context),
               text: '缓存',
               semanticsLabel: '缓存',
@@ -549,6 +557,8 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
               () => ActionItem(
                 icon: const Icon(FontAwesomeIcons.clock),
                 selectIcon: const Icon(FontAwesomeIcons.solidClock),
+                iconSize: 19.0,
+                fontSize: 10.0,
                 onTap: () =>
                     introController.handleAction(introController.viewLater),
                 selectStatus: introController.hasLater.value,
@@ -559,10 +569,20 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
           ],
           ActionItem(
             icon: const Icon(FontAwesomeIcons.shareFromSquare),
+            iconSize: Revamp.enabled ? 20.0 : 19.0,
+            fontSize: 10.0,
             onTap: () => introController.actionShareVideo(context),
             selectStatus: false,
             semanticsLabel: '转发',
             text: NumUtils.numFormat(stat.share),
+          ),
+          ActionItem(
+            icon: const Icon(Icons.download_rounded),
+            iconSize: Revamp.enabled ? 20.0 : 19.0,
+            fontSize: 10.0,
+            onTap: () => videoDetailCtr.onDownloadMp4(context),
+            text: '下载视频',
+            semanticsLabel: '下载视频',
           ),
         ],
       ),

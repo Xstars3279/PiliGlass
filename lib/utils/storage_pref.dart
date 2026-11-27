@@ -1048,6 +1048,12 @@ abstract final class Pref {
 
   static String? get downloadPath => _setting.get(SettingBoxKey.downloadPath);
 
+  static String? get localVideoDownloadUri =>
+      _setting.get(SettingBoxKey.localVideoDownloadUri);
+
+  static String? get localVideoDownloadLabel =>
+      _setting.get(SettingBoxKey.localVideoDownloadLabel);
+
   static String? get imageSavePath => _setting.get(SettingBoxKey.imageSavePath);
 
   static String? get liveCdnUrl => _setting.get(SettingBoxKey.liveCdnUrl);
@@ -1106,11 +1112,26 @@ abstract final class Pref {
   static bool get enableEmoteTooltip =>
       _setting.get(SettingBoxKey.enableEmoteTooltip, defaultValue: false);
 
-  static Set<MineTabType> get mineTabs =>
-      (_setting.get(SettingBoxKey.mineTabs) as List?)
-          ?.map<MineTabType>((index) => .values[index])
-          .toSet() ??
-      MineTabType.kDefault;
+  static Set<MineTabType> get mineTabs {
+    var saved = _setting.get(SettingBoxKey.mineTabs) as List?;
+    if (!(_setting.get(
+          SettingBoxKey.mineTabDownloadMigrated,
+          defaultValue: false,
+        )
+        as bool)) {
+      _setting.put(SettingBoxKey.mineTabDownloadMigrated, true);
+      if (saved != null && !saved.contains(MineTabType.download.index)) {
+        saved = [...saved, MineTabType.download.index];
+        _setting.put(SettingBoxKey.mineTabs, saved);
+      }
+    }
+    return saved
+            ?.whereType<int>()
+            .where((i) => i >= 0 && i < MineTabType.values.length)
+            .map<MineTabType>((index) => MineTabType.values[index])
+            .toSet() ??
+        MineTabType.kDefault;
+  }
 
   static bool get blockAtOnlyReply =>
       _setting.get(SettingBoxKey.blockAtOnlyReply, defaultValue: false);

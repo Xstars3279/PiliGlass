@@ -1201,11 +1201,16 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           onTap: () => videoDetailController.showNoteList(context),
           child: const Text('查看笔记'),
         ),
-      if (!videoDetailController.isFileSource)
+      if (!videoDetailController.isFileSource) ...[
         PopupMenuItem(
           onTap: () => videoDetailController.onDownload(this.context),
           child: const Text('缓存视频'),
         ),
+        PopupMenuItem(
+          onTap: () => videoDetailController.onDownloadMp4(this.context),
+          child: const Text('下载视频'),
+        ),
+      ],
       if (videoDetailController.cover.value.isNotEmpty)
         PopupMenuItem(
           onTap: () =>

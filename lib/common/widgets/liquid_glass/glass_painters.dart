@@ -124,7 +124,7 @@ class GlassRimPainter extends CustomPainter {
         rrect.deflate(0.5),
         Paint()
           ..style = .stroke
-          ..strokeWidth = 1
+          ..strokeWidth = isDark ? 1 : 0.8
           ..color = edge,
       );
     }

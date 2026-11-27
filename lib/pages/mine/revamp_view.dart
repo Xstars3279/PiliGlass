@@ -54,6 +54,7 @@ extension _MineRevamp on _MediaPageState {
                         .history => _buildHistory(previewOnly: true),
                         .later => _buildLater(previewOnly: true),
                         .sub => _buildSub(previewOnly: true),
+                        .download => const SizedBox.shrink(),
                       },
                     ),
                   ],
@@ -381,6 +382,11 @@ class _MineMenuState extends State<_MineMenu> {
         tab: .sub,
         count: controller.subCtr?.count,
         onOpen: shortcut('我的订阅'),
+      ),
+      .download => row(
+        icon: Icons.download_done_rounded,
+        title: '我的下载',
+        onOpen: () => Get.to(() => const Mp4DownloadPage()),
       ),
     };
 

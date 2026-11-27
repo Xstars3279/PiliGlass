@@ -324,10 +324,10 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
                           stops: const [0.0, 0.55, 1.0],
                           colors: [
                             colorScheme.surface.withValues(
-                              alpha: UiGlass.clear ? 0.55 : 0.92,
+                              alpha: UiGlass.clear ? 0.82 : 0.95,
                             ),
                             colorScheme.surface.withValues(
-                              alpha: UiGlass.clear ? 0.22 : 0.55,
+                              alpha: UiGlass.clear ? 0.48 : 0.62,
                             ),
                             colorScheme.surface.withValues(alpha: 0),
                           ],

@@ -14,6 +14,7 @@ class MainActivity : AudioServiceActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         UpdateInstaller.register(flutterEngine, this)
+        Mp4Exporter.register(flutterEngine, this)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "piliglass/app")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -49,6 +50,13 @@ class MainActivity : AudioServiceActivity() {
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         AndroidHelper.ToDart.onUserLeaveHint?.run()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (Mp4Exporter.onActivityResult(this, requestCode, resultCode, data)) {
+            return
+        }
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration?) {

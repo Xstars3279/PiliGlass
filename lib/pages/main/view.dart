@@ -433,8 +433,7 @@ class _MainAppState extends PopScopeState<MainApp>
 
   @override
   Widget build(BuildContext context) {
-    final fullBleedTop =
-        _mainController.useBottomNav && _mainController.dockSearch;
+    final fullBleedTop = _mainController.dockSearch;
     final topPad = _padding.top > 0
         ? _padding.top
         : Revamp.topPaddingOf(context);
@@ -488,7 +487,7 @@ class _MainAppState extends PopScopeState<MainApp>
       // keeps clear of it while it is closed
       rail = _glassRail();
       padding = .only(
-        top: _padding.top,
+        top: fullBleedTop ? 0 : _padding.top,
         left: _padding.left + LiquidGlassNavigationRail.extent,
         right: _padding.right,
       );
@@ -518,7 +517,10 @@ class _MainAppState extends PopScopeState<MainApp>
         ),
         child: _sideBar(),
       );
-      padding = .only(top: _padding.top, right: _padding.right);
+      padding = .only(
+        top: fullBleedTop ? 0 : _padding.top,
+        right: _padding.right,
+      );
     }
 
     child = MainLayout(
