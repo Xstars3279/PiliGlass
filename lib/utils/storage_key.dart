@@ -151,6 +151,8 @@ abstract final class SettingBoxKey {
       downloadPath = 'downloadPath',
       localVideoDownloadUri = 'localVideoDownloadUri',
       localVideoDownloadLabel = 'localVideoDownloadLabel',
+      localVideoDownloadQa = 'localVideoDownloadQa',
+      localAudioDownloadQa = 'localAudioDownloadQa',
       cachePlayInfo = 'cachePlayInfo',
       imageSavePath = 'imageSavePath',
       followOrderType = 'followOrderType',

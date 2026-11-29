@@ -209,81 +209,90 @@ class _SearchPageState extends State<SearchPage> {
       color: outline,
     );
     return SliverPadding(
-      padding: .fromLTRB(
-        10,
-        !isTrending && (isPortrait || _searchController.enableTrending)
-            ? 4
-            : 25,
-        4,
-        25,
-      ),
+      padding: Revamp.enabled
+          ? const .fromLTRB(16, 14, 16, 16)
+          : .fromLTRB(
+              10,
+              !isTrending && (isPortrait || _searchController.enableTrending)
+                  ? 4
+                  : 25,
+              4,
+              25,
+            ),
       sliver: SliverMainAxisGroup(
         slivers: [
           SliverPadding(
-            padding: const .fromLTRB(6, 0, 6, 6),
+            padding: Revamp.enabled
+                ? const .only(bottom: 10)
+                : const .fromLTRB(6, 0, 6, 6),
             sliver: SliverToBoxAdapter(
-              child: Row(
-                mainAxisAlignment: .spaceBetween,
-                children: [
-                  isTrending
-                      ? Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            text,
-                            const SizedBox(width: 14),
-                            TextButton(
-                              style: const ButtonStyle(
-                                visualDensity: .compact,
-                                tapTargetSize: .shrinkWrap,
-                                padding: WidgetStatePropertyAll(
-                                  .symmetric(horizontal: 10),
+              child: SizedBox(
+                height: Revamp.enabled ? 32 : null,
+                child: Row(
+                  mainAxisAlignment: .spaceBetween,
+                  children: [
+                    isTrending
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              text,
+                              const SizedBox(width: 10),
+                              TextButton(
+                                style: const ButtonStyle(
+                                  visualDensity: .compact,
+                                  tapTargetSize: .shrinkWrap,
+                                  padding: WidgetStatePropertyAll(
+                                    .symmetric(horizontal: 8),
+                                  ),
+                                ),
+                                onPressed: () => Get.toNamed('/searchTrending'),
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      '完整榜单',
+                                      strutStyle: const StrutStyle(
+                                        leading: 0,
+                                        height: 1,
+                                      ),
+                                      style: style,
+                                    ),
+                                    Icon(
+                                      size: 18,
+                                      Icons.keyboard_arrow_right,
+                                      color: outline,
+                                    ),
+                                  ],
                                 ),
                               ),
-                              onPressed: () => Get.toNamed('/searchTrending'),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '完整榜单',
-                                    strutStyle: const StrutStyle(
-                                      leading: 0,
-                                      height: 1,
-                                    ),
-                                    style: style,
-                                  ),
-                                  Icon(
-                                    size: 18,
-                                    Icons.keyboard_arrow_right,
-                                    color: outline,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        )
-                      : text,
-                  TextButton.icon(
-                    style: const ButtonStyle(
-                      visualDensity: .compact,
-                      tapTargetSize: .shrinkWrap,
-                      padding: WidgetStatePropertyAll(
-                        .symmetric(horizontal: 10),
+                            ],
+                          )
+                        : text,
+                    TextButton.icon(
+                      style: ButtonStyle(
+                        visualDensity: .compact,
+                        tapTargetSize: .shrinkWrap,
+                        padding: WidgetStatePropertyAll(
+                          Revamp.enabled
+                              ? const .symmetric(horizontal: 6)
+                              : const .symmetric(horizontal: 10),
+                        ),
+                      ),
+                      onPressed: isTrending
+                          ? _searchController.queryTrendingList
+                          : _searchController.queryRecommendList,
+                      icon: Icon(
+                        Icons.refresh_outlined,
+                        size: 18,
+                        color: secondary,
+                      ),
+                      label: Text(
+                        '刷新',
+                        strutStyle: const StrutStyle(leading: 0, height: 1),
+                        style: TextStyle(height: 1, color: secondary),
                       ),
                     ),
-                    onPressed: isTrending
-                        ? _searchController.queryTrendingList
-                        : _searchController.queryRecommendList,
-                    icon: Icon(
-                      Icons.refresh_outlined,
-                      size: 18,
-                      color: secondary,
-                    ),
-                    label: Text(
-                      '刷新',
-                      strutStyle: const StrutStyle(leading: 0, height: 1),
-                      style: TextStyle(height: 1, color: secondary),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -300,7 +309,8 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  late final mainAxisExtent = 16 + MediaQuery.textScalerOf(context).scale(14);
+  late final mainAxisExtent =
+      (Revamp.enabled ? 12 : 16) + MediaQuery.textScalerOf(context).scale(14);
   Widget get _buildHistory {
     return Obx(
       () {
@@ -310,62 +320,71 @@ class _SearchPageState extends State<SearchPage> {
         }
         final secondary = theme.colorScheme.secondary;
         return SliverPadding(
-          padding: .fromLTRB(
-            10,
-            !isPortrait
-                ? 25
-                : _searchController.enableTrending
-                ? 0
-                : 6,
-            6,
-            25,
-          ),
+          padding: Revamp.enabled
+              ? const .fromLTRB(16, 14, 16, 16)
+              : .fromLTRB(
+                  10,
+                  !isPortrait
+                      ? 25
+                      : _searchController.enableTrending
+                      ? 0
+                      : 6,
+                  6,
+                  25,
+                ),
           sliver: SliverMainAxisGroup(
             slivers: [
               SliverPadding(
-                padding: const .fromLTRB(6, 0, 6, 6),
+                padding: Revamp.enabled
+                    ? const .only(bottom: 10)
+                    : const .fromLTRB(6, 0, 6, 6),
                 sliver: SliverToBoxAdapter(
-                  child: Row(
-                    children: [
-                      Text(
-                        '搜索历史',
-                        strutStyle: const StrutStyle(leading: 0, height: 1),
-                        style: theme.textTheme.titleMedium!.copyWith(
-                          height: 1,
-                          fontWeight: .bold,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      _recordBtn,
-                      _exportBtn,
-                      const Spacer(),
-                      TextButton.icon(
-                        style: const ButtonStyle(
-                          visualDensity: .compact,
-                          tapTargetSize: .shrinkWrap,
-                          padding: WidgetStatePropertyAll(
-                            .symmetric(horizontal: 10),
+                  child: SizedBox(
+                    height: Revamp.enabled ? 32 : null,
+                    child: Row(
+                      children: [
+                        Text(
+                          '搜索历史',
+                          strutStyle: const StrutStyle(leading: 0, height: 1),
+                          style: theme.textTheme.titleMedium!.copyWith(
+                            height: 1,
+                            fontWeight: .bold,
                           ),
                         ),
-                        onPressed: _searchController.onClearHistory,
-                        icon: Icon(
-                          Icons.clear_all_outlined,
-                          size: 18,
-                          color: secondary,
+                        const SizedBox(width: 10),
+                        _recordBtn,
+                        _exportBtn,
+                        const Spacer(),
+                        TextButton.icon(
+                          style: ButtonStyle(
+                            visualDensity: .compact,
+                            tapTargetSize: .shrinkWrap,
+                            padding: WidgetStatePropertyAll(
+                              Revamp.enabled
+                                  ? const .symmetric(horizontal: 6)
+                                  : const .symmetric(horizontal: 10),
+                            ),
+                          ),
+                          onPressed: _searchController.onClearHistory,
+                          icon: Icon(
+                            Icons.clear_all_outlined,
+                            size: 18,
+                            color: secondary,
+                          ),
+                          label: Text(
+                            '清空',
+                            style: TextStyle(height: 1, color: secondary),
+                          ),
                         ),
-                        label: Text(
-                          '清空',
-                          style: TextStyle(height: 1, color: secondary),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
               SliverFixedWrap(
                 mainAxisExtent: mainAxisExtent,
                 spacing: 8,
-                runSpacing: 8,
+                runSpacing: Revamp.enabled ? 6 : 8,
                 delegate: SliverChildBuilderDelegate(
                   addAutomaticKeepAlives: false,
                   addRepaintBoundaries: false,
@@ -378,7 +397,9 @@ class _SearchPageState extends State<SearchPage> {
                     maxLines: 1,
                     fontSize: 14,
                     overflow: .ellipsis,
-                    padding: const .fromLTRB(11, 8, 11, 0),
+                    padding: Revamp.enabled
+                        ? const .fromLTRB(8, 6, 8, 0)
+                        : const .fromLTRB(11, 8, 11, 0),
                   ),
                 ),
               ),
@@ -403,8 +424,9 @@ class _SearchPageState extends State<SearchPage> {
           ),
         ),
         style: const ButtonStyle(
-          visualDensity: .comfortable,
+          visualDensity: .compact,
           tapTargetSize: .shrinkWrap,
+          minimumSize: WidgetStatePropertyAll(Size(32, 32)),
           padding: WidgetStatePropertyAll(.zero),
         ),
         onPressed: () {

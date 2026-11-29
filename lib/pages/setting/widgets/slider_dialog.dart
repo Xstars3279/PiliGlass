@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -36,7 +38,7 @@ class _SliderDialogState extends State<SliderDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    final dialog = AlertDialog(
       title: widget.title,
       contentPadding: const .only(top: 20, left: 8, right: 8, bottom: 8),
       content: SizedBox(
@@ -69,5 +71,8 @@ class _SliderDialogState extends State<SliderDialog> {
         ),
       ],
     );
+    return Revamp.enabled
+        ? LiquidPress(maxGrowth: 10, pullPastEdges: true, child: dialog)
+        : dialog;
   }
 }

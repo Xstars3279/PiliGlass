@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:PiliPlus/pages/setting/widgets/checkbox_num_list_tile.dart';
 import 'package:collection/collection.dart';
 import 'package:get/get.dart';
@@ -33,49 +35,55 @@ class _OrderedMultiSelectDialogState<T>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return AlertDialog(
+    final dialog = AlertDialog(
       clipBehavior: Clip.hardEdge,
       title: widget.title,
-      contentPadding: const EdgeInsets.only(top: 12),
+      titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+      contentPadding: const EdgeInsets.only(top: 4),
       content: Material(
         type: .transparency,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: widget.values.entries.map((i) {
-              return Builder(
-                builder: (context) {
-                  return OrderedCheckboxListTile(
-                    dense: true,
-                    value: _tempValues[i.key],
-                    title: Text(
-                      i.value,
-                      style: theme.textTheme.titleMedium!,
-                    ),
-                    onChanged: (value) {
-                      if (value == null) {
-                        _tempValues[i.key] = _tempValues.length + 1;
-                        (context as Element).markNeedsBuild();
-                      } else {
-                        final pos = _tempValues.remove(i.key)!;
-                        if (pos == _tempValues.length + 1) {
+        child: ListTileTheme.merge(
+          minTileHeight: 48,
+          minVerticalPadding: 4,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: widget.values.entries.map((i) {
+                return Builder(
+                  builder: (context) {
+                    return OrderedCheckboxListTile(
+                      dense: true,
+                      value: _tempValues[i.key],
+                      title: Text(
+                        i.value,
+                        style: theme.textTheme.titleMedium!,
+                      ),
+                      onChanged: (value) {
+                        if (value == null) {
+                          _tempValues[i.key] = _tempValues.length + 1;
                           (context as Element).markNeedsBuild();
                         } else {
-                          _tempValues.updateAll(
-                            (key, value) => value > pos ? value - 1 : value,
-                          );
-                          setState(() {});
+                          final pos = _tempValues.remove(i.key)!;
+                          if (pos == _tempValues.length + 1) {
+                            (context as Element).markNeedsBuild();
+                          } else {
+                            _tempValues.updateAll(
+                              (key, value) => value > pos ? value - 1 : value,
+                            );
+                            setState(() {});
+                          }
                         }
-                      }
-                    },
-                  );
-                },
-              );
-            }).toList(),
+                      },
+                    );
+                  },
+                );
+              }).toList(),
+            ),
           ),
         ),
       ),
-      actionsPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
+      actionsPadding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
       actions: [
         TextButton(
           onPressed: Get.back,
@@ -95,5 +103,8 @@ class _OrderedMultiSelectDialogState<T>
         ),
       ],
     );
+    return Revamp.enabled
+        ? LiquidPress(maxGrowth: 10, pullPastEdges: true, child: dialog)
+        : dialog;
   }
 }

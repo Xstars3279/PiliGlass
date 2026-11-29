@@ -3,7 +3,7 @@ import 'dart:async' show unawaited;
 import 'package:PiliPlus/common/revamp.dart';
 import 'package:PiliPlus/common/ui_tokens.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
-import 'package:PiliPlus/common/widgets/liquid_glass/glass_icon_button.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/glass_action_bar.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/models/common/setting_type.dart';
@@ -293,28 +293,35 @@ class _Mp4DownloadPageState extends State<Mp4DownloadPage> {
     }
   }
 
+  Future<void> _openDownloadSettings() async {
+    await Get.to(
+      () => const CommonSetting(settingType: SettingType.downloadSetting),
+    );
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
     final padding = MediaQuery.viewPaddingOf(context);
-    final clearBtn = Revamp.enabled
-        ? GlassIconButton(
-            tapSize: 44,
-            tooltip: '删除下载记录',
-            onTap: _confirmDelete,
-            icon: const Icon(Icons.delete_outline_rounded),
-          )
-        : IconButton(
-            tooltip: '删除下载记录',
-            onPressed: _confirmDelete,
-            icon: const Icon(Icons.delete_outline_rounded),
-          );
+    final actionButtons = [
+      IconButton(
+        tooltip: '下载设置',
+        onPressed: _openDownloadSettings,
+        icon: const Icon(Icons.settings_outlined),
+      ),
+      IconButton(
+        tooltip: '删除下载记录',
+        onPressed: _confirmDelete,
+        icon: const Icon(Icons.delete_outline_rounded),
+      ),
+    ];
 
     if (!Revamp.enabled) {
       return SimpleScaffold(
         appBar: AppBar(
-          title: const Text('下载视频（MP4）'),
-          actions: [clearBtn, const SizedBox(width: 4)],
+          title: const Text('我的下载'),
+          actions: [...actionButtons, const SizedBox(width: 4)],
         ),
         body: Obx(() {
           final items = _service.tasks;
@@ -345,8 +352,11 @@ class _Mp4DownloadPageState extends State<Mp4DownloadPage> {
         return CustomScrollView(
           slivers: [
             RevampLargeAppBar(
-              title: '下载视频',
-              actions: [clearBtn, const SizedBox(width: 4)],
+              title: '我的下载',
+              actions: [
+                GlassActionBar(actions: actionButtons),
+                const SizedBox(width: 4),
+              ],
             ),
             SliverToBoxAdapter(child: _buildBanner(colorScheme)),
             if (items.isEmpty)

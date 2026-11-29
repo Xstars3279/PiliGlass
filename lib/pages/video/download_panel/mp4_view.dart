@@ -67,8 +67,8 @@ class _Mp4DownloadPanelState extends State<Mp4DownloadPanel> {
   late final bool _ownsScrollController = widget.scrollController == null;
   final Set<int> _selectedCids = <int>{};
 
-  VideoQuality _quality = VideoQuality.fromCode(Pref.defaultVideoQa);
-  AudioQuality _audioQuality = AudioQuality.fromCode(Pref.defaultAudioQa);
+  VideoQuality _quality = VideoQuality.fromCode(Pref.localVideoDownloadQa);
+  AudioQuality _audioQuality = AudioQuality.fromCode(Pref.localAudioDownloadQa);
 
   late ColorScheme colorScheme;
 

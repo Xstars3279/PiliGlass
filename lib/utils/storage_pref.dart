@@ -1054,6 +1054,14 @@ abstract final class Pref {
   static String? get localVideoDownloadLabel =>
       _setting.get(SettingBoxKey.localVideoDownloadLabel);
 
+  static int get localVideoDownloadQa =>
+      _setting.get(SettingBoxKey.localVideoDownloadQa) as int? ??
+      defaultVideoQa;
+
+  static int get localAudioDownloadQa =>
+      _setting.get(SettingBoxKey.localAudioDownloadQa) as int? ??
+      defaultAudioQa;
+
   static String? get imageSavePath => _setting.get(SettingBoxKey.imageSavePath);
 
   static String? get liveCdnUrl => _setting.get(SettingBoxKey.liveCdnUrl);

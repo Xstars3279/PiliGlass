@@ -798,23 +798,13 @@ class LoginPageController extends GetxController
                   ],
                 ),
           titlePadding: Revamp.enabled
-              ? const .fromLTRB(
-                  UiSpace.s24,
-                  UiSpace.s24,
-                  UiSpace.s24,
-                  UiSpace.s8,
-                )
+              ? const .fromLTRB(20, 20, 20, 8)
               : const .only(left: 22, top: 16, right: 22, bottom: 3),
           contentPadding: Revamp.enabled
-              ? const .symmetric(horizontal: UiSpace.s24)
+              ? const .symmetric(horizontal: 24)
               : const .symmetric(vertical: 5),
           actionsPadding: Revamp.enabled
-              ? const .fromLTRB(
-                  UiSpace.s12,
-                  UiSpace.s8,
-                  UiSpace.s12,
-                  UiSpace.s12,
-                )
+              ? const .fromLTRB(20, 8, 20, 12)
               : const .only(left: 16, right: 16, bottom: 10),
           // 屏宽减 64, up to 360 (11.4)
           insetPadding: Revamp.enabled
@@ -862,9 +852,9 @@ class LoginPageController extends GetxController
                                       title: entry.value,
                                       mainAxisSize: .max,
                                       padding: PlatformUtils.isDesktop
-                                          ? const .only(left: 12)
+                                          ? const .only(left: 4)
                                           : const .only(
-                                              left: 12,
+                                              left: 4,
                                               top: 2,
                                               bottom: 2,
                                             ),

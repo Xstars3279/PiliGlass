@@ -210,7 +210,7 @@ class _GlassPopupAnchorState<T> extends State<GlassPopupAnchor<T>> {
       final boundary = _key.currentContext?.findRenderObject();
       if (boundary is RenderRepaintBoundary) {
         _snapshot.value = boundary.toImageSync(
-          pixelRatio: math.min(2.0, MediaQuery.devicePixelRatioOf(context)),
+          pixelRatio: MediaQuery.devicePixelRatioOf(context),
         );
         _hidden.value = true;
       }
@@ -1375,16 +1375,22 @@ class RenderGlassMenuMorph extends RenderProxyBox {
     _MorphFrame frame,
     Path path,
   ) {
+    if (frame.returning && frame.settled <= 0.01) {
+      return;
+    }
     final isSettled = !frame.returning && frame.settled >= 0.99;
     final (first, second) = _filtersFor(
       frame.platter,
       frame.radius,
       isSettled,
     );
+    final tintColor = frame.returning
+        ? _panelColor.withValues(alpha: _panelColor.a * frame.settled)
+        : _panelColor;
     void paintTint(PaintingContext context, Offset offset) {
       context.canvas.drawPath(
         path.shift(offset),
-        Paint()..color = _panelColor,
+        Paint()..color = tintColor,
       );
     }
 

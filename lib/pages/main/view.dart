@@ -81,11 +81,9 @@ class _MainAppState extends PopScopeState<MainApp>
         );
       }
     }
-    if (!_mainController.useSideBar) {
-      _mainController.useBottomNav = _mainController.bottomNavFor(
-        MediaQuery.sizeOf(context),
-      );
-    }
+    _mainController.useBottomNav = _mainController.bottomNavFor(
+      MediaQuery.sizeOf(context),
+    );
   }
 
   @override

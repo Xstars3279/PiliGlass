@@ -1,5 +1,4 @@
 import 'package:PiliPlus/common/revamp.dart';
-import 'package:PiliPlus/common/widgets/liquid_glass/glass_tab_strip.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
@@ -105,40 +104,8 @@ class _SearchResultPageState extends State<SearchResultPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (Revamp.enabled)
-              Obx(() {
-                String labelOf(SearchType item) {
-                  final count = _searchResultController.count[item.index];
-                  if (count == -1) return item.label;
-                  return '${item.label} ${count > 99 ? '99+' : count}';
-                }
-
-                return GlassTabStrip(
-                  items: [
-                    for (final item in SearchType.actives)
-                      GlassTabItem(labelOf(item)),
-                  ],
-                  controller: _tabController,
-                  capsule: true,
-                  refraction: false,
-                  centered: false,
-                  drag: GlassTabDrag.scrub,
-                  padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-                  onSelected: (index) {
-                    // as the old bar's onTap: only a re-tap goes back to the
-                    // top of the panel already shown
-                    if (index != _tabController.index) return;
-                    if (_searchResultController.toTopIndex.value == index) {
-                      _searchResultController.toTopIndex.refresh();
-                    } else {
-                      _searchResultController.toTopIndex.value = index;
-                    }
-                  },
-                );
-              })
-            else
-              TabBar(
-                overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+            TabBar(
+              overlayColor: const WidgetStatePropertyAll(Colors.transparent),
                 splashFactory: NoSplash.splashFactory,
                 padding: const EdgeInsets.only(top: 4, left: 8, right: 8),
                 controller: _tabController,

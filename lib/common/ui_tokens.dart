@@ -389,9 +389,9 @@ abstract final class UiGlass {
 
   static double get dialogAlpha => switch (level) {
     UiGlassLevel.none => 1.0,
-    UiGlassLevel.standard => 0.90,
-    UiGlassLevel.enhanced => 0.80,
-    UiGlassLevel.extreme => 0.72,
+    UiGlassLevel.standard => 0.88,
+    UiGlassLevel.enhanced => 0.76,
+    UiGlassLevel.extreme => 0.58,
   };
   static Color dialog(ColorScheme colorScheme) => colorScheme.brightness.isDark
       ? panel(colorScheme)

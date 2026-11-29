@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:PiliPlus/http/browser_ua.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/video.dart';
@@ -33,39 +35,48 @@ class SelectDialog<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final titleMedium = TextTheme.of(context).titleMedium!;
-    return AlertDialog(
+    final dialog = AlertDialog(
       clipBehavior: Clip.hardEdge,
       title: Text(title),
+      titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
       constraints: subtitleBuilder != null
           ? const BoxConstraints.tightFor(width: 320)
           : null,
-      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+      contentPadding: const EdgeInsets.only(top: 4, bottom: 12),
       content: Material(
         type: .transparency,
-        child: SingleChildScrollView(
-          child: RadioGroup<T>(
-            onChanged: (v) => Navigator.of(context).pop(v ?? value),
-            groupValue: value,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(
-                values.length,
-                (index) {
-                  final item = values[index];
-                  return RadioListTile<T>(
-                    toggleable: toggleable,
-                    dense: true,
-                    value: item.$1,
-                    title: Text(item.$2, style: titleMedium),
-                    subtitle: subtitleBuilder?.call(context, index, item.$1),
-                  );
-                },
+        child: ListTileTheme.merge(
+          minTileHeight: 48,
+          minVerticalPadding: 4,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: SingleChildScrollView(
+            child: RadioGroup<T>(
+              onChanged: (v) => Navigator.of(context).pop(v ?? value),
+              groupValue: value,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(
+                  values.length,
+                  (index) {
+                    final item = values[index];
+                    return RadioListTile<T>(
+                      toggleable: toggleable,
+                      dense: true,
+                      value: item.$1,
+                      title: Text(item.$2, style: titleMedium),
+                      subtitle: subtitleBuilder?.call(context, index, item.$1),
+                    );
+                  },
+                ),
               ),
             ),
           ),
         ),
       ),
     );
+    return Revamp.enabled
+        ? LiquidPress(maxGrowth: 10, pullPastEdges: true, child: dialog)
+        : dialog;
   }
 }
 

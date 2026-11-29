@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/revamp.dart';
+import 'package:PiliPlus/common/widgets/liquid_glass/liquid_press.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -29,40 +31,46 @@ class _MultiSelectDialogState<T> extends State<MultiSelectDialog<T>> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return AlertDialog(
+    final dialog = AlertDialog(
       clipBehavior: Clip.hardEdge,
       title: Text(widget.title),
-      contentPadding: const EdgeInsets.only(top: 12),
+      titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+      contentPadding: const EdgeInsets.only(top: 4),
       content: Material(
         type: .transparency,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: widget.values.entries.map((i) {
-              return Builder(
-                builder: (context) {
-                  bool isChecked = _tempValues.contains(i.key);
-                  return CheckboxListTile(
-                    dense: true,
-                    value: isChecked,
-                    title: Text(
-                      i.value,
-                      style: theme.textTheme.titleMedium!,
-                    ),
-                    onChanged: (value) {
-                      isChecked
-                          ? _tempValues.remove(i.key)
-                          : _tempValues.add(i.key);
-                      (context as Element).markNeedsBuild();
-                    },
-                  );
-                },
-              );
-            }).toList(),
+        child: ListTileTheme.merge(
+          minTileHeight: 48,
+          minVerticalPadding: 4,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: widget.values.entries.map((i) {
+                return Builder(
+                  builder: (context) {
+                    bool isChecked = _tempValues.contains(i.key);
+                    return CheckboxListTile(
+                      dense: true,
+                      value: isChecked,
+                      title: Text(
+                        i.value,
+                        style: theme.textTheme.titleMedium!,
+                      ),
+                      onChanged: (value) {
+                        isChecked
+                            ? _tempValues.remove(i.key)
+                            : _tempValues.add(i.key);
+                        (context as Element).markNeedsBuild();
+                      },
+                    );
+                  },
+                );
+              }).toList(),
+            ),
           ),
         ),
       ),
-      actionsPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
+      actionsPadding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
       actions: [
         TextButton(
           onPressed: Get.back,
@@ -79,5 +87,8 @@ class _MultiSelectDialogState<T> extends State<MultiSelectDialog<T>> {
         ),
       ],
     );
+    return Revamp.enabled
+        ? LiquidPress(maxGrowth: 10, pullPastEdges: true, child: dialog)
+        : dialog;
   }
 }
